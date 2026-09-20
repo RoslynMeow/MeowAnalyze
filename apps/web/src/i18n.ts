@@ -1,6 +1,11 @@
 export type Lang = "zh" | "en";
 
 export interface Strings {
+  pages: {
+    dashboard: string;
+    treemap: string;
+    detail: string;
+  };
   common: {
     settings: string;
     exportJson: string;
@@ -11,6 +16,9 @@ export interface Strings {
   };
   landing: {
     openFolder: string;
+  };
+  treemap: {
+    hint: string;
   };
   notices: {
     noFiles: string;
@@ -67,9 +75,17 @@ export interface Strings {
       filesTreemap: string;
       ruleViolations: string;
     };
+    topFunctions: string;
+    topTable: {
+      function: string;
+      file: string;
+      cyclomatic: string;
+      cognitive: string;
+    };
     donut: {
       physical: string;
       files: string;
+      functions: string;
     };
     segment: {
       code: string;
@@ -93,6 +109,8 @@ export interface Strings {
       blank: number,
       logical: number,
     ) => string;
+    filesTitle: string;
+    selectHint: string;
     kpi: {
       functions: string;
       maxCyclomatic: string;
@@ -118,6 +136,11 @@ export interface Strings {
 }
 
 const zh: Strings = {
+  pages: {
+    dashboard: "大屏",
+    treemap: "文件地图",
+    detail: "文件详情",
+  },
   common: {
     settings: "设置",
     exportJson: "导出 JSON",
@@ -128,6 +151,9 @@ const zh: Strings = {
   },
   landing: {
     openFolder: "打开文件夹",
+  },
+  treemap: {
+    hint: "点击任意格子查看该文件",
   },
   notices: {
     noFiles: "没有找到可分析的 TypeScript / JavaScript 文件。",
@@ -184,9 +210,17 @@ const zh: Strings = {
       filesTreemap: "按代码行数的文件树状图 —— 颜色为最大认知复杂度,点击下钻",
       ruleViolations: "违规规则",
     },
+    topFunctions: "最复杂的函数",
+    topTable: {
+      function: "函数",
+      file: "文件",
+      cyclomatic: "圈复杂",
+      cognitive: "认知",
+    },
     donut: {
       physical: "物理行",
       files: "文件",
+      functions: "函数",
     },
     segment: {
       code: "代码",
@@ -205,6 +239,8 @@ const zh: Strings = {
   detail: {
     locPill: (physical, code, comment, blank, logical) =>
       `物理 ${physical} · 代码 ${code} · 注释 ${comment} · 空行 ${blank} · 逻辑 ${logical}`,
+    filesTitle: "文件",
+    selectHint: "从左侧选择一个文件",
     kpi: {
       functions: "函数",
       maxCyclomatic: "最大圈复杂度",
@@ -230,6 +266,11 @@ const zh: Strings = {
 };
 
 const en: Strings = {
+  pages: {
+    dashboard: "Dashboard",
+    treemap: "File map",
+    detail: "File detail",
+  },
   common: {
     settings: "Settings",
     exportJson: "Export JSON",
@@ -240,6 +281,9 @@ const en: Strings = {
   },
   landing: {
     openFolder: "Open folder",
+  },
+  treemap: {
+    hint: "Click a cell to open that file",
   },
   notices: {
     noFiles: "No TypeScript / JavaScript files found.",
@@ -296,9 +340,17 @@ const en: Strings = {
       filesTreemap: "Files by code lines — color = max cognitive, click to drill down",
       ruleViolations: "Rule violations",
     },
+    topFunctions: "Most complex functions",
+    topTable: {
+      function: "function",
+      file: "file",
+      cyclomatic: "cyclo",
+      cognitive: "cog",
+    },
     donut: {
       physical: "physical",
       files: "files",
+      functions: "functions",
     },
     segment: {
       code: "code",
@@ -317,6 +369,8 @@ const en: Strings = {
   detail: {
     locPill: (physical, code, comment, blank, logical) =>
       `${physical} physical · ${code} code · ${comment} comment · ${blank} blank · ${logical} logical`,
+    filesTitle: "Files",
+    selectHint: "Select a file on the left",
     kpi: {
       functions: "Functions",
       maxCyclomatic: "Max cyclomatic",

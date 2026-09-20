@@ -100,13 +100,13 @@ Open a project folder — the analysis core runs **entirely in your browser** an
 
 **Input:** open a project folder (File System Access API, with a `webkitdirectory` fallback). A thresholds panel re-runs the analysis live.
 
-**Visuals & interaction:**
+**Three full-screen pages** (scroll-snap, page dots, arrow keys):
 
-- cyclomatic complexity histogram (bars turn yellow at 10, red at 20)
-- lines-of-code and language donut charts
-- most-complex-functions bar chart — click a bar to jump to its file
-- files treemap sized by code lines and colored by max complexity — click a tile to open the file
-- sortable tables, a file filter, and one-click JSON export
+1. **Dashboard** — a maintainability gauge, key numbers and pie charts only (lines of code, languages, cyclomatic/cognitive buckets), plus a most-complex-functions table.
+2. **File map** — a nested, SpaceSniffer-style treemap: folders contain files, sized by code lines and colored by max complexity. Click a cell to open the file.
+3. **File detail** — a file list with a source preview; click a function to scroll to and highlight its lines.
+
+Responsive layout, sortable tables and one-click JSON export.
 
 ## 🛠 CLI reference
 

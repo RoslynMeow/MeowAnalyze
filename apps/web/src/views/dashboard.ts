@@ -1,17 +1,16 @@
 import type { AnalysisReport, FunctionReport } from "@meowanalyze/core";
 import {
-  barList,
+  bucketize,
   complexityColor,
   donutChart,
   gaugeChart,
-  histogramChart,
-  maintainabilityColor,
   PALETTE,
-  treemapChart,
+  type BucketRange,
   type DonutSegment,
 } from "../charts.js";
-import { button, card, countUp, el } from "../dom.js";
+import { button, countUp, el } from "../dom.js";
 import { t } from "../i18n.js";
+import { dataTable, type Cell } from "../table.js";
 
 export interface DashboardHandlers {
   onOpenFile: (path: string) => void;
@@ -20,78 +19,93 @@ export interface DashboardHandlers {
   onOpenSettings: () => void;
 }
 
+const CYCLOMATIC_BUCKETS: readonly BucketRange[] = [
+  { upTo: 5, label: "1–5", color: "#3fb950" },
+  { upTo: 10, label: "6–10", color: "#d29922" },
+  { upTo: 20, label: "11–20", color: "#f0883e" },
+  { upTo: Number.POSITIVE_INFINITY, label: "21+", color: "#f85149" },
+];
+
+const COGNITIVE_BUCKETS: readonly BucketRange[] = [
+  { upTo: 5, label: "0–5", color: "#3fb950" },
+  { upTo: 15, label: "6–15", color: "#d29922" },
+  { upTo: 30, label: "16–30", color: "#f0883e" },
+  { upTo: Number.POSITIVE_INFINITY, label: "31+", color: "#f85149" },
+];
+
 export function renderDashboard(
   root: HTMLElement,
   report: AnalysisReport,
   handlers: DashboardHandlers,
 ): void {
   root.replaceChildren();
-
-  root.append(
-    el(
-      "div",
-      { class: "view dashboard" },
-      hero(report, handlers),
-      kpis(report),
-      charts(report, handlers),
-      filesStrip(report, handlers),
-    ),
-  );
+  root.append(header(report, handlers), summaryRow(report), donutRow(report), topFunctions(report, handlers));
 }
 
-function hero(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
-  const { summary } = report;
-  const mi = summary.maintainability;
+function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
   const s = t();
-  const markerCount = summary.markers.todo + summary.markers.fixme + summary.markers.hack;
+  const { summary } = report;
+  const markers = summary.markers.todo + summary.markers.fixme + summary.markers.hack;
 
   return el(
     "header",
-    { class: "hero-panel" },
+    { class: "page__head" },
     el(
       "div",
-      { class: "hero-panel__main" },
-      el("h1", { class: "hero-panel__title", text: s.dashboard.title }),
+      {},
+      el("h1", { class: "page__title", text: s.pages.dashboard }),
       el("p", {
-        class: "hero-panel__meta",
+        class: "page__meta",
         text: `${report.root} · ${report.durationMs}ms · v${report.toolVersion}`,
       }),
       el(
         "div",
-        { class: "hero-panel__badges" },
+        { class: "page__pills" },
         el("span", { class: "pill", text: s.dashboard.pills.files(summary.files) }),
-        el("span", {
-          class: "pill",
-          text: s.dashboard.pills.functions(summary.metrics.cyclomatic.count),
-        }),
-        el("span", {
-          class: "pill",
-          text: s.dashboard.pills.violations(summary.violations.total),
-        }),
-        markerCount > 0
+        el("span", { class: "pill", text: s.dashboard.pills.functions(summary.metrics.cyclomatic.count) }),
+        el("span", { class: "pill", text: s.dashboard.pills.violations(summary.violations.total) }),
+        markers > 0
           ? el("span", {
               class: "pill warn",
-              text: s.dashboard.pills.markers(
-                summary.markers.todo,
-                summary.markers.fixme,
-                summary.markers.hack,
-              ),
+              text: s.dashboard.pills.markers(summary.markers.todo, summary.markers.fixme, summary.markers.hack),
             })
           : null,
-      ),
-      el(
-        "div",
-        { class: "hero-panel__actions" },
-        button(s.common.settings, handlers.onOpenSettings),
-        button(s.common.exportJson, handlers.onExport),
-        button(s.common.newAnalysis, handlers.onNewAnalysis),
       ),
     ),
     el(
       "div",
-      { class: "hero-panel__gauge" },
-      gaugeChart(mi, { label: "MI" }),
-      el("p", { class: "hero-panel__gauge-caption", text: maintainabilityLabel(mi) }),
+      { class: "page__actions" },
+      button(s.common.settings, handlers.onOpenSettings),
+      button(s.common.exportJson, handlers.onExport),
+      button(s.common.newAnalysis, handlers.onNewAnalysis),
+    ),
+  );
+}
+
+function summaryRow(report: AnalysisReport): HTMLElement {
+  const { summary } = report;
+  const s = t().dashboard.kpi;
+  const commentTotal = summary.loc.code + summary.loc.comment;
+  const density = commentTotal > 0 ? (summary.loc.comment / commentTotal) * 100 : 0;
+
+  return el(
+    "div",
+    { class: "summary-row" },
+    el(
+      "div",
+      { class: "summary-gauge" },
+      gaugeChart(summary.maintainability, { size: 170, label: "MI" }),
+      el("p", { class: "summary-gauge__caption", text: maintainabilityLabel(summary.maintainability) }),
+    ),
+    el(
+      "div",
+      { class: "kpis" },
+      kpi(s.files, summary.files),
+      kpi(s.functions, summary.metrics.cyclomatic.count),
+      kpi(s.codeLines, summary.loc.code),
+      kpi(s.commentPct, Number(density.toFixed(1))),
+      kpi(s.maxCyclomatic, summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
+      kpi(s.maxCognitive, summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
     ),
   );
 }
@@ -103,27 +117,6 @@ function maintainabilityLabel(value: number): string {
   return s.healthy;
 }
 
-function kpis(report: AnalysisReport): HTMLElement {
-  const { summary } = report;
-  const s = t().dashboard.kpi;
-  const commentTotal = summary.loc.code + summary.loc.comment;
-  const density = commentTotal > 0 ? (summary.loc.comment / commentTotal) * 100 : 0;
-  const markerCount = summary.markers.todo + summary.markers.fixme + summary.markers.hack;
-
-  return el(
-    "div",
-    { class: "kpis" },
-    kpi(s.files, summary.files),
-    kpi(s.functions, summary.metrics.cyclomatic.count),
-    kpi(s.codeLines, summary.loc.code),
-    kpi(s.commentPct, Number(density.toFixed(1))),
-    kpi(s.maxCyclomatic, summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
-    kpi(s.maxCognitive, summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
-    kpi(s.violations, summary.violations.total, summary.violations.total > 0 ? "#d29922" : undefined),
-    kpi(s.markers, markerCount, markerCount > 0 ? "#d29922" : undefined),
-  );
-}
-
 function kpi(label: string, value: number, color?: string): HTMLElement {
   const valueNode = el("div", { class: "kpi__value" });
   if (color) valueNode.style.color = color;
@@ -132,38 +125,17 @@ function kpi(label: string, value: number, color?: string): HTMLElement {
   return el("div", { class: "kpi" }, valueNode, el("div", { class: "kpi__label", text: label }));
 }
 
-function charts(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
-  const functions = allFunctions(report);
-  const cyclomatic = functions.map((entry) => entry.fn.cyclomatic);
-  const cognitive = functions.map((entry) => entry.fn.cognitive);
+function donutRow(report: AnalysisReport): HTMLElement {
+  const s = t().dashboard;
+  const functions = allFunctions(report).map((entry) => entry.fn);
 
-  const topFunctions = [...functions]
-    .sort((a, b) => b.fn.cognitive - a.fn.cognitive || b.fn.cyclomatic - a.fn.cyclomatic)
-    .slice(0, 12)
-    .map((entry) => ({
-      label: `${entry.fn.name} · ${entry.file}`,
-      value: entry.fn.cognitive,
-      sub: `cyclo ${entry.fn.cyclomatic}, nest ${entry.fn.maxNesting}`,
-      color: complexityColor(entry.fn.cognitive),
-      key: entry.file,
-    }));
-
-  const filesTreemap = report.files
-    .filter((file) => file.loc.code > 0)
-    .map((file) => ({
-      label: file.path,
-      value: file.loc.code,
-      color: complexityColor(file.metrics.cognitive.max),
-      key: file.path,
-    }));
-
-  const locDonut: DonutSegment[] = [
-    { label: t().dashboard.segment.code, value: report.summary.loc.code, color: "#58a6ff" },
-    { label: t().dashboard.segment.comment, value: report.summary.loc.comment, color: "#3fb950" },
-    { label: t().dashboard.segment.blank, value: report.summary.loc.blank, color: "#8b949e" },
+  const loc: DonutSegment[] = [
+    { label: s.segment.code, value: report.summary.loc.code, color: "#58a6ff" },
+    { label: s.segment.comment, value: report.summary.loc.comment, color: "#3fb950" },
+    { label: s.segment.blank, value: report.summary.loc.blank, color: "#8b949e" },
   ];
 
-  const languageSegments: DonutSegment[] = Object.entries(report.summary.filesByLanguage)
+  const languages: DonutSegment[] = Object.entries(report.summary.filesByLanguage)
     .sort((a, b) => b[1] - a[1])
     .map(([language, count], index) => ({
       label: language,
@@ -171,105 +143,28 @@ function charts(report: AnalysisReport, handlers: DashboardHandlers): HTMLElemen
       color: PALETTE[index % PALETTE.length] ?? "#58a6ff",
     }));
 
-  const s = t().dashboard.charts;
-  const blocks: HTMLElement[] = [
-    chartBlock(s.cyclomatic, histogramChart(cyclomatic), true),
-    chartBlock(s.cognitive, histogramChart(cognitive), true),
-    chartBlock(s.topFunctions, clickableBar(topFunctions, handlers)),
-    chartBlock(
-      s.linesOfCode,
-      donutWithLegend(locDonut, String(report.summary.loc.physical), t().dashboard.donut.physical),
-    ),
-    chartBlock(
-      s.languages,
-      donutWithLegend(languageSegments, String(report.summary.files), t().dashboard.donut.files),
-    ),
-    chartBlock(s.filesTreemap, clickableTreemap(filesTreemap, handlers), true),
-  ];
-
-  const ruleCounts = violationsByRule(report);
-  if (ruleCounts.length > 0) {
-    blocks.push(
-      chartBlock(
-        s.ruleViolations,
-        barList(
-          ruleCounts.map(([rule, count], index) => ({
-            label: rule,
-            value: count,
-            color: PALETTE[index % PALETTE.length] ?? "#d29922",
-          })),
-        ),
-        true,
-      ),
-    );
-  }
-
-  return el("div", { class: "charts" }, ...blocks);
-}
-
-function chartBlock(title: string, chart: Node, wide = false): HTMLElement {
-  const block = el(
+  return el(
     "div",
-    { class: wide ? "chart-block chart-block--wide" : "chart-block" },
-    el("h3", { text: title }),
-    chart,
+    { class: "donut-row" },
+    donutCard(s.charts.linesOfCode, loc, String(report.summary.loc.physical), s.donut.physical),
+    donutCard(s.charts.languages, languages, String(report.summary.files), s.donut.files),
+    donutCard(
+      s.charts.cyclomatic,
+      bucketize(functions.map((fn) => fn.cyclomatic), CYCLOMATIC_BUCKETS),
+      String(functions.length),
+      s.donut.functions,
+    ),
+    donutCard(
+      s.charts.cognitive,
+      bucketize(functions.map((fn) => fn.cognitive), COGNITIVE_BUCKETS),
+      String(functions.length),
+      s.donut.functions,
+    ),
   );
-  block.classList.add("reveal");
-  return block;
 }
 
-function clickableBar(
-  items: Parameters<typeof barList>[0],
-  handlers: DashboardHandlers,
-): SVGSVGElement {
-  const chart = barList(items);
-  chart.addEventListener("click", (event) => {
-    const key = (event.target as SVGElement).closest("[data-key]")?.getAttribute("data-key");
-    if (key) handlers.onOpenFile(key);
-  });
-  return chart;
-}
-
-function clickableTreemap(
-  items: Parameters<typeof treemapChart>[0],
-  handlers: DashboardHandlers,
-): SVGSVGElement {
-  const chart = treemapChart(items);
-  chart.addEventListener("click", (event) => {
-    const key = (event.target as SVGElement).closest("[data-key]")?.getAttribute("data-key");
-    if (key) handlers.onOpenFile(key);
-  });
-  return chart;
-}
-
-function filesStrip(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
-  const list = el("div", { class: "file-cards" });
-  const sorted = [...report.files].sort(
-    (a, b) => b.metrics.cognitive.max - a.metrics.cognitive.max,
-  );
-  sorted.forEach((file, index) => {
-    const fc = t().dashboard.fileCard;
-    const node = el(
-      "button",
-      { class: "file-card", onClick: () => handlers.onOpenFile(file.path) },
-      el("div", { class: "file-card__path", text: file.path }),
-      el(
-        "div",
-        { class: "file-card__stats" },
-        el("span", { class: "file-card__cyclo", text: fc.cyclo(file.metrics.cyclomatic.max) }),
-        el("span", { text: fc.cognitive(file.metrics.cognitive.max) }),
-        el("span", { text: fc.code(file.loc.code) }),
-        el("span", { text: fc.functions(file.functions.length) }),
-        el("span", { class: "file-card__mi", text: fc.maintainability(Number(file.maintainability.toFixed(0))) }),
-      ),
-    );
-    node.style.setProperty("--delay", `${index * 18}ms`);
-    list.append(node);
-  });
-  return card(t().dashboard.filesTitle(report.files.length), list);
-}
-
-function donutWithLegend(
+function donutCard(
+  title: string,
   segments: DonutSegment[],
   centerValue: string,
   centerLabel: string,
@@ -277,8 +172,9 @@ function donutWithLegend(
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
   return el(
     "div",
-    { class: "donut" },
-    donutChart(segments, { centerValue, centerLabel }),
+    { class: "donut-card" },
+    el("h3", { text: title }),
+    donutChart(segments, { centerValue, centerLabel, size: 170 }),
     el(
       "ul",
       { class: "legend" },
@@ -298,14 +194,51 @@ function donutWithLegend(
   );
 }
 
-function violationsByRule(report: AnalysisReport): Array<[string, number]> {
-  const counts = new Map<string, number>();
-  for (const file of report.files) {
-    for (const violation of file.violations) {
-      counts.set(violation.rule, (counts.get(violation.rule) ?? 0) + 1);
-    }
-  }
-  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+function topFunctions(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
+  const s = t().dashboard;
+  const top = allFunctions(report)
+    .sort((a, b) => b.fn.cognitive - a.fn.cognitive || b.fn.cyclomatic - a.fn.cyclomatic)
+    .slice(0, 8);
+
+  const rows: Cell[][] = top.map(({ file, fn }) => [
+    {
+      content: el("span", {
+        class: "link",
+        text: fn.name,
+        onClick: () => handlers.onOpenFile(file),
+      }),
+    },
+    { content: file },
+    {
+      content: el("span", { class: complexityClass(fn.cyclomatic), text: String(fn.cyclomatic) }),
+      value: fn.cyclomatic,
+    },
+    {
+      content: el("span", { class: complexityClass(fn.cognitive), text: String(fn.cognitive) }),
+      value: fn.cognitive,
+    },
+  ]);
+
+  return el(
+    "div",
+    { class: "top-functions" },
+    el("h3", { text: s.topFunctions }),
+    dataTable(
+      [
+        { header: s.topTable.function },
+        { header: s.topTable.file },
+        { header: s.topTable.cyclomatic, align: "right" },
+        { header: s.topTable.cognitive, align: "right" },
+      ],
+      rows,
+    ),
+  );
+}
+
+function complexityClass(value: number): string {
+  if (value >= 20) return "bad";
+  if (value >= 10) return "warn";
+  return "";
 }
 
 function allFunctions(

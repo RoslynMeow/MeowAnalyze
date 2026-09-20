@@ -54,6 +54,156 @@ export function maintainabilityColor(value: number): string {
 }
 
 /* ------------------------------------------------------------------ */
+/* Buckets (for pie charts)                                            */
+/* ------------------------------------------------------------------ */
+
+export interface BucketRange {
+  upTo: number;
+  label: string;
+  color: string;
+}
+
+/** Count values into ranges and return non-empty donut segments. */
+export function bucketize(
+  values: readonly number[],
+  ranges: readonly BucketRange[],
+): DonutSegment[] {
+  const counts = ranges.map((range) => ({
+    label: range.label,
+    value: 0,
+    color: range.color,
+  }));
+  for (const value of values) {
+    const index = ranges.findIndex((range) => value <= range.upTo);
+    const target = counts[index === -1 ? ranges.length - 1 : index];
+    if (target) target.value++;
+  }
+  return counts.filter((segment) => segment.value > 0);
+}
+
+/* ------------------------------------------------------------------ */
+/* Nested treemap                                                      */
+/* ------------------------------------------------------------------ */
+
+export interface TreeNode {
+  name: string;
+  value: number;
+  color?: string;
+  key?: string;
+  children?: TreeNode[];
+}
+
+export interface TreemapBox {
+  node: TreeNode;
+  rect: Rect;
+  depth: number;
+  leaf: boolean;
+}
+
+/** Squarified, recursively nested treemap layout (folders contain files). */
+export function nestedTreemapLayout(
+  root: TreeNode,
+  bounds: Rect,
+  options: { padding?: number; maxDepth?: number } = {},
+): TreemapBox[] {
+  const padding = options.padding ?? 6;
+  const maxDepth = options.maxDepth ?? 8;
+  const boxes: TreemapBox[] = [];
+
+  const place = (node: TreeNode, rect: Rect, depth: number): void => {
+    const children = node.children?.filter((child) => child.value > 0);
+    const canNest =
+      children !== undefined &&
+      children.length > 0 &&
+      depth < maxDepth &&
+      rect.w > 46 &&
+      rect.h > 34;
+
+    if (!canNest || children === undefined) {
+      boxes.push({ node, rect, depth, leaf: true });
+      return;
+    }
+
+    boxes.push({ node, rect, depth, leaf: false });
+    const sorted = [...children].sort((a, b) => b.value - a.value);
+    const rects = squarify(sorted.map((child) => child.value), rect);
+    sorted.forEach((child, index) => {
+      const childRect = rects[index];
+      if (!childRect) return;
+      const inset = Math.min(padding, childRect.w / 4, childRect.h / 4);
+      place(
+        child,
+        {
+          x: childRect.x + inset / 2,
+          y: childRect.y + inset / 2,
+          w: Math.max(0, childRect.w - inset),
+          h: Math.max(0, childRect.h - inset),
+        },
+        depth + 1,
+      );
+    });
+  };
+
+  place(root, bounds, 0);
+  return boxes;
+}
+
+export function nestedTreemapChart(
+  root: TreeNode,
+  options: { width?: number; height?: number; onSelect?: (key: string) => void } = {},
+): SVGSVGElement {
+  const width = options.width ?? 900;
+  const height = options.height ?? 520;
+  const svgRoot = svg("svg", {
+    viewBox: `0 0 ${width} ${height}`,
+    class: "chart chart--treemap",
+    preserveAspectRatio: "xMidYMid meet",
+  });
+
+  const boxes = nestedTreemapLayout(root, { x: 0, y: 0, w: width, h: height });
+  boxes.forEach((box, index) => {
+    const isLeaf = box.leaf;
+    const rect = svg("rect", {
+      x: box.rect.x + 1,
+      y: box.rect.y + 1,
+      width: Math.max(0, box.rect.w - 2),
+      height: Math.max(0, box.rect.h - 2),
+      rx: isLeaf ? 4 : 6,
+      fill: isLeaf ? box.node.color ?? "#58a6ff" : "transparent",
+      class: isLeaf ? "chart__cell chart__anim-pop" : "chart__folder",
+      ...(isLeaf ? { "data-key": box.node.key ?? box.node.name } : {}),
+    });
+    withTitle(
+      rect,
+      isLeaf
+        ? `${box.node.name}: ${box.node.value} code lines`
+        : `${box.node.name || "root"} (${box.node.value} lines)`,
+    );
+    if (isLeaf) withDelay(rect, index, 12);
+    svgRoot.append(rect);
+
+    if (box.rect.w > 54 && box.rect.h > 18) {
+      const label = svg("text", {
+        x: box.rect.x + 8,
+        y: box.rect.y + 17,
+        class: isLeaf ? "chart__cell-label" : "chart__folder-label",
+      });
+      label.textContent = truncate(box.node.name, Math.floor(box.rect.w / 8));
+      svgRoot.append(label);
+    }
+  });
+
+  if (options.onSelect) {
+    svgRoot.addEventListener("click", (event) => {
+      const key = (event.target as SVGElement).closest("[data-key]")?.getAttribute("data-key");
+      if (key) options.onSelect?.(key);
+    });
+  }
+
+  return svgRoot;
+}
+
+/* ------------------------------------------------------------------ */
 /* Gauge                                                               */
 /* ------------------------------------------------------------------ */
 

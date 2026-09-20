@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   comment-density and marker KPIs; and more entrance/transition animations.
 - Web: bilingual UI — Chinese by default with an English/中文 switcher persisted
   in `localStorage`.
+- Web: a three-page, full-screen scroll-snap experience — a concise pie-chart
+  dashboard, a nested file treemap (SpaceSniffer-style) and a file list with
+  source preview — with page dots, arrow-key navigation and a responsive layout.
 
 ### Planned
 
