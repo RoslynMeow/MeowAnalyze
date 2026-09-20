@@ -1,22 +1,27 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import { viteSingleFile } from "vite-plugin-singlefile";
 
-// The banner lives in the shared docs folder; serve it as a static asset
-// instead of duplicating it into the app.
-const publicDir = fileURLToPath(new URL("../../docs/assets", import.meta.url));
-
-export default defineConfig({
-  publicDir,
-  resolve: {
-    alias: {
-      "@meowanalyze/core": fileURLToPath(
-        new URL("../../packages/core/src/index.ts", import.meta.url),
-      ),
+// `vite build`          -> apps/web/dist          (normal static site)
+// `vite build --mode single` -> apps/web/dist-single/index.html (one file, offline/embeddable)
+export default defineConfig(({ mode }) => {
+  const single = mode === "single";
+  return {
+    plugins: single ? [viteSingleFile()] : [],
+    resolve: {
+      alias: {
+        "@meowanalyze/core": fileURLToPath(
+          new URL("../../packages/core/src/index.ts", import.meta.url),
+        ),
+      },
     },
-  },
-  build: {
-    target: "es2022",
-    outDir: "dist",
-    emptyOutDir: true,
-  },
+    build: {
+      target: "es2022",
+      outDir: single ? "dist-single" : "dist",
+      emptyOutDir: true,
+      ...(single
+        ? { assetsInlineLimit: 100_000_000, cssCodeSplit: false }
+        : {}),
+    },
+  };
 });

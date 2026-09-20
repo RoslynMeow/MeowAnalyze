@@ -84,9 +84,14 @@ meowanalyze ./src --fail-on warning
 每次发版都会附带浏览器应用的静态包 `meowanalyze-web.zip`。解压后用任意静态服务器托管即可,或从源码运行:
 
 ```bash
-npm run dev:web      # 开发服务器 (http://localhost:5173)
-npm run build:web    # 静态构建输出到 apps/web/dist
+npm run dev:web            # 开发服务器 (http://localhost:5173)
+npm run build:web          # 静态站点 -> apps/web/dist
+npm run build:web:single   # 单文件 -> apps/web/dist-single/index.html
 ```
+
+**发布**:`apps/web/dist` 就是普通静态站点,托管到 GitHub Pages、Cloudflare Pages、Netlify、Vercel 或任意 Web 服务器即可。部署后用户直接打开网址就能用,**没有后端**。每次发版还附带 `meowanalyze-web.zip`(站点)和 `meowanalyze-web.html`(单文件版)。
+
+**内嵌 / 离线**:`meowanalyze-web.html` 把全部 JS、CSS 和 banner 内联成一个文件,无需服务器 —— 可直接从本地打开、单文件分享,或放进 `<iframe>`。
 
 拖入 `.zip`、选择文件夹或粘贴代码 —— 分析核心**完全在浏览器内运行**,代码不会上传。
 

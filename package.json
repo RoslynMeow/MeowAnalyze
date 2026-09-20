@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "build": "npm run build --workspace @meowanalyze/core",
     "build:web": "npm run build --workspace @meowanalyze/web",
+    "build:web:single": "npm run build:single --workspace @meowanalyze/web",
     "dev": "tsx packages/cli/src/cli.ts",
     "dev:web": "npm run dev --workspace @meowanalyze/web",
     "bundle": "node scripts/bundle.mjs",

@@ -85,9 +85,14 @@ meowanalyze ./src --fail-on warning
 A static build of the browser app is attached to every release as `meowanalyze-web.zip`. Unzip it and serve the folder with any static server, or run it from source:
 
 ```bash
-npm run dev:web      # dev server (http://localhost:5173)
-npm run build:web    # static build in apps/web/dist
+npm run dev:web            # dev server (http://localhost:5173)
+npm run build:web          # static site -> apps/web/dist
+npm run build:web:single   # one self-contained file -> apps/web/dist-single/index.html
 ```
+
+**Publish:** `apps/web/dist` is a plain static site — host it on GitHub Pages, Cloudflare Pages, Netlify, Vercel or any web server. Once deployed, users just open the URL and use it; there is no backend. Every release also attaches `meowanalyze-web.zip` (the site) and `meowanalyze-web.html` (the single-file build).
+
+**Embed / offline:** `meowanalyze-web.html` inlines all JavaScript, CSS and the banner into one file, so it works with no server at all — open it from disk, share a single file, or drop it into an `<iframe>`.
 
 Drop a `.zip` archive, pick a folder, or paste code — the analysis core runs **entirely in your browser** and nothing is uploaded.
 

@@ -94,14 +94,19 @@ jobs:
       - run: npm ci
       - name: Build static web app
         run: npm run build:web
-      - name: Package static site
+      - name: Build single-file web app
+        run: npm run build:web:single
+      - name: Package web artifacts
         run: |
           cd apps/web/dist
           zip -r "$GITHUB_WORKSPACE/meowanalyze-web.zip" .
+          cp "$GITHUB_WORKSPACE/apps/web/dist-single/index.html" "$GITHUB_WORKSPACE/meowanalyze-web.html"
       - uses: actions/upload-artifact@v4
         with:
           name: web
-          path: meowanalyze-web.zip
+          path: |
+            meowanalyze-web.zip
+            meowanalyze-web.html
           if-no-files-found: error
 
   release:

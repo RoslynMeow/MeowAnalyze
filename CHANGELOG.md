@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   browser — drop a `.zip`, pick a folder or paste code. Nothing is uploaded.
   Includes dependency-free SVG charts (complexity histogram, LOC/language donuts,
   top-functions bars, file treemap), sortable tables, a file filter and click-to-open
-  interaction.
+  interaction. Ships as a static site and as a single self-contained HTML file
+  (offline / embeddable in an iframe).
 - `meowanalyze.toml` configuration and `--fail-on` exit codes for CI gating.
 - Standalone multi-platform binaries (Bun) and a single-file CJS bundle (esbuild).
 - GitHub Actions: a CI workflow and a version-driven release workflow (no manual tags).

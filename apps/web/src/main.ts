@@ -1,4 +1,5 @@
 import "./styles.css";
+import bannerUrl from "../../../docs/assets/banner.svg";
 import {
   analyzeSources,
   DEFAULT_CONFIG,
@@ -22,6 +23,8 @@ const state: { sources: SourceInput[]; root: string } = {
 
 const inputPanel = requireElement("input-panel");
 const reportEl = requireElement("report");
+const banner = document.querySelector<HTMLImageElement>(".hero__banner");
+if (banner) banner.src = bannerUrl;
 const status = el("p", { class: "status", text: "Drop a .zip, pick a folder, or paste code." });
 
 const thresholdInputs: Record<keyof Thresholds, HTMLInputElement> = {
