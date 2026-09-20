@@ -100,12 +100,12 @@ Open a project folder — the analysis core runs **entirely in your browser** an
 
 **Input:** open a project folder (File System Access API, with a `webkitdirectory` fallback). A thresholds panel re-runs the analysis live.
 
-**Two full-screen pages** (scroll-snap, page dots, arrow keys):
+**Left-hand tabs** (with `#/dashboard` and `#/detail` hash routing):
 
 1. **Dashboard** — a pure data screen: a maintainability index, twelve key numbers (files, functions, lines, comment %, average/max cyclomatic and cognitive complexity, Halstead difficulty, violations, markers) and pie charts only — lines of code, languages, and cyclomatic / cognitive / nesting / function-length / function-kind distributions, plus markers and violations-by-rule when present.
 2. **File detail** — a file list with a source preview; click a function to scroll to and highlight its lines.
 
-Responsive layout, sortable tables and one-click JSON export.
+Pages scroll normally (no forced one-screen height), with a responsive layout, sortable tables and one-click JSON export.
 
 ## 🖥 Desktop app
 

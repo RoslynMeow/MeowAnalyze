@@ -20,8 +20,8 @@ const appEl = document.getElementById("app");
 if (!appEl) throw new Error("missing #app");
 const app: HTMLElement = appEl;
 
-const PAGE_KEYS = ["dashboard", "detail"] as const;
-const PAGE_COUNT = PAGE_KEYS.length;
+const TABS = ["dashboard", "detail"] as const;
+type Tab = (typeof TABS)[number];
 
 const state: {
   sources: SourceInput[];
@@ -29,21 +29,25 @@ const state: {
   report?: AnalysisReport;
   selectedPath?: string;
   thresholds: Thresholds;
+  tab: Tab;
 } = {
   sources: [],
   root: "in-browser",
   thresholds: { ...DEFAULT_THRESHOLDS },
+  tab: "dashboard",
 };
 
 let notice: string | undefined;
 
 /* ------------------------------------------------------------------ */
-/* Shell: top bar (page head + controls) above the content area        */
+/* Shell                                                               */
 /* ------------------------------------------------------------------ */
 
 let headSlot: HTMLElement;
 let content: HTMLElement;
+let sidenav: HTMLElement;
 let homeBtn: HTMLButtonElement;
+let tabButtons: HTMLButtonElement[] = [];
 
 function mountShell(): void {
   homeBtn = el("button", { class: "topbar__home", onClick: goHome });
@@ -58,9 +62,14 @@ function mountShell(): void {
     { class: "topbar" },
     el("div", { class: "topbar__inner" }, homeBtn, headSlot, controls),
   );
+
+  sidenav = el("nav", { class: "sidenav" });
   content = el("div", { class: "content" });
-  app.replaceChildren(topbar, content);
+  const main = el("div", { class: "main" }, sidenav, content);
+
+  app.replaceChildren(topbar, main);
   mountControls(controls);
+  mountTabs();
   updateHomeLabel();
 }
 
@@ -77,13 +86,59 @@ function goHome(): void {
 }
 
 /* ------------------------------------------------------------------ */
+/* Tabs + hash routing                                                 */
+/* ------------------------------------------------------------------ */
+
+function mountTabs(): void {
+  tabButtons = TABS.map((tab) => {
+    const node = el("button", { class: "sidenav__item", text: t().pages[tab] });
+    node.type = "button";
+    node.addEventListener("click", () => goTab(tab));
+    return node;
+  });
+  sidenav.replaceChildren(...tabButtons);
+}
+
+function updateTabs(): void {
+  tabButtons.forEach((node, index) => {
+    const tab = TABS[index];
+    const active = tab === state.tab;
+    node.textContent = t().pages[tab ?? "dashboard"];
+    node.classList.toggle("sidenav__item--active", active);
+    node.setAttribute("aria-selected", active ? "true" : "false");
+  });
+}
+
+function tabFromHash(): Tab {
+  const value = location.hash.replace(/^#\/?/, "");
+  return (TABS as readonly string[]).includes(value) ? (value as Tab) : "dashboard";
+}
+
+function goTab(tab: Tab): void {
+  state.tab = tab;
+  const hash = `#/${tab}`;
+  if (location.hash !== hash) {
+    location.hash = hash; // triggers hashchange -> render
+  } else {
+    renderContent();
+  }
+}
+
+window.addEventListener("hashchange", () => {
+  if (!state.report) return;
+  state.tab = tabFromHash();
+  renderContent();
+});
+
+/* ------------------------------------------------------------------ */
 /* Landing                                                             */
 /* ------------------------------------------------------------------ */
 
 function renderLandingView(): void {
-  teardownPager();
+  sidenav.hidden = true;
   homeBtn.hidden = true;
   headSlot.replaceChildren();
+  content.replaceChildren();
   renderLanding(content, {
     onFolder: () => void handleFolder(),
     notice,
@@ -92,168 +147,46 @@ function renderLandingView(): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Pager (full-height pages)                                           */
+/* Content                                                             */
 /* ------------------------------------------------------------------ */
 
-let pager: HTMLElement | undefined;
-let pages: HTMLElement[] = [];
-let bodies: HTMLElement[] = [];
-let heads: HTMLElement[] = [];
-let dots: HTMLButtonElement[] = [];
-let dotLabels: HTMLElement[] = [];
-let nav: HTMLElement | undefined;
-let currentPage = 0;
-
-function mountPager(): void {
-  teardownPager();
-
-  pager = el("div", { class: "pager" });
-  pages = [];
-  bodies = [];
-  heads = [];
-  for (let index = 0; index < PAGE_COUNT; index++) {
-    const body = el("div", { class: `page__body page__body--${PAGE_KEYS[index]}` });
-    const section = el("section", { class: `page page--${PAGE_KEYS[index]}` }, body);
-    pages.push(section);
-    bodies.push(body);
-    heads.push(el("div", { class: "page__head-slot" }));
+function renderContent(): void {
+  const report = state.report;
+  if (!report) {
+    renderLandingView();
+    return;
   }
-  pager.append(...pages);
 
-  nav = el("nav", { class: "page-dots" });
-  dots = [];
-  dotLabels = [];
-  PAGE_KEYS.forEach((_, index) => {
-    const mark = el("span", { class: "page-dot__mark" });
-    const label = el("span", { class: "page-dot__label" });
-    const dot = el("button", { class: "page-dot" }, mark, label);
-    dot.type = "button";
-    dot.addEventListener("click", () => goToPage(index));
-    dots.push(dot);
-    dotLabels.push(label);
-  });
-  nav.append(...dots);
-
-  content.replaceChildren(pager);
-  app.append(nav);
+  sidenav.hidden = false;
   homeBtn.hidden = false;
-  pager.addEventListener("scroll", onPagerScroll, { passive: true });
-  document.addEventListener("keydown", onKeydown);
+  content.replaceChildren();
 
-  renderPages();
-}
+  const body = el("div", { class: "page__body" });
+  content.append(body);
+  const targets: ViewTargets = { head: headSlot, body };
 
-function renderPages(): void {
-  const report = state.report;
-  if (!report || bodies.length === 0) return;
+  if (state.tab === "detail") {
+    renderDetail(targets, report, state.sources, state.selectedPath, {
+      onSelect: selectFile,
+    });
+  } else {
+    renderDashboard(targets, report, {
+      onOpenFile: selectFile,
+      onExport: () => downloadJson(report, "meowanalyze-report.json"),
+      onOpenSettings: () =>
+        openSettings(state.thresholds, (thresholds) => {
+          state.thresholds = thresholds;
+          rerun();
+        }),
+    });
+  }
 
-  renderDashboard({ head: heads[0]!, body: bodies[0]! }, report, {
-    onOpenFile: selectFile,
-    onExport: () => downloadJson(report, "meowanalyze-report.json"),
-    onOpenSettings: () =>
-      openSettings(state.thresholds, (thresholds) => {
-        state.thresholds = thresholds;
-        rerun();
-      }),
-  });
-
-  renderDetailPage();
-  showPageHead(currentPage);
-  updateDots();
-}
-
-function renderDetailPage(): void {
-  const report = state.report;
-  if (!report || bodies.length === 0) return;
-  const targets: ViewTargets = { head: heads[1]!, body: bodies[1]! };
-  renderDetail(targets, report, state.sources, state.selectedPath, {
-    onSelect: selectFile,
-  });
-}
-
-function showPageHead(index: number): void {
-  const head = heads[index];
-  if (head) headSlot.replaceChildren(head);
+  updateTabs();
 }
 
 function selectFile(path: string): void {
   state.selectedPath = path;
-  renderDetailPage();
-  goToPage(1);
-}
-
-function goToPage(index: number): void {
-  const target = pages[index];
-  if (!target) return;
-  currentPage = index;
-  showPageHead(index);
-  updateDots();
-  target.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function onPagerScroll(): void {
-  if (!pager) return;
-  const height = pager.clientHeight || 1;
-  const page = Math.round(pager.scrollTop / height);
-  if (page !== currentPage) {
-    currentPage = page;
-    showPageHead(page);
-    updateDots();
-  }
-}
-
-function updateDots(): void {
-  dots.forEach((dot, index) => {
-    const active = index === currentPage;
-    dot.classList.toggle("page-dot--active", active);
-    dot.title = t().pages[PAGE_KEYS[index] ?? "dashboard"];
-    dot.setAttribute("aria-label", dot.title);
-    dot.setAttribute("aria-current", active ? "true" : "false");
-    const label = dotLabels[index];
-    if (label) label.textContent = dot.title;
-  });
-}
-
-function onKeydown(event: KeyboardEvent): void {
-  if (!pager) return;
-  const target = event.target as HTMLElement | null;
-  if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
-
-  switch (event.key) {
-    case "ArrowDown":
-    case "PageDown":
-      event.preventDefault();
-      goToPage(Math.min(PAGE_COUNT - 1, currentPage + 1));
-      break;
-    case "ArrowUp":
-    case "PageUp":
-      event.preventDefault();
-      goToPage(Math.max(0, currentPage - 1));
-      break;
-    case "Home":
-      event.preventDefault();
-      goToPage(0);
-      break;
-    case "End":
-      event.preventDefault();
-      goToPage(PAGE_COUNT - 1);
-      break;
-    default:
-      break;
-  }
-}
-
-function teardownPager(): void {
-  document.removeEventListener("keydown", onKeydown);
-  nav?.remove();
-  nav = undefined;
-  pager = undefined;
-  pages = [];
-  bodies = [];
-  heads = [];
-  dots = [];
-  dotLabels = [];
-  currentPage = 0;
+  goTab("detail");
 }
 
 /* ------------------------------------------------------------------ */
@@ -286,7 +219,9 @@ function runAnalysis(sources: SourceInput[], root: string): void {
   state.root = root;
   state.report = report;
   state.selectedPath = undefined;
-  mountPager();
+  state.tab = "dashboard";
+  if (location.hash !== "#/dashboard") location.hash = "#/dashboard";
+  renderContent();
 }
 
 function rerun(): void {
@@ -294,18 +229,12 @@ function rerun(): void {
     renderLandingView();
     return;
   }
-  const report = analyzeSources({
+  state.report = analyzeSources({
     root: state.root,
     sources: state.sources,
     config: { ...DEFAULT_CONFIG, thresholds: state.thresholds },
   });
-  state.report = report;
-  if (pager) {
-    renderPages();
-    goToPage(currentPage);
-  } else {
-    mountPager();
-  }
+  renderContent();
 }
 
 /* ------------------------------------------------------------------ */
@@ -343,9 +272,9 @@ function mountControls(container: HTMLElement): void {
     renderLang();
     renderTheme();
     updateHomeLabel();
-    if (state.report && pager) {
-      renderPages();
-      goToPage(currentPage);
+    if (state.report) {
+      mountTabs();
+      renderContent();
     } else {
       renderLandingView();
     }
@@ -355,4 +284,5 @@ function mountControls(container: HTMLElement): void {
 }
 
 mountShell();
+state.tab = tabFromHash();
 renderLandingView();

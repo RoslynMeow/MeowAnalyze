@@ -7,49 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Web: the file-map page is temporarily removed; the app is now two pages
-  (dashboard + file detail).
-- Web: the dashboard surfaces more data — average cyclomatic/cognitive
-  complexity and Halstead difficulty KPIs, plus nesting, function-length and
-  function-kind distribution charts, and markers / violations-by-rule charts.
-- Web: 4 more KPIs (max nesting, avg function length, physical and logical lines)
-  and 4 more charts (maintainability, parameters, Halstead volume, file size),
-  plus staggered entrance and donut-arc animations.
-- Core: `FileMetrics` gains `halsteadDifficulty` and `halsteadEffort`.
-
 ### Added
 
-- Desktop app (`@meowanalyze/desktop`): Electron, reusing the built web UI in
-  the renderer. The main process opens a native folder dialog and reads files
-  directly (no CLI subprocess); packaged as NSIS / dmg / AppImage + deb.
 - Core metrics: cognitive complexity (Sonar-style, nesting-weighted), Halstead
   metrics and a maintainability index (per function, per file and averaged), plus
   `TODO` / `FIXME` / `HACK` marker counts. Surfaced in the JSON report, the CLI
-  and the web app.
-- Web: a settings modal for thresholds; a redesigned dashboard with a
-  maintainability gauge, cognitive/cyclomatic histograms, a rule-violation chart,
-  comment-density and marker KPIs; and more entrance/transition animations.
-- Web: bilingual UI — Chinese by default with an English/中文 switcher persisted
-  in `localStorage`.
-- Web: a three-page, full-screen scroll-snap experience — a concise pie-chart
-  dashboard, a nested file treemap (SpaceSniffer-style) and a file list with
-  source preview — with page dots, arrow-key navigation and a responsive layout.
-- Web: light/dark theme toggle (dark by default, persisted) and hidden
-  scrollbars for a cleaner look.
-- Web: page 1 is a pure data screen (equal-sized stat cards + pie charts).
-  Responsive grids and `100dvh` sizing so each page fits the viewport.
-- Web: page 2 is now a full-bleed file map only (no title, hint or side panel);
-  it measures its container and redraws on resize. Cell area uses √code-lines
-  (real line counts stay in tooltips) so the size range stays readable; tiny
-  files get a minimum cell size, crowded folders fold their smallest entries
-  into a "…" cell, and a top inset keeps the map clear of the fixed controls.
+  and the web app. `FileMetrics` gains `halsteadDifficulty` and `halsteadEffort`.
+- Desktop app (`@meowanalyze/desktop`): Electron, reusing the built web UI in the
+  renderer. The main process opens a native folder dialog and reads files
+  directly (no CLI subprocess); packaged as NSIS / dmg / AppImage + deb.
+- Web: bilingual UI (Chinese by default) with an English/中文 switcher, and a
+  light/dark theme toggle (dark by default); both persisted in `localStorage`.
+- Web: a left-hand tab sidebar with `#/dashboard` / `#/detail` hash routing, a
+  settings modal for thresholds, a home button and hidden scrollbars.
+- Web dashboard: 16 KPIs and 11+ pie charts (lines of code, languages, and
+  cyclomatic / cognitive / nesting / function-length / function-kind /
+  maintainability / parameters / Halstead volume / file-size distributions, plus
+  markers and violations-by-rule), with hover-exploding slices and staggered
+  entrance animations.
+- Web: the file detail tab lists files and previews source; clicking a function
+  scrolls to and highlights its lines.
 
 ### Planned
 
-- Desktop UI (thin shell that wraps the platform CLI binary).
-- More languages via tree-sitter, plus cognitive complexity, Halstead metrics and the maintainability index.
+- File map tab (nested treemap) — temporarily removed, to be re-added.
+- More languages via tree-sitter.
 
 ## [0.1.0] - 2026-09-20
 
