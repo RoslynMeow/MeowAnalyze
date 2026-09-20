@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 
 - Desktop UI (thin shell that wraps the platform CLI binary).
-- Web app (runs the core in the browser: drop a `.zip` or pick a folder).
 - More languages via tree-sitter, plus cognitive complexity, Halstead metrics and the maintainability index.
 
 ## [0.1.0] - 2026-09-20
@@ -25,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `analyzeSources` (pure, in-memory, no I/O) and `analyze` (Node filesystem host).
 - CLI (`@meowanalyze/cli`) with a rich terminal report, stable JSON output,
   `.gitignore`-aware directory walking and configurable thresholds.
+- Web app (`@meowanalyze/web`): Vite + TypeScript, runs the core entirely in the
+  browser — drop a `.zip`, pick a folder or paste code. Nothing is uploaded.
 - `meowanalyze.toml` configuration and `--fail-on` exit codes for CI gating.
 - Standalone multi-platform binaries (Bun) and a single-file CJS bundle (esbuild).
 - GitHub Actions: a CI workflow and a version-driven release workflow (no manual tags).

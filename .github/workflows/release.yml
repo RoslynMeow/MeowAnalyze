@@ -81,8 +81,31 @@ jobs:
           path: dist/meowanalyze-*
           if-no-files-found: error
 
+  web:
+    needs: [version, test]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build static web app
+        run: npm run build:web
+      - name: Package static site
+        run: |
+          cd apps/web/dist
+          zip -r "$GITHUB_WORKSPACE/meowanalyze-web.zip" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: meowanalyze-web.zip
+          if-no-files-found: error
+
   release:
-    needs: [version, cli]
+    needs: [version, cli, web]
     if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-latest
     steps:

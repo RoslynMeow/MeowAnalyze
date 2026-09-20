@@ -80,6 +80,17 @@ meowanalyze ./src --quiet
 meowanalyze ./src --fail-on warning
 ```
 
+## 🌐 Web app
+
+A static build of the browser app is attached to every release as `meowanalyze-web.zip`. Unzip it and serve the folder with any static server, or run it from source:
+
+```bash
+npm run dev:web      # dev server (http://localhost:5173)
+npm run build:web    # static build in apps/web/dist
+```
+
+Drop a `.zip` archive, pick a folder, or paste code — the analysis core runs **entirely in your browser** and nothing is uploaded.
+
 ## 🛠 CLI reference
 
 ```
@@ -234,18 +245,20 @@ const registry = new LanguageRegistry().register(new MyLang());
 packages/
   core/   @meowanalyze/core   browser-safe engine (no fs): languages, metrics, report model
   cli/    @meowanalyze/cli    Node host: filesystem walk + terminal report + CLI
+apps/
+  web/    @meowanalyze/web    Vite web app running the core in the browser
 docs/assets/banner.svg
 ```
 
-The **core** is pure and platform-agnostic; hosts (CLI today, desktop UI and web app next) only supply sources and render the report.
+The **core** is pure and platform-agnostic; hosts (CLI, web app and the upcoming desktop UI) only supply sources and render the report.
 
 ## 🗺 Roadmap
 
 - [x] CLI with terminal + JSON output, thresholds and CI gating
 - [x] Browser-safe core decoupled from the filesystem
 - [x] Multi-platform standalone binaries via Bun
+- [x] Web app (runs the core in the browser: drop a `.zip`, pick a folder or paste code)
 - [ ] Desktop UI (thin shell that wraps the platform CLI binary)
-- [ ] Web app (runs the core in the browser: drop a `.zip` or pick a folder)
 - [ ] More languages via tree-sitter, cognitive complexity, Halstead & maintainability index
 
 ## 💻 Development
@@ -253,8 +266,11 @@ The **core** is pure and platform-agnostic; hosts (CLI today, desktop UI and web
 ```bash
 npm install
 npm run dev -- <path>     # run the CLI from source
+npm run dev:web           # run the web app from source
 npm run typecheck         # type-check all packages
 npm test                  # unit tests (Vitest)
+npm run build             # build the core library
+npm run build:web         # build the static web app
 npm run bundle            # single-file CJS bundle
 npm run compile           # standalone binary (requires Bun)
 ```

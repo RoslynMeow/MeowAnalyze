@@ -79,6 +79,17 @@ meowanalyze ./src --quiet
 meowanalyze ./src --fail-on warning
 ```
 
+## 🌐 Web 应用
+
+每次发版都会附带浏览器应用的静态包 `meowanalyze-web.zip`。解压后用任意静态服务器托管即可,或从源码运行:
+
+```bash
+npm run dev:web      # 开发服务器 (http://localhost:5173)
+npm run build:web    # 静态构建输出到 apps/web/dist
+```
+
+拖入 `.zip`、选择文件夹或粘贴代码 —— 分析核心**完全在浏览器内运行**,代码不会上传。
+
 ## 🛠 CLI 参数
 
 ```
@@ -233,18 +244,20 @@ const registry = new LanguageRegistry().register(new MyLang());
 packages/
   core/   @meowanalyze/core   浏览器安全引擎(无 fs):语言、指标、报告模型
   cli/    @meowanalyze/cli    Node 宿主:文件遍历 + 终端报告 + CLI
+apps/
+  web/    @meowanalyze/web    Vite Web 应用,在浏览器内运行核心
 docs/assets/banner.svg
 ```
 
-**核心**是纯的、平台无关;宿主(今天的 CLI,将来的桌面 UI 和 Web 应用)只负责提供源码并渲染报告。
+**核心**是纯的、平台无关;宿主(CLI、Web 应用以及将来的桌面 UI)只负责提供源码并渲染报告。
 
 ## 🗺 路线图
 
 - [x] CLI:终端 + JSON 输出、阈值与 CI 门禁
 - [x] 与文件系统解耦的浏览器安全核心
 - [x] 通过 Bun 产出多平台独立程序
+- [x] Web 应用(浏览器内运行核心:拖入 `.zip`、选择文件夹或粘贴代码)
 - [ ] 桌面 UI(薄壳,内部调用平台 CLI 程序)
-- [ ] Web 应用(浏览器内运行核心:拖入 `.zip` 或选择文件夹)
 - [ ] 通过 tree-sitter 支持更多语言、认知复杂度、Halstead 与可维护性指数
 
 ## 💻 开发
@@ -252,8 +265,11 @@ docs/assets/banner.svg
 ```bash
 npm install
 npm run dev -- <path>     # 从源码运行 CLI
+npm run dev:web           # 从源码运行 Web 应用
 npm run typecheck         # 类型检查所有包
 npm test                  # 单元测试(Vitest)
+npm run build             # 构建 core 库
+npm run build:web         # 构建静态 Web 应用
 npm run bundle            # 单文件 CJS 打包
 npm run compile           # 独立程序(需要 Bun)
 ```

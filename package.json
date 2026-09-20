@@ -5,19 +5,22 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && npm run typecheck --workspace @meowanalyze/web",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "npm run build --workspace @meowanalyze/core",
+    "build:web": "npm run build --workspace @meowanalyze/web",
+    "dev": "tsx packages/cli/src/cli.ts",
+    "dev:web": "npm run dev --workspace @meowanalyze/web",
     "bundle": "node scripts/bundle.mjs",
-    "compile": "bun build packages/cli/src/cli.ts --compile --outfile dist/meowanalyze",
-    "dev": "tsx packages/cli/src/cli.ts"
+    "compile": "bun build packages/cli/src/cli.ts --compile --outfile dist/meowanalyze"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
