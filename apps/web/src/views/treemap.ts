@@ -2,6 +2,8 @@ import type { AnalysisReport } from "@meowanalyze/core";
 import { complexityColor, nestedTreemapChart, type TreeNode } from "../charts.js";
 import { el } from "../dom.js";
 import { t } from "../i18n.js";
+import { dataTable, type Cell } from "../table.js";
+import { allFunctions } from "./dashboard.js";
 
 export interface TreemapHandlers {
   onOpenFile: (path: string) => void;
@@ -30,11 +32,53 @@ export function renderTreemap(
       { class: "treemap-wrap" },
       nestedTreemapChart(buildTree(report), {
         width: 1000,
-        height: 560,
+        height: 620,
         onSelect: handlers.onOpenFile,
       }),
     ),
+    topFunctions(report, handlers),
   );
+}
+
+function topFunctions(report: AnalysisReport, handlers: TreemapHandlers): HTMLElement {
+  const s = t().dashboard;
+  const top = allFunctions(report)
+    .sort((a, b) => b.fn.cognitive - a.fn.cognitive || b.fn.cyclomatic - a.fn.cyclomatic)
+    .slice(0, 12);
+
+  const rows: Cell[][] = top.map(({ file, fn }) => [
+    {
+      content: el("span", {
+        class: "link",
+        text: fn.name,
+        onClick: () => handlers.onOpenFile(file),
+      }),
+    },
+    { content: file },
+    { content: el("span", { class: complexityClass(fn.cyclomatic), text: String(fn.cyclomatic) }), value: fn.cyclomatic },
+    { content: el("span", { class: complexityClass(fn.cognitive), text: String(fn.cognitive) }), value: fn.cognitive },
+  ]);
+
+  return el(
+    "div",
+    { class: "top-functions" },
+    el("h3", { text: s.topFunctions }),
+    dataTable(
+      [
+        { header: s.topTable.function },
+        { header: s.topTable.file },
+        { header: s.topTable.cyclomatic, align: "right" },
+        { header: s.topTable.cognitive, align: "right" },
+      ],
+      rows,
+    ),
+  );
+}
+
+function complexityClass(value: number): string {
+  if (value >= 20) return "bad";
+  if (value >= 10) return "warn";
+  return "";
 }
 
 /** Build a folder tree whose leaves are files, sized by code lines. */

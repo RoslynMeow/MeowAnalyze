@@ -10,7 +10,6 @@ import {
 } from "../charts.js";
 import { button, countUp, el } from "../dom.js";
 import { t } from "../i18n.js";
-import { dataTable, type Cell } from "../table.js";
 
 export interface DashboardHandlers {
   onOpenFile: (path: string) => void;
@@ -39,7 +38,7 @@ export function renderDashboard(
   handlers: DashboardHandlers,
 ): void {
   root.replaceChildren();
-  root.append(header(report, handlers), summaryRow(report), donutRow(report), topFunctions(report, handlers));
+  root.append(header(report, handlers), stats(report), donutRow(report));
 }
 
 function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
@@ -82,7 +81,7 @@ function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElemen
   );
 }
 
-function summaryRow(report: AnalysisReport): HTMLElement {
+function stats(report: AnalysisReport): HTMLElement {
   const { summary } = report;
   const s = t().dashboard.kpi;
   const commentTotal = summary.loc.code + summary.loc.comment;
@@ -90,23 +89,29 @@ function summaryRow(report: AnalysisReport): HTMLElement {
 
   return el(
     "div",
-    { class: "summary-row" },
-    el(
-      "div",
-      { class: "summary-gauge" },
-      gaugeChart(summary.maintainability, { size: 170, label: "MI" }),
-      el("p", { class: "summary-gauge__caption", text: maintainabilityLabel(summary.maintainability) }),
+    { class: "stats-grid" },
+    gaugeCard(summary.maintainability),
+    kpi(s.files, summary.files),
+    kpi(s.functions, summary.metrics.cyclomatic.count),
+    kpi(s.codeLines, summary.loc.code),
+    kpi(s.commentPct, Number(density.toFixed(1))),
+    kpi(s.maxCyclomatic, summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
+    kpi(s.maxCognitive, summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
+    kpi(s.violations, summary.violations.total, summary.violations.total > 0 ? "#d29922" : undefined),
+    kpi(
+      s.markers,
+      summary.markers.todo + summary.markers.fixme + summary.markers.hack,
+      summary.markers.todo + summary.markers.fixme + summary.markers.hack > 0 ? "#d29922" : undefined,
     ),
-    el(
-      "div",
-      { class: "kpis" },
-      kpi(s.files, summary.files),
-      kpi(s.functions, summary.metrics.cyclomatic.count),
-      kpi(s.codeLines, summary.loc.code),
-      kpi(s.commentPct, Number(density.toFixed(1))),
-      kpi(s.maxCyclomatic, summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
-      kpi(s.maxCognitive, summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
-    ),
+  );
+}
+
+function gaugeCard(value: number): HTMLElement {
+  return el(
+    "div",
+    { class: "kpi kpi--gauge" },
+    gaugeChart(value, { size: 96, label: "MI" }),
+    el("div", { class: "kpi__label", text: maintainabilityLabel(value) }),
   );
 }
 
@@ -174,7 +179,7 @@ function donutCard(
     "div",
     { class: "donut-card" },
     el("h3", { text: title }),
-    donutChart(segments, { centerValue, centerLabel, size: 170 }),
+    donutChart(segments, { centerValue, centerLabel }),
     el(
       "ul",
       { class: "legend" },
@@ -194,54 +199,7 @@ function donutCard(
   );
 }
 
-function topFunctions(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
-  const s = t().dashboard;
-  const top = allFunctions(report)
-    .sort((a, b) => b.fn.cognitive - a.fn.cognitive || b.fn.cyclomatic - a.fn.cyclomatic)
-    .slice(0, 8);
-
-  const rows: Cell[][] = top.map(({ file, fn }) => [
-    {
-      content: el("span", {
-        class: "link",
-        text: fn.name,
-        onClick: () => handlers.onOpenFile(file),
-      }),
-    },
-    { content: file },
-    {
-      content: el("span", { class: complexityClass(fn.cyclomatic), text: String(fn.cyclomatic) }),
-      value: fn.cyclomatic,
-    },
-    {
-      content: el("span", { class: complexityClass(fn.cognitive), text: String(fn.cognitive) }),
-      value: fn.cognitive,
-    },
-  ]);
-
-  return el(
-    "div",
-    { class: "top-functions" },
-    el("h3", { text: s.topFunctions }),
-    dataTable(
-      [
-        { header: s.topTable.function },
-        { header: s.topTable.file },
-        { header: s.topTable.cyclomatic, align: "right" },
-        { header: s.topTable.cognitive, align: "right" },
-      ],
-      rows,
-    ),
-  );
-}
-
-function complexityClass(value: number): string {
-  if (value >= 20) return "bad";
-  if (value >= 10) return "warn";
-  return "";
-}
-
-function allFunctions(
+export function allFunctions(
   report: AnalysisReport,
 ): Array<{ file: string; fn: FunctionReport }> {
   const all: Array<{ file: string; fn: FunctionReport }> = [];

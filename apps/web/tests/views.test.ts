@@ -44,7 +44,7 @@ describe("landing view", () => {
 });
 
 describe("dashboard view", () => {
-  it("renders KPIs, donut charts and the top-functions table", () => {
+  it("renders a data-only dashboard with stats and donut charts", () => {
     const root = document.createElement("div");
     renderDashboard(root, sampleReport(), {
       onOpenFile: vi.fn(),
@@ -54,22 +54,9 @@ describe("dashboard view", () => {
     });
 
     expect(root.querySelectorAll(".kpi").length).toBeGreaterThan(0);
+    expect(root.querySelector(".stats-grid")).not.toBeNull();
     expect(root.querySelectorAll(".donut-card").length).toBe(4);
-    expect(root.querySelector(".top-functions")).not.toBeNull();
-  });
-
-  it("opens a file from the top-functions table", () => {
-    const root = document.createElement("div");
-    const onOpenFile = vi.fn();
-    renderDashboard(root, sampleReport(), {
-      onOpenFile,
-      onNewAnalysis: vi.fn(),
-      onExport: vi.fn(),
-      onOpenSettings: vi.fn(),
-    });
-
-    root.querySelector<HTMLElement>(".top-functions .link")?.click();
-    expect(onOpenFile).toHaveBeenCalled();
+    expect(root.querySelector(".top-functions")).toBeNull();
   });
 });
 
@@ -89,6 +76,16 @@ describe("treemap view", () => {
     const cell = root.querySelector<SVGElement>("[data-key]");
     expect(cell).not.toBeNull();
     cell?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(onOpenFile).toHaveBeenCalled();
+  });
+
+  it("lists the most complex functions", () => {
+    const root = document.createElement("div");
+    const onOpenFile = vi.fn();
+    renderTreemap(root, sampleReport(), { onOpenFile });
+
+    expect(root.querySelector(".top-functions")).not.toBeNull();
+    root.querySelector<HTMLElement>(".top-functions .link")?.click();
     expect(onOpenFile).toHaveBeenCalled();
   });
 });

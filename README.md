@@ -102,8 +102,8 @@ Open a project folder — the analysis core runs **entirely in your browser** an
 
 **Three full-screen pages** (scroll-snap, page dots, arrow keys):
 
-1. **Dashboard** — a maintainability gauge, key numbers and pie charts only (lines of code, languages, cyclomatic/cognitive buckets), plus a most-complex-functions table.
-2. **File map** — a nested, SpaceSniffer-style treemap: folders contain files, sized by code lines and colored by max complexity. Click a cell to open the file.
+1. **Dashboard** — a pure data screen: a maintainability gauge, key numbers and pie charts only (lines of code, languages, cyclomatic/cognitive buckets).
+2. **File map** — a nested, SpaceSniffer-style treemap: folders contain files, sized by code lines and colored by max complexity. Click a cell to open the file; a side panel lists the most complex functions.
 3. **File detail** — a file list with a source preview; click a function to scroll to and highlight its lines.
 
 Responsive layout, sortable tables and one-click JSON export.
