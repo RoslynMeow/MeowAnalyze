@@ -71,7 +71,7 @@ function mountPager(): void {
   bodies = [];
   for (let index = 0; index < PAGE_COUNT; index++) {
     const body = el("div", { class: `page__body page__body--${PAGE_KEYS[index]}` });
-    const section = el("section", { class: "page" }, body);
+    const section = el("section", { class: `page page--${PAGE_KEYS[index]}` }, body);
     pages.push(section);
     bodies.push(body);
   }

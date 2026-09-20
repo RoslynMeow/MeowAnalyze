@@ -201,7 +201,7 @@ function donutCard(
   );
 }
 
-export function allFunctions(
+function allFunctions(
   report: AnalysisReport,
 ): Array<{ file: string; fn: FunctionReport }> {
   const all: Array<{ file: string; fn: FunctionReport }> = [];

@@ -78,16 +78,6 @@ describe("treemap view", () => {
     cell?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(onOpenFile).toHaveBeenCalled();
   });
-
-  it("lists the most complex functions", () => {
-    const root = document.createElement("div");
-    const onOpenFile = vi.fn();
-    renderTreemap(root, sampleReport(), { onOpenFile });
-
-    expect(root.querySelector(".top-functions")).not.toBeNull();
-    root.querySelector<HTMLElement>(".top-functions .link")?.click();
-    expect(onOpenFile).toHaveBeenCalled();
-  });
 });
 
 describe("detail view", () => {

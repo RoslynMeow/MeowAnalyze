@@ -26,9 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source preview — with page dots, arrow-key navigation and a responsive layout.
 - Web: light/dark theme toggle (dark by default, persisted) and hidden
   scrollbars for a cleaner look.
-- Web: page 1 is a pure data screen (equal-sized stat cards + pie charts); the
-  most-complex-functions table moved to the file-map page. Responsive grids and
-  `100dvh` sizing so each page fits the viewport.
+- Web: page 1 is a pure data screen (equal-sized stat cards + pie charts).
+  Responsive grids and `100dvh` sizing so each page fits the viewport.
+- Web: page 2 is now a full-bleed file map only (no title, hint or side panel);
+  it measures its container and redraws on resize.
 
 ### Planned
 

@@ -21,9 +21,6 @@ export interface Strings {
   landing: {
     openFolder: string;
   };
-  treemap: {
-    hint: string;
-  };
   notices: {
     noFiles: string;
   };
@@ -160,9 +157,6 @@ const zh: Strings = {
   landing: {
     openFolder: "打开文件夹",
   },
-  treemap: {
-    hint: "点击任意格子查看该文件",
-  },
   notices: {
     noFiles: "没有找到可分析的 TypeScript / JavaScript 文件。",
   },
@@ -293,9 +287,6 @@ const en: Strings = {
   },
   landing: {
     openFolder: "Open folder",
-  },
-  treemap: {
-    hint: "Click a cell to open that file",
   },
   notices: {
     noFiles: "No TypeScript / JavaScript files found.",

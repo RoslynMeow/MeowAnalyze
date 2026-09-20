@@ -1,14 +1,15 @@
 import type { AnalysisReport } from "@meowanalyze/core";
 import { complexityColor, nestedTreemapChart, type TreeNode } from "../charts.js";
 import { el } from "../dom.js";
-import { t } from "../i18n.js";
-import { dataTable, type Cell } from "../table.js";
-import { allFunctions } from "./dashboard.js";
 
 export interface TreemapHandlers {
   onOpenFile: (path: string) => void;
 }
 
+/**
+ * Full-bleed file map: a nested, SpaceSniffer-style treemap sized by code
+ * lines. No chrome — just the map, filling the page.
+ */
 export function renderTreemap(
   root: HTMLElement,
   report: AnalysisReport,
@@ -16,69 +17,31 @@ export function renderTreemap(
 ): void {
   root.replaceChildren();
 
-  root.append(
-    el(
-      "header",
-      { class: "page__head" },
-      el(
-        "div",
-        {},
-        el("h1", { class: "page__title", text: t().pages.treemap }),
-        el("p", { class: "page__meta", text: t().treemap.hint }),
-      ),
-    ),
-    el(
-      "div",
-      { class: "treemap-wrap" },
-      nestedTreemapChart(buildTree(report), {
-        width: 1000,
-        height: 620,
-        onSelect: handlers.onOpenFile,
-      }),
-    ),
-    topFunctions(report, handlers),
-  );
-}
+  const wrap = el("div", { class: "treemap-wrap" });
+  root.append(wrap);
 
-function topFunctions(report: AnalysisReport, handlers: TreemapHandlers): HTMLElement {
-  const s = t().dashboard;
-  const top = allFunctions(report)
-    .sort((a, b) => b.fn.cognitive - a.fn.cognitive || b.fn.cyclomatic - a.fn.cyclomatic)
-    .slice(0, 12);
+  const tree = buildTree(report);
+  let lastWidth = 0;
+  let lastHeight = 0;
 
-  const rows: Cell[][] = top.map(({ file, fn }) => [
-    {
-      content: el("span", {
-        class: "link",
-        text: fn.name,
-        onClick: () => handlers.onOpenFile(file),
-      }),
-    },
-    { content: file },
-    { content: el("span", { class: complexityClass(fn.cyclomatic), text: String(fn.cyclomatic) }), value: fn.cyclomatic },
-    { content: el("span", { class: complexityClass(fn.cognitive), text: String(fn.cognitive) }), value: fn.cognitive },
-  ]);
+  const draw = (): void => {
+    const rect = wrap.getBoundingClientRect();
+    const width = Math.max(320, Math.round(rect.width) || 1000);
+    const height = Math.max(240, Math.round(rect.height) || 620);
+    if (width === lastWidth && height === lastHeight) return;
+    lastWidth = width;
+    lastHeight = height;
+    wrap.replaceChildren(
+      nestedTreemapChart(tree, { width, height, onSelect: handlers.onOpenFile }),
+    );
+  };
 
-  return el(
-    "div",
-    { class: "top-functions" },
-    el("h3", { text: s.topFunctions }),
-    dataTable(
-      [
-        { header: s.topTable.function },
-        { header: s.topTable.file },
-        { header: s.topTable.cyclomatic, align: "right" },
-        { header: s.topTable.cognitive, align: "right" },
-      ],
-      rows,
-    ),
-  );
-}
+  draw();
 
-function complexityClass(value: number): string {
-  if (value >= 20) return "bad";
-  if (value >= 10) return "warn";
-  return "";
+  if (typeof ResizeObserver !== "undefined") {
+    const observer = new ResizeObserver(() => draw());
+    observer.observe(wrap);
+  }
 }
 
 /** Build a folder tree whose leaves are files, sized by code lines. */
