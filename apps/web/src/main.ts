@@ -47,9 +47,17 @@ let headSlot: HTMLElement;
 let content: HTMLElement;
 let sidenav: HTMLElement;
 let homeBtn: HTMLButtonElement;
+let brand: HTMLElement;
 let tabButtons: HTMLButtonElement[] = [];
 
 function mountShell(): void {
+  brand = el(
+    "div",
+    { class: "topbar__brand" },
+    el("span", { class: "topbar__brand-accent", text: "Meow" }),
+    el("span", { text: "Analyze" }),
+  );
+
   homeBtn = el("button", { class: "topbar__home", onClick: goHome });
   homeBtn.type = "button";
   homeBtn.append(icon(HOME_ICON));
@@ -60,7 +68,7 @@ function mountShell(): void {
   const topbar = el(
     "header",
     { class: "topbar" },
-    el("div", { class: "topbar__inner" }, homeBtn, headSlot, controls),
+    el("div", { class: "topbar__inner" }, brand, homeBtn, headSlot, controls),
   );
 
   sidenav = el("nav", { class: "sidenav" });
@@ -136,6 +144,7 @@ window.addEventListener("hashchange", () => {
 
 function renderLandingView(): void {
   sidenav.hidden = true;
+  brand.hidden = false;
   homeBtn.hidden = true;
   headSlot.replaceChildren();
   content.replaceChildren();
@@ -158,6 +167,7 @@ function renderContent(): void {
   }
 
   sidenav.hidden = false;
+  brand.hidden = true;
   homeBtn.hidden = false;
   content.replaceChildren();
 

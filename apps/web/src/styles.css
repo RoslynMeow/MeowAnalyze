@@ -122,6 +122,23 @@ body {
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
+.topbar__brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.topbar__brand-accent {
+  color: var(--accent);
+}
+
+.topbar__brand[hidden] {
+  display: none;
+}
+
 .topbar__home:hover {
   color: var(--accent);
   border-color: var(--border);
