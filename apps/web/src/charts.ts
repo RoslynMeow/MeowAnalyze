@@ -25,6 +25,11 @@ function withTitle<T extends SVGElement>(node: T, text: string): T {
   return node;
 }
 
+/** Stagger entrance animations via a CSS custom property. */
+function withDelay(node: SVGElement, index: number, step = 35): void {
+  node.setAttribute("style", `--delay:${index * step}ms`);
+}
+
 export const PALETTE: readonly string[] = [
   "#58a6ff",
   "#3fb950",
@@ -159,10 +164,11 @@ export function histogramChart(
         height: barH,
         rx: 3,
         fill: complexityColor(bin.to),
-        class: "chart__bar",
+        class: "chart__bar chart__anim-grow-y",
       }),
       `${bin.label}: ${bin.count} function(s)`,
     );
+    withDelay(rect, index);
     root.append(rect);
 
     if (bins.length <= 14 || index % 2 === 0) {
@@ -244,20 +250,21 @@ export function barList(
       }),
     );
 
+    const bar = svg("rect", {
+      x: labelW,
+      y: y + 4,
+      width: Math.max(2, barW),
+      height: rowHeight - 12,
+      rx: 4,
+      fill: item.color ?? PALETTE[index % PALETTE.length] ?? "#58a6ff",
+      class: item.key
+        ? "chart__bar chart__bar--clickable chart__anim-grow-x"
+        : "chart__bar chart__anim-grow-x",
+    });
+    if (item.key) bar.setAttribute("data-key", item.key);
+    withDelay(bar, index);
     root.append(
-      withTitle(
-        svg("rect", {
-          x: labelW,
-          y: y + 4,
-          width: Math.max(2, barW),
-          height: rowHeight - 12,
-          rx: 4,
-          fill: item.color ?? PALETTE[index % PALETTE.length] ?? "#58a6ff",
-          class: item.key ? "chart__bar chart__bar--clickable" : "chart__bar",
-          ...(item.key ? { "data-key": item.key } : {}),
-        }),
-        `${item.label}: ${item.value}${item.sub ? ` (${item.sub})` : ""}`,
-      ),
+      withTitle(bar, `${item.label}: ${item.value}${item.sub ? ` (${item.sub})` : ""}`),
     );
 
     const value = svg("text", {
@@ -295,7 +302,7 @@ export function donutChart(
 
   const root = svg("svg", {
     viewBox: `0 0 ${size} ${size}`,
-    class: "chart chart--donut",
+    class: "chart chart--donut chart__anim-fade",
     preserveAspectRatio: "xMidYMid meet",
   });
 
@@ -412,11 +419,12 @@ export function treemapChart(
         height: Math.max(0, rect.h - 2),
         rx: 3,
         fill: item.color ?? PALETTE[index % PALETTE.length] ?? "#58a6ff",
-        class: "chart__cell",
+        class: "chart__cell chart__anim-pop",
       }),
       `${item.label}: ${item.value} code lines`,
     );
     if (item.key) node.setAttribute("data-key", item.key);
+    withDelay(node, index, 20);
     root.append(node);
 
     if (rect.w > 60 && rect.h > 20) {

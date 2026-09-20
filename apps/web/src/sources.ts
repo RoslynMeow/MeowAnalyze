@@ -65,6 +65,15 @@ export function textToSource(text: string, path = "pasted.ts"): SourceInput {
   return { path, content: text };
 }
 
+const textDecoder = new TextDecoder("utf-8");
+
+/** Decode an in-memory source back to text (used to show the code panel). */
+export function decodeContent(content: Uint8Array | string): string {
+  const text =
+    typeof content === "string" ? content : textDecoder.decode(content);
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
 export async function fileListToSources(
   files: readonly File[],
 ): Promise<SourceInput[]> {
