@@ -136,7 +136,7 @@ function miKpi(value: number): HTMLElement {
     "div",
     { class: "kpi" },
     valueNode,
-    el("div", { class: "kpi__label", text: `MI · ${maintainabilityLabel(value)}` }),
+    el("div", { class: "kpi__label", text: `${t().dashboard.kpi.maintainability} · ${maintainabilityLabel(value)}` }),
   );
 }
 

@@ -61,6 +61,7 @@ export interface Strings {
       functions: string;
       codeLines: string;
       commentPct: string;
+      maintainability: string;
       avgCyclomatic: string;
       maxCyclomatic: string;
       avgCognitive: string;
@@ -111,6 +112,7 @@ export interface Strings {
     selectHint: string;
     kpi: {
       functions: string;
+      maintainability: string;
       maxCyclomatic: string;
       maxCognitive: string;
       maxNesting: string;
@@ -194,6 +196,7 @@ const zh: Strings = {
       functions: "函数",
       codeLines: "代码行",
       commentPct: "注释占比",
+      maintainability: "维护指数",
       avgCyclomatic: "平均圈复杂度",
       maxCyclomatic: "最大圈复杂度",
       avgCognitive: "平均认知复杂度",
@@ -239,6 +242,7 @@ const zh: Strings = {
     selectHint: "从左侧选择一个文件",
     kpi: {
       functions: "函数",
+      maintainability: "维护指数",
       maxCyclomatic: "最大圈复杂度",
       maxCognitive: "最大认知复杂度",
       maxNesting: "最大嵌套深度",
@@ -254,7 +258,7 @@ const zh: Strings = {
       nesting: "嵌套",
       loc: "行数",
       params: "参数",
-      maintainability: "MI",
+      maintainability: "维护",
       function: "函数",
       line: "行号",
     },
@@ -322,6 +326,7 @@ const en: Strings = {
       functions: "Functions",
       codeLines: "Code lines",
       commentPct: "Comment %",
+      maintainability: "Maintainability",
       avgCyclomatic: "Avg cyclomatic",
       maxCyclomatic: "Max cyclomatic",
       avgCognitive: "Avg cognitive",
@@ -367,6 +372,7 @@ const en: Strings = {
     selectHint: "Select a file on the left",
     kpi: {
       functions: "Functions",
+      maintainability: "Maintainability",
       maxCyclomatic: "Max cyclomatic",
       maxCognitive: "Max cognitive",
       maxNesting: "Max nesting",

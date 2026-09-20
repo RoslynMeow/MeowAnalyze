@@ -70,7 +70,7 @@ function fileList(
         { class: "file-list__meta" },
         el("span", { class: complexityClass(file.metrics.cyclomatic.max), text: `cyclo ${file.metrics.cyclomatic.max}` }),
         el("span", { text: `cog ${file.metrics.cognitive.max}` }),
-        el("span", { text: `MI ${file.maintainability.toFixed(0)}` }),
+        el("span", { text: `${t().detail.table.maintainability} ${file.maintainability.toFixed(0)}` }),
       ),
     );
     list.append(node);
@@ -150,7 +150,12 @@ function kpi(label: string, value: number, color?: string): HTMLElement {
 function miKpi(value: number): HTMLElement {
   const valueNode = el("div", { class: "kpi__value", text: String(Math.round(value)) });
   valueNode.style.color = maintainabilityColor(value);
-  return el("div", { class: "kpi" }, valueNode, el("div", { class: "kpi__label", text: "MI" }));
+  return el(
+    "div",
+    { class: "kpi" },
+    valueNode,
+    el("div", { class: "kpi__label", text: t().detail.kpi.maintainability }),
+  );
 }
 
 function section(title: string, ...children: Array<Node | string | null>): HTMLElement {
