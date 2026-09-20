@@ -6,6 +6,8 @@
 export interface Thresholds {
   /** Max cyclomatic complexity per function. */
   cyclomatic: number;
+  /** Max cognitive complexity per function. */
+  cognitive: number;
   /** Max nesting depth per function. */
   nesting: number;
   /** Max parameters per function. */
@@ -18,6 +20,7 @@ export interface Thresholds {
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
   cyclomatic: 10,
+  cognitive: 15,
   nesting: 4,
   params: 5,
   functionLoc: 80,

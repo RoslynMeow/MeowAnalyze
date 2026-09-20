@@ -62,6 +62,20 @@ describe("functions and complexity", () => {
     expect(fn(report, "abs").cyclomatic).toBe(2);
   });
 
+  it("measures cognitive complexity (nesting weighted)", () => {
+    expect(fn(report, "add").cognitive).toBe(0);
+    expect(fn(report, "abs").cognitive).toBe(1);
+    expect(fn(report, "classify").cognitive).toBe(6);
+  });
+
+  it("computes Halstead metrics and a maintainability index", () => {
+    const add = fn(report, "add");
+    expect(add.halstead.volume).toBeGreaterThan(0);
+    expect(add.halstead.vocabulary).toBeGreaterThan(0);
+    expect(add.maintainability).toBeGreaterThan(0);
+    expect(add.maintainability).toBeLessThanOrEqual(100);
+  });
+
   it("classifies methods", () => {
     expect(fn(report, "increment").kind).toBe("method");
   });
@@ -76,8 +90,20 @@ describe("functions and complexity", () => {
   });
 });
 
-describe("lines of code", () => {
-  it("splits code / comment / blank / logical", () => {
+describe("markers", () => {
+  it("counts TODO / FIXME / HACK in comments", () => {
+    const report = analyzeSource(
+      [
+        "// TODO: one",
+        "/* FIXME: two */",
+        "const a = 1; // HACK three",
+      ].join("\n"),
+    );
+    expect(report.markers).toEqual({ todo: 1, fixme: 1, hack: 1 });
+  });
+});
+
+describe("lines of code", () => {  it("splits code / comment / blank / logical", () => {
     const source = [
       "// comment",
       "const a = 1;",

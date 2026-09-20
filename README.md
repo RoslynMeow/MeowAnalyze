@@ -21,8 +21,10 @@
 
 - **Language detection** per file (extension first, extensible to shebang / content heuristics).
 - **Cyclomatic complexity** per function (decision points: `if`, loops, `case`, `catch`, `?:`, `&&`, `||`, `??`).
-- **Cognitive-friendly metrics** planned: nesting depth is measured today, cognitive complexity is on the roadmap.
+- **Cognitive complexity** (Sonar-style, nesting-weighted).
 - **Nesting depth** per function.
+- **Halstead metrics** and a **maintainability index** (per function, per file and averaged).
+- **Markers**: `TODO` / `FIXME` / `HACK` counts, plus comment density.
 - **Lines of code**: physical / code / comment / blank / logical.
 - **Distribution aggregates** (`count` / `sum` / `min` / `max` / `mean`) for every metric, ready for charts and CI gates.
 - **Configurable thresholds** with CI-friendly exit codes.
@@ -247,7 +249,12 @@ const registry = new LanguageRegistry().register(new MyLang());
 | Metric | Definition |
 | --- | --- |
 | **Cyclomatic complexity** | `1 + decision points` per function. Decision points: `if`, `for`, `for-in`, `for-of`, `while`, `do`, `case`, `catch`, `?:`, and `&&` / `\|\|` / `??`. |
+| **Cognitive complexity** | Sonar-style, nesting-weighted score. Nesting increments for `if` / loops / `switch` / `catch` / `?:`, `else if` chains stay flat, and each sequence of like logical operators adds one. |
 | **Nesting depth** | Maximum depth of nested control constructs (`if`, loops, `switch`, `try`) within a function. |
+| **Halstead** | Distinct/total operators and operands, vocabulary, length, volume, difficulty and effort, scanned from the function text. |
+| **Maintainability index** | `171 − 3.42·ln(V) − 0.23·CC − 16.2·ln(LOC)`, normalized to 0–100 (higher is better). Reported per function, per file and averaged. |
+| **Comment density** | Share of non-blank lines that are comments. |
+| **Markers** | Counts of `TODO` / `FIXME` / `HACK` in comments. |
 | **Physical LOC** | Number of lines in the file. |
 | **Code LOC** | Lines containing at least one non-comment token. |
 | **Comment LOC** | Lines that only contain comments. |

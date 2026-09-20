@@ -79,8 +79,15 @@ export function renderReport(
   lines.push(
     `${pc.dim("files:")} ${report.summary.files}` +
       `   ${pc.dim("functions:")} ${report.summary.metrics.cyclomatic.count}` +
+      `   ${pc.dim("maintainability:")} ${report.summary.maintainability.toFixed(1)}` +
       `   ${pc.dim("time:")} ${report.durationMs}ms`,
   );
+  const { markers } = report.summary;
+  if (markers.todo + markers.fixme + markers.hack > 0) {
+    lines.push(
+      `${pc.dim("markers:")} TODO ${markers.todo}  FIXME ${markers.fixme}  HACK ${markers.hack}`,
+    );
+  }
   lines.push("");
 
   lines.push(section("Lines of code"));
@@ -151,9 +158,12 @@ function renderLanguages(report: AnalysisReport): string {
 
 const METRIC_LABELS: Array<[string, (m: AnalysisReport["summary"]["metrics"]) => Distribution]> = [
   ["cyclomatic", (m) => m.cyclomatic],
+  ["cognitive", (m) => m.cognitive],
   ["nesting", (m) => m.nesting],
   ["function loc", (m) => m.functionLoc],
   ["params", (m) => m.params],
+  ["maintainability", (m) => m.maintainability],
+  ["halstead volume", (m) => m.halsteadVolume],
 ];
 
 function renderMetricsTable(report: AnalysisReport): string {
@@ -162,9 +172,9 @@ function renderMetricsTable(report: AnalysisReport): string {
     return [
       label,
       String(d.count),
-      String(d.sum),
-      String(d.min),
-      String(d.max),
+      formatNumber(d.sum),
+      formatNumber(d.min),
+      formatNumber(d.max),
       d.mean.toFixed(2),
     ];
   });
@@ -204,6 +214,7 @@ function renderTopFunctions(
   return renderTable(
     [
       { header: "cyclo", align: "right" },
+      { header: "cog", align: "right" },
       { header: "nest", align: "right" },
       { header: "loc", align: "right" },
       { header: "function" },
@@ -211,6 +222,7 @@ function renderTopFunctions(
     ],
     items.map(({ file, fn }) => [
       colorComplexity(fn.cyclomatic),
+      String(fn.cognitive),
       String(fn.maxNesting),
       String(fn.loc),
       fn.name,
@@ -224,6 +236,10 @@ function colorComplexity(value: number): string {
   if (value >= 20) return pc.red(text);
   if (value >= 10) return pc.yellow(text);
   return text;
+}
+
+function formatNumber(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
 function allViolations(

@@ -1,5 +1,5 @@
 import type { FileReport, FunctionReport } from "@meowanalyze/core";
-import { complexityColor } from "../charts.js";
+import { complexityColor, gaugeChart } from "../charts.js";
 import { button, el } from "../dom.js";
 import { dataTable, type Cell } from "../table.js";
 
@@ -65,11 +65,14 @@ function header(file: FileReport, handlers: DetailHandlers): HTMLElement {
 
 function kpis(file: FileReport): HTMLElement {
   const maxCyclo = file.metrics.cyclomatic.max;
+  const maxCognitive = file.metrics.cognitive.max;
   return el(
     "div",
     { class: "kpis" },
+    el("div", { class: "kpi kpi--gauge" }, gaugeChart(file.maintainability, { size: 120, label: "MI" })),
     kpi("Functions", file.functions.length),
-    kpi("Max complexity", maxCyclo, complexityColor(maxCyclo)),
+    kpi("Max cyclomatic", maxCyclo, complexityColor(maxCyclo)),
+    kpi("Max cognitive", maxCognitive, complexityColor(maxCognitive)),
     kpi("Max nesting", file.metrics.nesting.max),
     kpi("Code lines", file.loc.code),
     kpi(
@@ -154,7 +157,7 @@ function functionsTable(
 ): HTMLTableElement {
   const rows: Cell[][] = file.functions
     .slice()
-    .sort((a, b) => b.cyclomatic - a.cyclomatic)
+    .sort((a, b) => b.cognitive - a.cognitive || b.cyclomatic - a.cyclomatic)
     .map((fn) => [
       {
         content: el("span", {
@@ -163,9 +166,17 @@ function functionsTable(
         }),
         value: fn.cyclomatic,
       },
+      {
+        content: el("span", {
+          class: complexityClass(fn.cognitive),
+          text: String(fn.cognitive),
+        }),
+        value: fn.cognitive,
+      },
       { content: fn.maxNesting, value: fn.maxNesting },
       { content: fn.loc, value: fn.loc },
       { content: fn.params, value: fn.params },
+      { content: fn.maintainability.toFixed(0), value: fn.maintainability },
       {
         content: el("span", {
           class: "link",
@@ -179,9 +190,11 @@ function functionsTable(
   return dataTable(
     [
       { header: "cyclo", align: "right" },
+      { header: "cog", align: "right" },
       { header: "nest", align: "right" },
       { header: "loc", align: "right" },
       { header: "params", align: "right" },
+      { header: "MI", align: "right" },
       { header: "function" },
       { header: "line", align: "right" },
     ],

@@ -47,6 +47,83 @@ export function complexityColor(value: number): string {
   return "#3fb950";
 }
 
+export function maintainabilityColor(value: number): string {
+  if (value < 40) return "#f85149";
+  if (value < 65) return "#d29922";
+  return "#3fb950";
+}
+
+/* ------------------------------------------------------------------ */
+/* Gauge                                                               */
+/* ------------------------------------------------------------------ */
+
+export function gaugeChart(
+  value: number,
+  options: { size?: number; label?: string; color?: string } = {},
+): SVGSVGElement {
+  const size = options.size ?? 160;
+  const thickness = 14;
+  const radius = (size - thickness) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.max(0, Math.min(100, value));
+  const offset = circumference * (1 - clamped / 100);
+  const color = options.color ?? maintainabilityColor(clamped);
+
+  const root = svg("svg", {
+    viewBox: `0 0 ${size} ${size}`,
+    class: "chart chart--gauge",
+    preserveAspectRatio: "xMidYMid meet",
+  });
+
+  root.append(
+    svg("circle", {
+      cx: size / 2,
+      cy: size / 2,
+      r: radius,
+      fill: "none",
+      stroke: "#21262d",
+      "stroke-width": thickness,
+    }),
+  );
+
+  const arc = svg("circle", {
+    cx: size / 2,
+    cy: size / 2,
+    r: radius,
+    fill: "none",
+    stroke: color,
+    "stroke-width": thickness,
+    "stroke-linecap": "round",
+    "stroke-dasharray": `${circumference} ${circumference}`,
+    transform: `rotate(-90 ${size / 2} ${size / 2})`,
+    class: "gauge__value",
+  });
+  arc.setAttribute("style", `--circ:${circumference};--offset:${offset}`);
+  root.append(arc);
+
+  const valueText = svg("text", {
+    x: size / 2,
+    y: size / 2,
+    class: "chart__center-value",
+    "text-anchor": "middle",
+  });
+  valueText.textContent = clamped.toFixed(0);
+  root.append(valueText);
+
+  if (options.label) {
+    const label = svg("text", {
+      x: size / 2,
+      y: size / 2 + 20,
+      class: "chart__center-label",
+      "text-anchor": "middle",
+    });
+    label.textContent = options.label;
+    root.append(label);
+  }
+
+  return root;
+}
+
 /* ------------------------------------------------------------------ */
 /* Histogram                                                           */
 /* ------------------------------------------------------------------ */

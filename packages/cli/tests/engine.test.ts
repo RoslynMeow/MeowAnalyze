@@ -40,6 +40,7 @@ describe("analyze (Node host)", () => {
         ...DEFAULT_CONFIG,
         thresholds: {
           cyclomatic: 1,
+          cognitive: 99,
           nesting: 99,
           params: 99,
           functionLoc: 999,

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Core metrics: cognitive complexity (Sonar-style, nesting-weighted), Halstead
+  metrics and a maintainability index (per function, per file and averaged), plus
+  `TODO` / `FIXME` / `HACK` marker counts. Surfaced in the JSON report, the CLI
+  and the web app.
+- Web: a settings modal for thresholds; a redesigned dashboard with a
+  maintainability gauge, cognitive/cyclomatic histograms, a rule-violation chart,
+  comment-density and marker KPIs; and more entrance/transition animations.
+
 ### Planned
 
 - Desktop UI (thin shell that wraps the platform CLI binary).

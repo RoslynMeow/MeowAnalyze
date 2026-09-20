@@ -24,6 +24,15 @@ export function applyThresholds(
     );
     check(
       violations,
+      "cognitive",
+      fn.cognitive,
+      thresholds.cognitive,
+      fn.range,
+      fn.id,
+      `function '${fn.name}' has cognitive complexity ${fn.cognitive} (max ${thresholds.cognitive})`,
+    );
+    check(
+      violations,
       "nesting",
       fn.maxNesting,
       thresholds.nesting,

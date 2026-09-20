@@ -3,8 +3,10 @@ import type {
   FileReport,
   FunctionKind,
   FunctionReport,
+  Halstead,
   LanguageId,
   LocStats,
+  Markers,
   Position,
   Range,
 } from "../report/model.js";
@@ -54,20 +56,34 @@ export class TypeScriptAnalyzer implements LanguageAnalyzer {
     );
 
     const loc = measureLoc(ctx.source, sf, isJsx(scriptKind));
-    const functions = collectFunctions(sf, ctx.path);
+    const markers = countMarkers(ctx.source, isJsx(scriptKind));
+    const functions = collectFunctions(sf, ctx.source, ctx.path);
 
     const metrics = {
       cyclomatic: distributionOf(functions.map((f) => f.cyclomatic)),
+      cognitive: distributionOf(functions.map((f) => f.cognitive)),
       nesting: distributionOf(functions.map((f) => f.maxNesting)),
       functionLoc: distributionOf(functions.map((f) => f.loc)),
       params: distributionOf(functions.map((f) => f.params)),
+      maintainability: distributionOf(functions.map((f) => f.maintainability)),
+      halsteadVolume: distributionOf(functions.map((f) => f.halstead.volume)),
     };
+
+    const totalVolume = functions.reduce((sum, f) => sum + f.halstead.volume, 0);
+    const totalCyclomatic = functions.reduce((sum, f) => sum + f.cyclomatic, 0);
+    const maintainability = maintainabilityIndex(
+      totalVolume,
+      totalCyclomatic,
+      loc.physical,
+    );
 
     return {
       path: ctx.path,
       language,
       loc,
+      maintainability,
       metrics,
+      markers,
       functions,
       violations: [],
     };
@@ -88,19 +104,9 @@ function isJsx(kind: ts.ScriptKind): boolean {
 /* Lines of code                                                       */
 /* ------------------------------------------------------------------ */
 
-function measureLoc(
-  source: string,
-  sf: ts.SourceFile,
-  jsx: boolean,
-): LocStats {
+function measureLoc(source: string, sf: ts.SourceFile, jsx: boolean): LocStats {
   const physical = sf.getLineStarts().length;
-  const variant = jsx ? ts.LanguageVariant.JSX : ts.LanguageVariant.Standard;
-  const scanner = ts.createScanner(
-    ts.ScriptTarget.Latest,
-    /* skipTrivia */ false,
-    variant,
-    source,
-  );
+  const scanner = createScanner(source, jsx);
 
   const codeLines = new Set<number>();
   const commentLines = new Set<number>();
@@ -131,6 +137,15 @@ function measureLoc(
   };
 }
 
+function createScanner(source: string, jsx: boolean): ts.Scanner {
+  return ts.createScanner(
+    ts.ScriptTarget.Latest,
+    /* skipTrivia */ false,
+    jsx ? ts.LanguageVariant.JSX : ts.LanguageVariant.Standard,
+    source,
+  );
+}
+
 function isComment(kind: ts.SyntaxKind): boolean {
   return (
     kind === ts.SyntaxKind.SingleLineCommentTrivia ||
@@ -155,6 +170,33 @@ function markLines(
   const first = sf.getLineAndCharacterOfPosition(start).line;
   const last = sf.getLineAndCharacterOfPosition(Math.max(start, end - 1)).line;
   for (let line = first; line <= last; line++) target.add(line);
+}
+
+/* ------------------------------------------------------------------ */
+/* Markers (TODO / FIXME / HACK)                                       */
+/* ------------------------------------------------------------------ */
+
+const MARKER_PATTERN = /\b(TODO|FIXME|HACK)\b/gi;
+
+function countMarkers(source: string, jsx: boolean): Markers {
+  const markers: Markers = { todo: 0, fixme: 0, hack: 0 };
+  const scanner = createScanner(source, jsx);
+  let token = scanner.scan();
+  while (token !== ts.SyntaxKind.EndOfFileToken) {
+    if (isComment(token)) {
+      const matches = scanner.getTokenText().match(MARKER_PATTERN);
+      if (matches) {
+        for (const match of matches) {
+          const key = match.toLowerCase();
+          if (key === "todo") markers.todo++;
+          else if (key === "fixme") markers.fixme++;
+          else if (key === "hack") markers.hack++;
+        }
+      }
+    }
+    token = scanner.scan();
+  }
+  return markers;
 }
 
 /* ------------------------------------------------------------------ */
@@ -206,11 +248,15 @@ function countStatements(sf: ts.SourceFile): number {
 /* Functions & complexity                                              */
 /* ------------------------------------------------------------------ */
 
-function collectFunctions(sf: ts.SourceFile, path: string): FunctionReport[] {
+function collectFunctions(
+  sf: ts.SourceFile,
+  source: string,
+  path: string,
+): FunctionReport[] {
   const out: FunctionReport[] = [];
   const visit = (node: ts.Node): void => {
     if (isFunctionLike(node) && hasBody(node)) {
-      out.push(analyzeFunction(node, sf, path));
+      out.push(analyzeFunction(node, sf, source, path));
     }
     node.forEachChild(visit);
   };
@@ -221,10 +267,13 @@ function collectFunctions(sf: ts.SourceFile, path: string): FunctionReport[] {
 function analyzeFunction(
   node: ts.FunctionLikeDeclaration,
   sf: ts.SourceFile,
+  source: string,
   path: string,
 ): FunctionReport {
   const name = functionName(node);
   const range = rangeOf(node, sf);
+  const loc = range.end.line - range.start.line + 1;
+
   let cyclomatic = 1;
   let maxNesting = 0;
 
@@ -241,17 +290,202 @@ function analyzeFunction(
   const body = (node as { body?: ts.Node }).body;
   if (body) walk(body, 0);
 
+  const cognitive = cognitiveComplexity(body);
+  const halstead = halsteadOf(node, sf, source);
+
   return {
     id: `${path}:${range.start.line}:${name}`,
     name,
     kind: functionKind(node),
     range,
-    loc: range.end.line - range.start.line + 1,
+    loc,
     params: node.parameters.length,
     cyclomatic,
+    cognitive,
     maxNesting,
+    halstead,
+    maintainability: maintainabilityIndex(halstead.volume, cyclomatic, loc),
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Cognitive complexity (Sonar-style)                                  */
+/* ------------------------------------------------------------------ */
+
+const LOOP_KINDS = new Set<ts.SyntaxKind>([
+  ts.SyntaxKind.ForStatement,
+  ts.SyntaxKind.ForInStatement,
+  ts.SyntaxKind.ForOfStatement,
+  ts.SyntaxKind.WhileStatement,
+  ts.SyntaxKind.DoStatement,
+]);
+
+function cognitiveComplexity(body: ts.Node | undefined): number {
+  if (!body) return 0;
+  let score = 0;
+
+  const visit = (node: ts.Node, nesting: number): void => {
+    const kind = node.kind;
+
+    if (kind === ts.SyntaxKind.IfStatement) {
+      const ifNode = node as ts.IfStatement;
+      const isElseIf =
+        ts.isIfStatement(node.parent) && node.parent.elseStatement === ifNode;
+      score += isElseIf ? 1 : 1 + nesting;
+      const inner = isElseIf ? nesting : nesting + 1;
+      visit(ifNode.expression, nesting);
+      visit(ifNode.thenStatement, inner);
+      if (ifNode.elseStatement) {
+        if (ts.isIfStatement(ifNode.elseStatement)) {
+          visit(ifNode.elseStatement, inner);
+        } else {
+          score += 1;
+          visit(ifNode.elseStatement, inner);
+        }
+      }
+      return;
+    }
+
+    if (LOOP_KINDS.has(kind) || kind === ts.SyntaxKind.SwitchStatement) {
+      score += 1 + nesting;
+      node.forEachChild((child) => {
+        if (!isFunctionLike(child)) visit(child, nesting + 1);
+      });
+      return;
+    }
+
+    if (kind === ts.SyntaxKind.CatchClause) {
+      score += 1 + nesting;
+      node.forEachChild((child) => {
+        if (!isFunctionLike(child)) visit(child, nesting + 1);
+      });
+      return;
+    }
+
+    if (kind === ts.SyntaxKind.ConditionalExpression) {
+      score += 1 + nesting;
+      node.forEachChild((child) => {
+        if (!isFunctionLike(child)) visit(child, nesting + 1);
+      });
+      return;
+    }
+
+    if (
+      ts.isBinaryExpression(node) &&
+      LOGICAL_OPERATORS.has(node.operatorToken.kind)
+    ) {
+      const sameAsParent =
+        ts.isBinaryExpression(node.parent) &&
+        node.parent.operatorToken.kind === node.operatorToken.kind;
+      if (!sameAsParent) score += 1; // one point per sequence of like operators
+      node.forEachChild((child) => visit(child, nesting));
+      return;
+    }
+
+    if (isFunctionLike(node)) return; // nested functions are measured separately
+    node.forEachChild((child) => visit(child, nesting));
+  };
+
+  visit(body, 0);
+  return score;
+}
+
+/* ------------------------------------------------------------------ */
+/* Halstead                                                            */
+/* ------------------------------------------------------------------ */
+
+const OPERAND_KINDS = new Set<ts.SyntaxKind>([
+  ts.SyntaxKind.Identifier,
+  ts.SyntaxKind.PrivateIdentifier,
+  ts.SyntaxKind.StringLiteral,
+  ts.SyntaxKind.NumericLiteral,
+  ts.SyntaxKind.BigIntLiteral,
+  ts.SyntaxKind.RegularExpressionLiteral,
+  ts.SyntaxKind.NoSubstitutionTemplateLiteral,
+  ts.SyntaxKind.TemplateHead,
+  ts.SyntaxKind.TemplateMiddle,
+  ts.SyntaxKind.TemplateTail,
+  ts.SyntaxKind.TrueKeyword,
+  ts.SyntaxKind.FalseKeyword,
+  ts.SyntaxKind.NullKeyword,
+]);
+
+function halsteadOf(
+  node: ts.FunctionLikeDeclaration,
+  sf: ts.SourceFile,
+  source: string,
+): Halstead {
+  const text = source.slice(node.getStart(sf), node.getEnd());
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.Latest,
+    /* skipTrivia */ false,
+    ts.LanguageVariant.Standard,
+    text,
+  );
+
+  const operators = new Map<string, number>();
+  const operands = new Map<string, number>();
+
+  let token = scanner.scan();
+  while (token !== ts.SyntaxKind.EndOfFileToken) {
+    if (!isTrivia(token) && !isComment(token)) {
+      const target = OPERAND_KINDS.has(token) ? operands : operators;
+      const value = scanner.getTokenText();
+      target.set(value, (target.get(value) ?? 0) + 1);
+    }
+    token = scanner.scan();
+  }
+
+  const distinctOperators = operators.size;
+  const distinctOperands = operands.size;
+  const totalOperators = sumValues(operators);
+  const totalOperands = sumValues(operands);
+  const vocabulary = distinctOperators + distinctOperands;
+  const length = totalOperators + totalOperands;
+  const volume = vocabulary > 0 ? length * Math.log2(vocabulary) : 0;
+  const difficulty =
+    distinctOperands > 0
+      ? (distinctOperators / 2) * (totalOperands / distinctOperands)
+      : 0;
+  const effort = difficulty * volume;
+
+  return {
+    distinctOperators,
+    distinctOperands,
+    totalOperators,
+    totalOperands,
+    vocabulary,
+    length,
+    volume,
+    difficulty,
+    effort,
+  };
+}
+
+function sumValues(map: Map<string, number>): number {
+  let total = 0;
+  for (const value of map.values()) total += value;
+  return total;
+}
+
+/** Normalized maintainability index (0–100, higher is better). */
+function maintainabilityIndex(
+  volume: number,
+  cyclomatic: number,
+  loc: number,
+): number {
+  if (loc <= 0) return 100;
+  const raw =
+    171 -
+    3.42 * Math.log(Math.max(volume, 1)) -
+    0.23 * cyclomatic -
+    16.2 * Math.log(loc);
+  return Math.max(0, Math.min(100, (raw * 100) / 171));
+}
+
+/* ------------------------------------------------------------------ */
+/* AST helpers                                                         */
+/* ------------------------------------------------------------------ */
 
 function isFunctionLike(node: ts.Node): node is ts.FunctionLikeDeclaration {
   return (

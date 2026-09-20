@@ -45,6 +45,7 @@ describe("analyzeSources (pure core, no filesystem)", () => {
         ...DEFAULT_CONFIG,
         thresholds: {
           cyclomatic: 1,
+          cognitive: 99,
           nesting: 0,
           params: 0,
           functionLoc: 1,

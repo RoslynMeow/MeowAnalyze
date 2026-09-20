@@ -1,13 +1,11 @@
 // @vitest-environment jsdom
-import {
-  analyzeSources,
-  DEFAULT_THRESHOLDS,
-  type AnalysisReport,
-} from "@meowanalyze/core";
+import { analyzeSources, type AnalysisReport } from "@meowanalyze/core";
 import { describe, expect, it, vi } from "vitest";
 import { renderDashboard } from "../src/views/dashboard.js";
 import { renderDetail } from "../src/views/detail.js";
 import { renderLanding } from "../src/views/landing.js";
+import { openSettings } from "../src/settings.js";
+import { DEFAULT_THRESHOLDS } from "@meowanalyze/core";
 
 const SOURCE = `export function simple(a: number) {
   return a + 1;
@@ -50,11 +48,10 @@ describe("dashboard view", () => {
   it("renders KPIs, charts and file cards", () => {
     const root = document.createElement("div");
     renderDashboard(root, sampleReport(), {
-      thresholds: { ...DEFAULT_THRESHOLDS },
       onOpenFile: vi.fn(),
       onNewAnalysis: vi.fn(),
       onExport: vi.fn(),
-      onThresholdsChange: vi.fn(),
+      onOpenSettings: vi.fn(),
     });
 
     expect(root.querySelectorAll(".kpi").length).toBeGreaterThan(0);
@@ -66,11 +63,10 @@ describe("dashboard view", () => {
     const root = document.createElement("div");
     const onOpenFile = vi.fn();
     renderDashboard(root, sampleReport(), {
-      thresholds: { ...DEFAULT_THRESHOLDS },
       onOpenFile,
       onNewAnalysis: vi.fn(),
       onExport: vi.fn(),
-      onThresholdsChange: vi.fn(),
+      onOpenSettings: vi.fn(),
     });
 
     root.querySelector<HTMLElement>(".file-card")?.click();
@@ -107,5 +103,27 @@ describe("detail view", () => {
 
     root.querySelector<HTMLButtonElement>("button.button")?.click();
     expect(onBack).toHaveBeenCalled();
+  });
+});
+
+describe("settings modal", () => {
+  it("applies edited thresholds", () => {
+    const onApply = vi.fn();
+    openSettings({ ...DEFAULT_THRESHOLDS }, onApply);
+
+    const overlay = document.querySelector<HTMLElement>(".modal-overlay");
+    expect(overlay).not.toBeNull();
+    const input = overlay?.querySelector<HTMLInputElement>("input");
+    expect(input).not.toBeNull();
+    if (input) input.value = "42";
+
+    const apply = [...(overlay?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find(
+      (node) => node.textContent === "Apply",
+    );
+    apply?.click();
+
+    expect(onApply).toHaveBeenCalledTimes(1);
+    expect(onApply.mock.calls[0]?.[0]?.cyclomatic).toBe(42);
+    overlay?.remove();
   });
 });

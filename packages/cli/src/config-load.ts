@@ -43,6 +43,10 @@ function mergeConfig(raw: Record<string, unknown>): Config {
       thresholds["cyclomatic"],
       config.thresholds.cyclomatic,
     );
+    config.thresholds.cognitive = pickNumber(
+      thresholds["cognitive"],
+      config.thresholds.cognitive,
+    );
     config.thresholds.nesting = pickNumber(
       thresholds["nesting"],
       config.thresholds.nesting,

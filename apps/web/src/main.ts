@@ -18,6 +18,7 @@ import {
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail } from "./views/detail.js";
 import { renderLanding } from "./views/landing.js";
+import { openSettings } from "./settings.js";
 
 const appEl = document.getElementById("app");
 if (!appEl) throw new Error("missing #app");
@@ -52,7 +53,6 @@ function showDashboard(): void {
     return;
   }
   renderDashboard(app, report, {
-    thresholds: state.thresholds,
     onOpenFile: showDetail,
     onNewAnalysis: () => {
       state.report = undefined;
@@ -60,10 +60,11 @@ function showDashboard(): void {
       showLanding();
     },
     onExport: () => downloadJson(report, "meowanalyze-report.json"),
-    onThresholdsChange: (thresholds) => {
-      state.thresholds = thresholds;
-      rerun();
-    },
+    onOpenSettings: () =>
+      openSettings(state.thresholds, (thresholds) => {
+        state.thresholds = thresholds;
+        rerun();
+      }),
   });
 }
 

@@ -55,6 +55,26 @@ export interface Distribution {
   mean: number;
 }
 
+/** Halstead software-science measures, computed from operators and operands. */
+export interface Halstead {
+  distinctOperators: number;
+  distinctOperands: number;
+  totalOperators: number;
+  totalOperands: number;
+  vocabulary: number;
+  length: number;
+  volume: number;
+  difficulty: number;
+  effort: number;
+}
+
+/** Counts of common in-comment markers. */
+export interface Markers {
+  todo: number;
+  fixme: number;
+  hack: number;
+}
+
 export interface FunctionReport {
   /** Stable id: `path:startLine:name`. */
   id: string;
@@ -65,7 +85,12 @@ export interface FunctionReport {
   loc: number;
   params: number;
   cyclomatic: number;
+  /** Nesting-weighted cognitive complexity (Sonar-style). */
+  cognitive: number;
   maxNesting: number;
+  halstead: Halstead;
+  /** Maintainability index, 0–100 (higher is better). */
+  maintainability: number;
 }
 
 export type Level = "info" | "warning" | "error";
@@ -83,9 +108,12 @@ export interface Violation {
 
 export interface FileMetrics {
   cyclomatic: Distribution;
+  cognitive: Distribution;
   nesting: Distribution;
   functionLoc: Distribution;
   params: Distribution;
+  maintainability: Distribution;
+  halsteadVolume: Distribution;
 }
 
 export interface FileReport {
@@ -93,7 +121,10 @@ export interface FileReport {
   path: string;
   language: LanguageId;
   loc: LocStats;
+  /** File-level maintainability index, 0–100. */
+  maintainability: number;
   metrics: FileMetrics;
+  markers: Markers;
   functions: FunctionReport[];
   violations: Violation[];
 }
@@ -109,7 +140,10 @@ export interface Summary {
   files: number;
   filesByLanguage: Record<LanguageId, number>;
   loc: LocStats;
+  /** Average file-level maintainability index, 0–100. */
+  maintainability: number;
   metrics: FileMetrics;
+  markers: Markers;
   violations: ViolationSummary;
 }
 

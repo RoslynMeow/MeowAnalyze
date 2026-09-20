@@ -7,6 +7,7 @@ import {
   type Diagnostic,
   type FileReport,
   type LocStats,
+  type Markers,
   type Summary,
   type ViolationSummary,
 } from "../report/model.js";
@@ -126,6 +127,8 @@ function summarize(files: FileReport[]): Summary {
     warning: 0,
     info: 0,
   };
+  const markers: Markers = { todo: 0, fixme: 0, hack: 0 };
+  let maintainabilitySum = 0;
 
   for (const file of files) {
     filesByLanguage[file.language] = (filesByLanguage[file.language] ?? 0) + 1;
@@ -134,6 +137,10 @@ function summarize(files: FileReport[]): Summary {
     loc.comment += file.loc.comment;
     loc.blank += file.loc.blank;
     loc.logical += file.loc.logical;
+    markers.todo += file.markers.todo;
+    markers.fixme += file.markers.fixme;
+    markers.hack += file.markers.hack;
+    maintainabilitySum += file.maintainability;
     for (const violation of file.violations) {
       violations.total++;
       violations[violation.level]++;
@@ -144,12 +151,21 @@ function summarize(files: FileReport[]): Summary {
     files: files.length,
     filesByLanguage,
     loc,
+    maintainability: files.length > 0 ? maintainabilitySum / files.length : 100,
     metrics: {
       cyclomatic: mergeDistributions(files.map((f) => f.metrics.cyclomatic)),
+      cognitive: mergeDistributions(files.map((f) => f.metrics.cognitive)),
       nesting: mergeDistributions(files.map((f) => f.metrics.nesting)),
       functionLoc: mergeDistributions(files.map((f) => f.metrics.functionLoc)),
       params: mergeDistributions(files.map((f) => f.metrics.params)),
+      maintainability: mergeDistributions(
+        files.map((f) => f.metrics.maintainability),
+      ),
+      halsteadVolume: mergeDistributions(
+        files.map((f) => f.metrics.halsteadVolume),
+      ),
     },
+    markers,
     violations,
   };
 }
