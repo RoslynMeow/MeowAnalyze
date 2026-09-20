@@ -3,6 +3,8 @@
  * uses ECharts (see `pie.ts`); this module only holds colors and bucketing.
  */
 
+import { getTheme, type Theme } from "./theme.js";
+
 export const PALETTE: readonly string[] = [
   "#58a6ff",
   "#3fb950",
@@ -14,16 +16,39 @@ export const PALETTE: readonly string[] = [
   "#a5d6ff",
 ];
 
+/** Severity of a metric value, used to pick a theme-aware color. */
+export type Severity = "good" | "warn" | "bad" | "critical";
+
+const SEVERITY_COLORS: Record<Theme, Record<Severity, string>> = {
+  dark: {
+    good: "#3fb950",
+    warn: "#d29922",
+    bad: "#f0883e",
+    critical: "#f85149",
+  },
+  light: {
+    good: "#1a7f37",
+    warn: "#9a6700",
+    bad: "#bc4c00",
+    critical: "#cf222e",
+  },
+};
+
+/** Resolve a severity to a hex color for the active theme. */
+export function severityColor(severity: Severity): string {
+  return SEVERITY_COLORS[getTheme()][severity];
+}
+
 export function complexityColor(value: number): string {
-  if (value >= 20) return "#f85149";
-  if (value >= 10) return "#d29922";
-  return "#3fb950";
+  if (value >= 20) return severityColor("critical");
+  if (value >= 10) return severityColor("warn");
+  return severityColor("good");
 }
 
 export function maintainabilityColor(value: number): string {
-  if (value < 40) return "#f85149";
-  if (value < 65) return "#d29922";
-  return "#3fb950";
+  if (value < 40) return severityColor("critical");
+  if (value < 65) return severityColor("warn");
+  return severityColor("good");
 }
 
 export interface DonutSegment {
@@ -35,7 +60,7 @@ export interface DonutSegment {
 export interface BucketRange {
   upTo: number;
   label: string;
-  color: string;
+  severity: Severity;
 }
 
 /** Count values into ranges and return non-empty donut segments. */
@@ -46,7 +71,7 @@ export function bucketize(
   const counts = ranges.map((range) => ({
     label: range.label,
     value: 0,
-    color: range.color,
+    color: severityColor(range.severity),
   }));
   for (const value of values) {
     const index = ranges.findIndex((range) => value <= range.upTo);

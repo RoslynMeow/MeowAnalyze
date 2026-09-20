@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { analyzeSources, DEFAULT_THRESHOLDS, type AnalysisReport } from "@meowanalyze/core";
 import { describe, expect, it, vi } from "vitest";
-import { openSettings } from "../src/settings.js";
+import { renderSettings } from "../src/settings.js";
+import { defaultPrefs } from "../src/prefs.js";
 import { renderDashboard } from "../src/views/dashboard.js";
 import { renderDetail } from "../src/views/detail.js";
+import { renderHelp } from "../src/views/help.js";
 import { renderLanding } from "../src/views/landing.js";
 
 const SOURCE = `export function simple(a: number) {
@@ -47,14 +49,39 @@ describe("landing view", () => {
 });
 
 describe("dashboard view", () => {
-  it("renders a data-only dashboard with stats and donut charts", () => {
+  it("renders one card per enabled module", () => {
     const view = targets();
     renderDashboard(view, sampleReport(), { onJump: vi.fn() });
 
+    const defaults = defaultPrefs();
+    const count = Object.values(defaults.modules).filter(Boolean).length;
+
     expect(view.head.querySelector(".page__head")).not.toBeNull();
-    expect(view.body.querySelectorAll(".kpi").length).toBeGreaterThanOrEqual(10);
     expect(view.body.querySelector(".stats-grid")).not.toBeNull();
-    expect(view.body.querySelectorAll(".donut-card").length).toBeGreaterThanOrEqual(7);
+    expect(view.body.querySelectorAll(".kpi")).toHaveLength(count);
+  });
+
+  it("honors dashboard preferences", () => {
+    const view = targets();
+    const prefs = defaultPrefs();
+    for (const id of Object.keys(prefs.modules)) prefs.modules[id] = false;
+    renderDashboard(view, sampleReport(), { onJump: vi.fn() }, prefs);
+    expect(view.body.querySelectorAll(".kpi")).toHaveLength(0);
+
+    for (const id of Object.keys(prefs.modules)) prefs.modules[id] = true;
+    renderDashboard(view, sampleReport(), { onJump: vi.fn() }, prefs);
+    expect(view.body.querySelectorAll(".kpi").length).toBeGreaterThan(6);
+  });
+});
+
+describe("help view", () => {
+  it("lists metric sections with formula placeholders", () => {
+    const view = targets();
+    renderHelp(view);
+    expect(view.head.querySelector(".page__head")).not.toBeNull();
+    expect(view.body.querySelector(".help-page")).not.toBeNull();
+    expect(view.body.querySelectorAll(".card").length).toBeGreaterThanOrEqual(8);
+    expect(view.body.querySelectorAll(".math").length).toBeGreaterThanOrEqual(8);
   });
 });
 
@@ -86,20 +113,28 @@ describe("detail view", () => {
   });
 });
 
-describe("settings modal", () => {
-  it("applies edited thresholds", () => {
+describe("settings page", () => {
+  it("applies edited thresholds and dashboard prefs", () => {
     const onApply = vi.fn();
-    openSettings({ ...DEFAULT_THRESHOLDS }, onApply);
+    const view = targets();
+    renderSettings(
+      view,
+      { thresholds: { ...DEFAULT_THRESHOLDS }, prefs: defaultPrefs() },
+      { onApply },
+    );
 
-    const overlay = document.querySelector<HTMLElement>(".modal-overlay");
-    expect(overlay).not.toBeNull();
-    const input = overlay?.querySelector<HTMLInputElement>("input");
+    expect(view.head.querySelector(".page__head")).not.toBeNull();
+    const input = view.body.querySelector<HTMLInputElement>("input");
     if (input) input.value = "42";
 
-    overlay?.querySelector<HTMLButtonElement>("button.button--primary")?.click();
+    const firstToggle = view.body.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (firstToggle) firstToggle.checked = false;
+
+    view.body.querySelector<HTMLButtonElement>("button.button--primary")?.click();
 
     expect(onApply).toHaveBeenCalledTimes(1);
-    expect(onApply.mock.calls[0]?.[0]?.cyclomatic).toBe(42);
-    overlay?.remove();
+    const values = onApply.mock.calls[0]?.[0];
+    expect(values?.thresholds.cyclomatic).toBe(42);
+    expect(values?.prefs.modules.maintainability).toBe(false);
   });
 });

@@ -35,15 +35,7 @@ export function renderDetail(
     el(
       "header",
       { class: "page__head" },
-      el(
-        "div",
-        {},
-        el("h1", { class: "page__title", text: t().pages.detail }),
-        el("p", {
-          class: "page__subtitle",
-          text: file ? file.path : t().detail.selectHint,
-        }),
-      ),
+      el("h1", { class: "page__title", text: t().pages.detail }),
     ),
   );
 
@@ -219,7 +211,15 @@ function buildSource(source: string): SourcePanel {
         active.push(node);
       }
     }
-    lineEls[from - 1]?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    const target = lineEls[from - 1];
+    if (target) {
+      // The panel may be detached from the document until the caller mounts it,
+      // so wait a frame before scrolling (scrollIntoView is a no-op otherwise).
+      const scroll = (): void =>
+        target.scrollIntoView?.({ behavior: "smooth", block: "center" });
+      if (typeof requestAnimationFrame === "function") requestAnimationFrame(scroll);
+      else scroll();
+    }
   };
   const highlight = (fn: FunctionReport): void =>
     highlightRange(fn.range.start.line, fn.range.end.line);

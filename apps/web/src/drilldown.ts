@@ -1,4 +1,4 @@
-import type { DonutSegment } from "./charts.js";
+import type { BucketRange, DonutSegment } from "./charts.js";
 import { el } from "./dom.js";
 import { disposeChart, renderBar, renderDonut } from "./echarts.js";
 
@@ -17,6 +17,10 @@ export interface Drilldown {
   chart: "donut" | "bar";
   segments: DonutSegment[];
   items: DrillItem[];
+  /** Bucket ranges, so a bar selection can be matched back to items. */
+  ranges?: readonly BucketRange[];
+  /** Segment/bar to apply as the initial filter. */
+  selected?: string;
   centerValue?: string;
   centerLabel?: string;
 }
@@ -40,33 +44,81 @@ export function closeDrilldown(): void {
   overlay = undefined;
 }
 
+function rangeIndexOf(value: number, ranges: readonly BucketRange[]): number {
+  const index = ranges.findIndex((range) => value <= range.upTo);
+  return index === -1 ? ranges.length - 1 : index;
+}
+
+/** Items that belong to the clicked chart segment / bar. */
+function itemsForLabel(dd: Drilldown, label: string): DrillItem[] {
+  if (dd.ranges) {
+    const index = dd.ranges.findIndex((range) => range.label === label);
+    if (index >= 0) {
+      const ranges = dd.ranges;
+      return dd.items.filter((item) => rangeIndexOf(item.value, ranges) === index);
+    }
+  }
+  return dd.items.filter((item) => item.category === label);
+}
+
 export function openDrilldown(dd: Drilldown, handlers: DrilldownHandlers): void {
   closeDrilldown();
 
-  const chartHost = el("div", { class: "drawer__chart" });
-  const list = el("div", { class: "drawer__list" });
+  let selected = dd.selected;
 
-  const items = [...dd.items].sort((a, b) => b.value - a.value).slice(0, 200);
-  for (const item of items) {
-    list.append(
-      el(
-        "button",
-        {
-          class: "drawer__item",
-          onClick: () => {
-            handlers.onJump(item);
-            closeDrilldown();
+  const chartHost = el("div", { class: "drawer__chart" });
+  const filterBar = el("div", { class: "drawer__filter" });
+  const list = el("div", { class: "drawer__list" });
+  const hint = el("p", { class: "drawer__hint" });
+
+  const refresh = (): void => {
+    const items = (selected ? itemsForLabel(dd, selected) : [...dd.items])
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 200);
+
+    list.replaceChildren(
+      ...items.map((item) =>
+        el(
+          "button",
+          {
+            class: "drawer__item",
+            onClick: () => {
+              handlers.onJump(item);
+              closeDrilldown();
+            },
           },
-        },
-        el("span", { class: "drawer__item-label", text: item.label }),
-        el("span", {
-          class: "drawer__item-file",
-          text: `${item.file}${item.line ? `:${item.line}` : ""}`,
-        }),
-        el("span", { class: "drawer__item-value", text: String(item.value) }),
+          el("span", { class: "drawer__item-label", text: item.label }),
+          el("span", {
+            class: "drawer__item-file",
+            text: `${item.file}${item.line ? `:${item.line}` : ""}`,
+          }),
+          el("span", { class: "drawer__item-value", text: String(item.value) }),
+        ),
       ),
     );
-  }
+
+    hint.textContent = String(items.length);
+
+    if (selected) {
+      const clear = el("button", {
+        class: "drawer__filter-clear",
+        text: "✕",
+        onClick: () => {
+          selected = undefined;
+          refresh();
+        },
+      });
+      clear.type = "button";
+      filterBar.replaceChildren(
+        el("span", { class: "drawer__filter-chip", text: selected }),
+        clear,
+      );
+      filterBar.hidden = false;
+    } else {
+      filterBar.replaceChildren();
+      filterBar.hidden = true;
+    }
+  };
 
   const closeBtn = el("button", { class: "drawer__close", text: "✕", onClick: closeDrilldown });
   closeBtn.type = "button";
@@ -76,7 +128,8 @@ export function openDrilldown(dd: Drilldown, handlers: DrilldownHandlers): void 
     { class: "drawer" },
     el("header", { class: "drawer__head" }, el("h2", { class: "drawer__title", text: dd.title }), closeBtn),
     chartHost,
-    el("p", { class: "drawer__hint", text: `${items.length}` }),
+    filterBar,
+    hint,
     list,
   );
 
@@ -87,16 +140,29 @@ export function openDrilldown(dd: Drilldown, handlers: DrilldownHandlers): void 
   document.addEventListener("keydown", onKey);
   document.body.append(overlay);
 
+  refresh();
+
   if (typeof requestAnimationFrame === "function") {
     requestAnimationFrame(() => overlay?.classList.add("drawer-overlay--open"));
   } else {
     overlay.classList.add("drawer-overlay--open");
   }
 
+  const onSelect = (name: string): void => {
+    if (itemsForLabel(dd, name).length === 0) return;
+    selected = selected === name ? undefined : name;
+    refresh();
+  };
+
+  if (dd.segments.length === 0) {
+    chartHost.hidden = true;
+    return;
+  }
+
   void (async () => {
     chartInstance =
       dd.chart === "bar"
-        ? await renderBar(chartHost, dd.segments)
-        : await renderDonut(chartHost, dd.segments, dd.centerValue, dd.centerLabel);
+        ? await renderBar(chartHost, dd.segments, onSelect)
+        : await renderDonut(chartHost, dd.segments, dd.centerValue, dd.centerLabel, onSelect);
   })();
 }

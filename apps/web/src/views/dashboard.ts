@@ -4,13 +4,15 @@ import {
   complexityColor,
   maintainabilityColor,
   PALETTE,
+  severityColor,
   type BucketRange,
   type DonutSegment,
 } from "../charts.js";
+import { MODULES, type ModuleId } from "../dashboard-modules.js";
 import { countUp, el, type ViewTargets } from "../dom.js";
 import { openDrilldown, type DrillItem } from "../drilldown.js";
-import { renderBar, renderDonut } from "../echarts.js";
 import { t } from "../i18n.js";
+import { defaultPrefs, type DashboardPrefs } from "../prefs.js";
 
 export interface DashboardHandlers {
   onJump: (item: DrillItem) => void;
@@ -35,69 +37,70 @@ interface KpiEntry {
   label: string;
   value: number;
   color?: string;
+  detail?: string;
   spec: DrillSpec;
 }
 
 const CYCLOMATIC_BUCKETS: readonly BucketRange[] = [
-  { upTo: 5, label: "1–5", color: "#3fb950" },
-  { upTo: 10, label: "6–10", color: "#d29922" },
-  { upTo: 20, label: "11–20", color: "#f0883e" },
-  { upTo: Number.POSITIVE_INFINITY, label: "21+", color: "#f85149" },
+  { upTo: 5, label: "1–5", severity: "good" },
+  { upTo: 10, label: "6–10", severity: "warn" },
+  { upTo: 20, label: "11–20", severity: "bad" },
+  { upTo: Number.POSITIVE_INFINITY, label: "21+", severity: "critical" },
 ];
 
 const COGNITIVE_BUCKETS: readonly BucketRange[] = [
-  { upTo: 5, label: "0–5", color: "#3fb950" },
-  { upTo: 15, label: "6–15", color: "#d29922" },
-  { upTo: 30, label: "16–30", color: "#f0883e" },
-  { upTo: Number.POSITIVE_INFINITY, label: "31+", color: "#f85149" },
+  { upTo: 5, label: "0–5", severity: "good" },
+  { upTo: 15, label: "6–15", severity: "warn" },
+  { upTo: 30, label: "16–30", severity: "bad" },
+  { upTo: Number.POSITIVE_INFINITY, label: "31+", severity: "critical" },
 ];
 
 const NESTING_BUCKETS: readonly BucketRange[] = [
-  { upTo: 0, label: "0", color: "#3fb950" },
-  { upTo: 2, label: "1–2", color: "#d29922" },
-  { upTo: 4, label: "3–4", color: "#f0883e" },
-  { upTo: Number.POSITIVE_INFINITY, label: "5+", color: "#f85149" },
+  { upTo: 0, label: "0", severity: "good" },
+  { upTo: 2, label: "1–2", severity: "warn" },
+  { upTo: 4, label: "3–4", severity: "bad" },
+  { upTo: Number.POSITIVE_INFINITY, label: "5+", severity: "critical" },
 ];
 
 const LENGTH_BUCKETS: readonly BucketRange[] = [
-  { upTo: 10, label: "1–10", color: "#3fb950" },
-  { upTo: 30, label: "11–30", color: "#d29922" },
-  { upTo: 80, label: "31–80", color: "#f0883e" },
-  { upTo: Number.POSITIVE_INFINITY, label: "80+", color: "#f85149" },
+  { upTo: 10, label: "1–10", severity: "good" },
+  { upTo: 30, label: "11–30", severity: "warn" },
+  { upTo: 80, label: "31–80", severity: "bad" },
+  { upTo: Number.POSITIVE_INFINITY, label: "80+", severity: "critical" },
 ];
 
 const MAINTAINABILITY_BUCKETS: readonly BucketRange[] = [
-  { upTo: 40, label: "<40", color: "#f85149" },
-  { upTo: 65, label: "40–65", color: "#d29922" },
-  { upTo: Number.POSITIVE_INFINITY, label: "65+", color: "#3fb950" },
+  { upTo: 40, label: "<40", severity: "critical" },
+  { upTo: 65, label: "40–65", severity: "warn" },
+  { upTo: Number.POSITIVE_INFINITY, label: "65+", severity: "good" },
 ];
 
 const PARAM_BUCKETS: readonly BucketRange[] = [
-  { upTo: 0, label: "0", color: "#3fb950" },
-  { upTo: 2, label: "1–2", color: "#3fb950" },
-  { upTo: 4, label: "3–4", color: "#d29922" },
-  { upTo: Number.POSITIVE_INFINITY, label: "5+", color: "#f85149" },
+  { upTo: 0, label: "0", severity: "good" },
+  { upTo: 2, label: "1–2", severity: "good" },
+  { upTo: 4, label: "3–4", severity: "warn" },
+  { upTo: Number.POSITIVE_INFINITY, label: "5+", severity: "critical" },
 ];
 
 const VOLUME_BUCKETS: readonly BucketRange[] = [
-  { upTo: 50, label: "0–50", color: "#3fb950" },
-  { upTo: 150, label: "51–150", color: "#d29922" },
-  { upTo: 400, label: "151–400", color: "#f0883e" },
-  { upTo: Number.POSITIVE_INFINITY, label: "400+", color: "#f85149" },
+  { upTo: 50, label: "0–50", severity: "good" },
+  { upTo: 150, label: "51–150", severity: "warn" },
+  { upTo: 400, label: "151–400", severity: "bad" },
+  { upTo: Number.POSITIVE_INFINITY, label: "400+", severity: "critical" },
 ];
 
 const DIFFICULTY_BUCKETS: readonly BucketRange[] = [
-  { upTo: 5, label: "0–5", color: "#3fb950" },
-  { upTo: 15, label: "6–15", color: "#d29922" },
-  { upTo: 30, label: "16–30", color: "#f0883e" },
-  { upTo: Number.POSITIVE_INFINITY, label: "30+", color: "#f85149" },
+  { upTo: 5, label: "0–5", severity: "good" },
+  { upTo: 15, label: "6–15", severity: "warn" },
+  { upTo: 30, label: "16–30", severity: "bad" },
+  { upTo: Number.POSITIVE_INFINITY, label: "30+", severity: "critical" },
 ];
 
 const FILE_SIZE_BUCKETS: readonly BucketRange[] = [
-  { upTo: 100, label: "1–100", color: "#3fb950" },
-  { upTo: 300, label: "101–300", color: "#d29922" },
-  { upTo: 600, label: "301–600", color: "#f0883e" },
-  { upTo: Number.POSITIVE_INFINITY, label: "600+", color: "#f85149" },
+  { upTo: 100, label: "1–100", severity: "good" },
+  { upTo: 300, label: "101–300", severity: "warn" },
+  { upTo: 600, label: "301–600", severity: "bad" },
+  { upTo: Number.POSITIVE_INFINITY, label: "600+", severity: "critical" },
 ];
 
 const KIND_ORDER: readonly FunctionKind[] = [
@@ -113,6 +116,7 @@ export function renderDashboard(
   targets: ViewTargets,
   report: AnalysisReport,
   handlers: DashboardHandlers,
+  prefs: DashboardPrefs = defaultPrefs(),
 ): void {
   targets.head.replaceChildren(header());
 
@@ -241,6 +245,14 @@ export function renderDashboard(
     String(files.length),
     s.donut.files,
   );
+  const logicalSpec = bucketSpec(
+    s.kpi.logicalLines,
+    files.map((file) => file.loc.logical),
+    FILE_SIZE_BUCKETS,
+    fileItems((file) => file.loc.logical),
+    String(files.length),
+    s.donut.files,
+  );
 
   const locSpec: DrillSpec = {
     title: s.charts.linesOfCode,
@@ -302,56 +314,79 @@ export function renderDashboard(
   const commentTotal = report.summary.loc.code + report.summary.loc.comment;
   const density = commentTotal > 0 ? (report.summary.loc.comment / commentTotal) * 100 : 0;
   const markerTotal = report.summary.markers.todo + report.summary.markers.fixme + report.summary.markers.hack;
+  const metrics = report.summary.metrics;
+  const violations = report.summary.violations;
 
-  const kpis: KpiEntry[] = [
-    { label: s.kpi.maintainability, value: Math.round(report.summary.maintainability), color: maintainabilityColor(report.summary.maintainability), spec: fileSizeSpec },
-    { label: s.kpi.files, value: files.length, spec: fileSizeSpec },
-    { label: s.kpi.functions, value: functions.length, spec: cyclomaticSpec },
-    { label: s.kpi.codeLines, value: report.summary.loc.code, spec: locSpec },
-    { label: s.kpi.commentPct, value: round1(density), spec: locSpec },
-    { label: s.kpi.avgCyclomatic, value: round1(report.summary.metrics.cyclomatic.mean), spec: cyclomaticSpec },
-    { label: s.kpi.maxCyclomatic, value: report.summary.metrics.cyclomatic.max, color: complexityColor(report.summary.metrics.cyclomatic.max), spec: cyclomaticSpec },
-    { label: s.kpi.avgCognitive, value: round1(report.summary.metrics.cognitive.mean), spec: cognitiveSpec },
-    { label: s.kpi.maxCognitive, value: report.summary.metrics.cognitive.max, color: complexityColor(report.summary.metrics.cognitive.max), spec: cognitiveSpec },
-    { label: s.kpi.maxNesting, value: report.summary.metrics.nesting.max, spec: nestingSpec },
-    { label: s.kpi.avgFunctionLength, value: round1(report.summary.metrics.functionLoc.mean), spec: lengthSpec },
-    { label: s.kpi.halsteadDifficulty, value: round1(report.summary.metrics.halsteadDifficulty.mean), spec: difficultySpec },
-    { label: s.kpi.physicalLines, value: report.summary.loc.physical, spec: fileSizeSpec },
-    { label: s.kpi.logicalLines, value: report.summary.loc.logical, spec: fileSizeSpec },
-    { label: s.kpi.violations, value: report.summary.violations.total, color: report.summary.violations.total > 0 ? "#d29922" : undefined, spec: ruleSpec },
-    { label: s.kpi.markers, value: markerTotal, color: markerTotal > 0 ? "#d29922" : undefined, spec: markerSpec },
-  ];
-
-  const charts: DrillSpec[] = [
-    locSpec,
-    languageSpec,
-    cyclomaticSpec,
-    cognitiveSpec,
-    nestingSpec,
-    lengthSpec,
-    kindsSpec,
-    maintainabilitySpec,
-    paramsSpec,
-    volumeSpec,
-    fileSizeSpec,
-  ];
-  if (markerTotal > 0) charts.push(markerSpec);
-  if (report.summary.violations.total > 0) charts.push(ruleSpec);
-
-  const pending: Array<() => void> = [];
-  const body = el(
-    "div",
-    { class: "dashboard-body" },
-    el("div", { class: "stats-grid" }, ...kpis.map((entry) => kpiCard(entry, handlers))),
-    el("div", { class: "donut-row" }, ...charts.map((spec) => chartCard(spec, handlers, pending))),
-  );
-  targets.body.replaceChildren(body);
-
-  const run = (): void => {
-    for (const init of pending) init();
+  const cardBuilders: Record<ModuleId, () => KpiEntry> = {
+    maintainability: () => ({
+      label: s.kpi.maintainability,
+      value: Math.round(report.summary.maintainability),
+      color: maintainabilityColor(report.summary.maintainability),
+      spec: maintainabilitySpec,
+    }),
+    scale: () => ({
+      label: s.kpi.scale,
+      value: report.summary.loc.code,
+      detail: s.kpiDetail.scale(files.length, functions.length),
+      spec: fileSizeSpec,
+    }),
+    cyclomatic: () => ({
+      label: s.kpi.maxCyclomatic,
+      value: metrics.cyclomatic.max,
+      color: complexityColor(metrics.cyclomatic.max),
+      detail: s.kpiDetail.avg(round1(metrics.cyclomatic.mean)),
+      spec: cyclomaticSpec,
+    }),
+    cognitive: () => ({
+      label: s.kpi.maxCognitive,
+      value: metrics.cognitive.max,
+      color: complexityColor(metrics.cognitive.max),
+      detail: s.kpiDetail.avg(round1(metrics.cognitive.mean)),
+      spec: cognitiveSpec,
+    }),
+    nesting: () => ({ label: s.kpi.maxNesting, value: metrics.nesting.max, spec: nestingSpec }),
+    functionLength: () => ({
+      label: s.kpi.avgFunctionLength,
+      value: round1(metrics.functionLoc.mean),
+      spec: lengthSpec,
+    }),
+    params: () => ({ label: s.kpi.params, value: metrics.params.max, spec: paramsSpec }),
+    halsteadVolume: () => ({
+      label: s.kpi.halsteadVolume,
+      value: round1(metrics.halsteadVolume.mean),
+      spec: volumeSpec,
+    }),
+    halsteadDifficulty: () => ({
+      label: s.kpi.halsteadDifficulty,
+      value: round1(metrics.halsteadDifficulty.mean),
+      spec: difficultySpec,
+    }),
+    loc: () => ({ label: s.charts.linesOfCode, value: report.summary.loc.physical, spec: locSpec }),
+    logicalLines: () => ({ label: s.kpi.logicalLines, value: report.summary.loc.logical, spec: logicalSpec }),
+    commentPct: () => ({ label: s.kpi.commentPct, value: round1(density), spec: locSpec }),
+    languages: () => ({ label: s.charts.languages, value: files.length, spec: languageSpec }),
+    functionKinds: () => ({ label: s.charts.functionKinds, value: functions.length, spec: kindsSpec }),
+    markers: () => ({
+      label: s.kpi.markers,
+      value: markerTotal,
+      color: markerTotal > 0 ? severityColor("warn") : undefined,
+      spec: markerSpec,
+    }),
+    violations: () => ({
+      label: s.kpi.violations,
+      value: violations.total,
+      color: violations.total > 0 ? severityColor("critical") : undefined,
+      detail: markerTotal > 0 ? s.alerts.markers(markerTotal) : undefined,
+      spec: ruleSpec,
+    }),
   };
-  if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
-  else run();
+
+  const cards = MODULES.filter((module) => prefs.modules[module.id]).map((module) =>
+    kpiCard(cardBuilders[module.id](), handlers),
+  );
+  targets.body.replaceChildren(
+    el("div", { class: "dashboard-body" }, el("div", { class: "stats-grid stats-grid--core" }, ...cards)),
+  );
 }
 
 function header(): HTMLElement {
@@ -368,45 +403,20 @@ function kpiCard(entry: KpiEntry, handlers: DashboardHandlers): HTMLElement {
   if (Number.isInteger(entry.value)) countUp(valueNode, entry.value);
   else valueNode.textContent = String(entry.value);
 
+  const children: HTMLElement[] = [valueNode];
+  if (entry.detail) {
+    children.push(el("div", { class: "kpi__detail", text: entry.detail }));
+  }
+  children.push(el("div", { class: "kpi__label", text: entry.label }));
+
   return el(
     "button",
     {
       class: "kpi kpi--clickable",
       onClick: () => openDrilldown(entry.spec, { onJump: handlers.onJump }),
     },
-    valueNode,
-    el("div", { class: "kpi__label", text: entry.label }),
+    ...children,
   );
-}
-
-function chartCard(
-  spec: DrillSpec,
-  handlers: DashboardHandlers,
-  pending: Array<() => void>,
-): HTMLElement {
-  const host = el("div", { class: "chart-host" });
-  pending.push(() => {
-    const onSelect = (name: string): void =>
-      openDrilldown(filterSpec(spec, name), { onJump: handlers.onJump });
-    void (spec.chart === "bar"
-      ? renderBar(host, spec.segments, onSelect)
-      : renderDonut(host, spec.segments, spec.centerValue, spec.centerLabel, onSelect));
-  });
-  return el("div", { class: "donut-card" }, el("h3", { text: spec.title }), host);
-}
-
-function bucketLabel(value: number, ranges: readonly BucketRange[]): string {
-  const index = ranges.findIndex((range) => value <= range.upTo);
-  return ranges[index === -1 ? ranges.length - 1 : index]?.label ?? "";
-}
-
-function filterSpec(spec: DrillSpec, name: string): DrillSpec {
-  const items = spec.items.filter((item) => {
-    if (spec.ranges) return bucketLabel(item.value, spec.ranges) === name;
-    if (item.category) return item.category === name;
-    return true;
-  });
-  return { ...spec, title: `${spec.title} · ${name}`, items };
 }
 
 function functionKinds(functions: readonly FunctionReport[]): DonutSegment[] {

@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { bucketize, type BucketRange } from "../src/charts.js";
 
 const RANGES: BucketRange[] = [
-  { upTo: 5, label: "1–5", color: "#3fb950" },
-  { upTo: 10, label: "6–10", color: "#d29922" },
-  { upTo: Number.POSITIVE_INFINITY, label: "11+", color: "#f85149" },
+  { upTo: 5, label: "1–5", severity: "good" },
+  { upTo: 10, label: "6–10", severity: "warn" },
+  { upTo: Number.POSITIVE_INFINITY, label: "11+", severity: "critical" },
 ];
 
 describe("bucketize", () => {

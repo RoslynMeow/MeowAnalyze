@@ -10,19 +10,21 @@ import {
 import { button, downloadJson, el, icon, HOME_ICON, type ViewTargets } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
-import { openSettings } from "./settings.js";
+import { renderSettings, type SettingsValues } from "./settings.js";
+import { loadPrefs, savePrefs, type DashboardPrefs } from "./prefs.js";
 import { chooseFolder } from "./platform.js";
 import { disposeCharts } from "./echarts.js";
 import { closeDrilldown, type DrillItem } from "./drilldown.js";
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail, type Highlight } from "./views/detail.js";
+import { renderHelp } from "./views/help.js";
 import { renderLanding } from "./views/landing.js";
 
 const appEl = document.getElementById("app");
 if (!appEl) throw new Error("missing #app");
 const app: HTMLElement = appEl;
 
-const TABS = ["dashboard", "detail"] as const;
+const TABS = ["dashboard", "detail", "help", "settings"] as const;
 type Tab = (typeof TABS)[number];
 
 const state: {
@@ -32,11 +34,13 @@ const state: {
   selectedPath?: string;
   highlight?: Highlight;
   thresholds: Thresholds;
+  prefs: DashboardPrefs;
   tab: Tab;
 } = {
   sources: [],
   root: "in-browser",
   thresholds: { ...DEFAULT_THRESHOLDS },
+  prefs: loadPrefs(),
   tab: "dashboard",
 };
 
@@ -51,9 +55,8 @@ let content: HTMLElement;
 let sidenav: HTMLElement;
 let homeBtn: HTMLButtonElement;
 let brand: HTMLElement;
-let settingsBtn: HTMLButtonElement;
 let exportBtn: HTMLButtonElement;
-let tabButtons: HTMLButtonElement[] = [];
+const navButtons: Array<{ tab: Tab; node: HTMLButtonElement }> = [];
 
 function mountShell(): void {
   brand = el(
@@ -103,32 +106,46 @@ function goHome(): void {
 /* Tabs + hash routing                                                 */
 /* ------------------------------------------------------------------ */
 
-function mountSidenav(): void {
-  tabButtons = TABS.map((tab) => {
-    const node = el("button", { class: "sidenav__item", text: t().pages[tab] });
-    node.type = "button";
-    node.addEventListener("click", () => goTab(tab));
-    return node;
-  });
+function tabLabel(tab: Tab): string {
+  if (tab === "settings") return t().common.settings;
+  if (tab === "help") return t().common.help;
+  return t().pages[tab];
+}
 
-  settingsBtn = el("button", { class: "sidenav__item sidenav__action", onClick: openSettingsDialog });
-  settingsBtn.type = "button";
+const TOP_TABS: readonly Tab[] = ["dashboard", "detail"];
+
+function makeTabButton(tab: Tab, className: string): HTMLButtonElement {
+  const node = el("button", { class: className, text: tabLabel(tab) });
+  node.type = "button";
+  node.addEventListener("click", () => goTab(tab));
+  navButtons.push({ tab, node });
+  return node;
+}
+
+function mountSidenav(): void {
+  navButtons.length = 0;
+
+  const topButtons = TOP_TABS.map((tab) => makeTabButton(tab, "sidenav__item"));
+  const helpBtn = makeTabButton("help", "sidenav__item sidenav__action");
+  const settingsBtn = makeTabButton("settings", "sidenav__item sidenav__action");
+
   exportBtn = el("button", { class: "sidenav__item sidenav__action", onClick: exportReport });
   exportBtn.type = "button";
 
   sidenav.replaceChildren(
-    ...tabButtons,
+    ...topButtons,
     el("div", { class: "sidenav__spacer" }),
+    helpBtn,
     settingsBtn,
     exportBtn,
   );
 }
 
-function openSettingsDialog(): void {
-  openSettings(state.thresholds, (thresholds) => {
-    state.thresholds = thresholds;
-    rerun();
-  });
+function applySettings(values: SettingsValues): void {
+  state.thresholds = values.thresholds;
+  state.prefs = values.prefs;
+  savePrefs(values.prefs);
+  rerun();
 }
 
 function exportReport(): void {
@@ -136,14 +153,12 @@ function exportReport(): void {
 }
 
 function updateTabs(): void {
-  tabButtons.forEach((node, index) => {
-    const tab = TABS[index];
+  for (const { tab, node } of navButtons) {
     const active = tab === state.tab;
-    node.textContent = t().pages[tab ?? "dashboard"];
+    node.textContent = tabLabel(tab);
     node.classList.toggle("sidenav__item--active", active);
     node.setAttribute("aria-selected", active ? "true" : "false");
-  });
-  settingsBtn.textContent = t().common.settings;
+  }
   exportBtn.textContent = t().common.exportJson;
 }
 
@@ -213,8 +228,16 @@ function renderContent(): void {
     renderDetail(targets, report, state.sources, state.selectedPath, {
       onSelect: selectFile,
     }, state.highlight);
+  } else if (state.tab === "help") {
+    renderHelp(targets);
+  } else if (state.tab === "settings") {
+    renderSettings(
+      targets,
+      { thresholds: state.thresholds, prefs: state.prefs },
+      { onApply: applySettings },
+    );
   } else {
-    renderDashboard(targets, report, { onJump: jumpToItem });
+    renderDashboard(targets, report, { onJump: jumpToItem }, state.prefs);
   }
 
   updateTabs();
