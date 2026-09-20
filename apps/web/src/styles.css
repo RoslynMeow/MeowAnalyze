@@ -616,6 +616,17 @@ body {
 
 .chart__arc {
   transition: opacity 0.12s ease;
+  animation: arcIn 0.5s ease both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes arcIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .chart__arc:hover {
@@ -867,40 +878,127 @@ th.sortable:hover {
 
 .kpi,
 .chart-block,
+.donut-card,
 .file-card {
   animation: revealUp 0.5s ease both;
 }
 
 .kpi:nth-child(1),
-.chart-block:nth-child(1) {
+.chart-block:nth-child(1),
+.donut-card:nth-child(1) {
   animation-delay: 0.04s;
 }
 .kpi:nth-child(2),
-.chart-block:nth-child(2) {
+.chart-block:nth-child(2),
+.donut-card:nth-child(2) {
   animation-delay: 0.08s;
 }
 .kpi:nth-child(3),
-.chart-block:nth-child(3) {
+.chart-block:nth-child(3),
+.donut-card:nth-child(3) {
   animation-delay: 0.12s;
 }
 .kpi:nth-child(4),
-.chart-block:nth-child(4) {
+.chart-block:nth-child(4),
+.donut-card:nth-child(4) {
   animation-delay: 0.16s;
 }
 .kpi:nth-child(5),
-.chart-block:nth-child(5) {
+.chart-block:nth-child(5),
+.donut-card:nth-child(5) {
   animation-delay: 0.2s;
 }
 .kpi:nth-child(6),
-.chart-block:nth-child(6) {
+.chart-block:nth-child(6),
+.donut-card:nth-child(6) {
   animation-delay: 0.24s;
 }
 .kpi:nth-child(7),
-.chart-block:nth-child(7) {
+.chart-block:nth-child(7),
+.donut-card:nth-child(7) {
   animation-delay: 0.28s;
 }
-.kpi:nth-child(8) {
+.kpi:nth-child(8),
+.donut-card:nth-child(8) {
   animation-delay: 0.32s;
+}
+.kpi:nth-child(9),
+.donut-card:nth-child(9) {
+  animation-delay: 0.36s;
+}
+.kpi:nth-child(10),
+.donut-card:nth-child(10) {
+  animation-delay: 0.4s;
+}
+.kpi:nth-child(11),
+.donut-card:nth-child(11) {
+  animation-delay: 0.44s;
+}
+.kpi:nth-child(12),
+.donut-card:nth-child(12) {
+  animation-delay: 0.48s;
+}
+.kpi:nth-child(13) {
+  animation-delay: 0.52s;
+}
+.kpi:nth-child(14) {
+  animation-delay: 0.56s;
+}
+.kpi:nth-child(15) {
+  animation-delay: 0.6s;
+}
+.kpi:nth-child(16) {
+  animation-delay: 0.64s;
+}
+
+.legend li {
+  animation: revealUp 0.4s ease both;
+}
+
+.legend li:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.legend li:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.legend li:nth-child(4) {
+  animation-delay: 0.18s;
+}
+.legend li:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+.kpi {
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.kpi:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.donut-card {
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.donut-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.topbar__head .page__head {
+  animation: headIn 0.35s ease both;
+}
+
+@keyframes headIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes revealUp {

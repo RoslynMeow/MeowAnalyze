@@ -46,6 +46,33 @@ const LENGTH_BUCKETS: readonly BucketRange[] = [
   { upTo: Number.POSITIVE_INFINITY, label: "80+", color: "#f85149" },
 ];
 
+const MAINTAINABILITY_BUCKETS: readonly BucketRange[] = [
+  { upTo: 40, label: "<40", color: "#f85149" },
+  { upTo: 65, label: "40–65", color: "#d29922" },
+  { upTo: Number.POSITIVE_INFINITY, label: "65+", color: "#3fb950" },
+];
+
+const PARAM_BUCKETS: readonly BucketRange[] = [
+  { upTo: 0, label: "0", color: "#3fb950" },
+  { upTo: 2, label: "1–2", color: "#3fb950" },
+  { upTo: 4, label: "3–4", color: "#d29922" },
+  { upTo: Number.POSITIVE_INFINITY, label: "5+", color: "#f85149" },
+];
+
+const VOLUME_BUCKETS: readonly BucketRange[] = [
+  { upTo: 50, label: "0–50", color: "#3fb950" },
+  { upTo: 150, label: "51–150", color: "#d29922" },
+  { upTo: 400, label: "151–400", color: "#f0883e" },
+  { upTo: Number.POSITIVE_INFINITY, label: "400+", color: "#f85149" },
+];
+
+const FILE_SIZE_BUCKETS: readonly BucketRange[] = [
+  { upTo: 100, label: "1–100", color: "#3fb950" },
+  { upTo: 300, label: "101–300", color: "#d29922" },
+  { upTo: 600, label: "301–600", color: "#f0883e" },
+  { upTo: Number.POSITIVE_INFINITY, label: "600+", color: "#f85149" },
+];
+
 const KIND_ORDER: readonly FunctionKind[] = [
   "function",
   "method",
@@ -123,7 +150,11 @@ function stats(report: AnalysisReport): HTMLElement {
     kpi(s.maxCyclomatic, summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
     kpi(s.avgCognitive, round1(summary.metrics.cognitive.mean)),
     kpi(s.maxCognitive, summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
+    kpi(s.maxNesting, summary.metrics.nesting.max),
+    kpi(s.avgFunctionLength, round1(summary.metrics.functionLoc.mean)),
     kpi(s.halsteadDifficulty, round1(summary.metrics.halsteadDifficulty.mean)),
+    kpi(s.physicalLines, summary.loc.physical),
+    kpi(s.logicalLines, summary.loc.logical),
     kpi(s.violations, summary.violations.total, summary.violations.total > 0 ? "#d29922" : undefined),
     kpi(s.markers, markerCount, markerCount > 0 ? "#d29922" : undefined),
   );
@@ -181,6 +212,10 @@ function donuts(report: AnalysisReport): HTMLElement {
     donutCard(s.charts.nesting, bucketize(functions.map((f) => f.maxNesting), NESTING_BUCKETS), String(functions.length), s.donut.functions),
     donutCard(s.charts.functionLength, bucketize(functions.map((f) => f.loc), LENGTH_BUCKETS), String(functions.length), s.donut.functions),
     donutCard(s.charts.functionKinds, functionKinds(functions), String(functions.length), s.donut.functions),
+    donutCard(s.charts.maintainability, bucketize(functions.map((f) => f.maintainability), MAINTAINABILITY_BUCKETS), String(functions.length), s.donut.functions),
+    donutCard(s.charts.parameters, bucketize(functions.map((f) => f.params), PARAM_BUCKETS), String(functions.length), s.donut.functions),
+    donutCard(s.charts.halsteadVolume, bucketize(functions.map((f) => f.halstead.volume), VOLUME_BUCKETS), String(functions.length), s.donut.functions),
+    donutCard(s.charts.fileSize, bucketize(report.files.map((f) => f.loc.code), FILE_SIZE_BUCKETS), String(report.files.length), s.donut.files),
   ];
 
   const markers = markerSegments(report);

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web: the dashboard surfaces more data — average cyclomatic/cognitive
   complexity and Halstead difficulty KPIs, plus nesting, function-length and
   function-kind distribution charts, and markers / violations-by-rule charts.
+- Web: 4 more KPIs (max nesting, avg function length, physical and logical lines)
+  and 4 more charts (maintainability, parameters, Halstead volume, file size),
+  plus staggered entrance and donut-arc animations.
 - Core: `FileMetrics` gains `halsteadDifficulty` and `halsteadEffort`.
 
 ### Added

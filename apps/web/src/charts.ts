@@ -476,8 +476,8 @@ export function donutChart(
   );
 
   let offset = 0;
-  for (const segment of segments) {
-    if (total === 0 || segment.value === 0) continue;
+  segments.forEach((segment, index) => {
+    if (total === 0 || segment.value === 0) return;
     const length = (segment.value / total) * circumference;
     const arc = withTitle(
       svg("circle", {
@@ -494,9 +494,10 @@ export function donutChart(
       }),
       `${segment.label}: ${segment.value} (${Math.round((segment.value / total) * 100)}%)`,
     );
+    withDelay(arc, index, 45);
     root.append(arc);
     offset += length;
-  }
+  });
 
   if (options.centerValue) {
     const value = svg("text", {

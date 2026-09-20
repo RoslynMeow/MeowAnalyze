@@ -67,6 +67,10 @@ export interface Strings {
       avgCognitive: string;
       maxCognitive: string;
       halsteadDifficulty: string;
+      physicalLines: string;
+      logicalLines: string;
+      avgFunctionLength: string;
+      maxNesting: string;
       violations: string;
       markers: string;
     };
@@ -78,6 +82,10 @@ export interface Strings {
       nesting: string;
       functionLength: string;
       functionKinds: string;
+      maintainability: string;
+      parameters: string;
+      halsteadVolume: string;
+      fileSize: string;
       markers: string;
       ruleViolations: string;
     };
@@ -202,6 +210,10 @@ const zh: Strings = {
       avgCognitive: "平均认知复杂度",
       maxCognitive: "最大认知复杂度",
       halsteadDifficulty: "Halstead 难度",
+      physicalLines: "物理行",
+      logicalLines: "逻辑行",
+      avgFunctionLength: "平均函数行数",
+      maxNesting: "最大嵌套深度",
       violations: "违规",
       markers: "标记",
     },
@@ -213,6 +225,10 @@ const zh: Strings = {
       nesting: "嵌套深度分布",
       functionLength: "函数长度分布",
       functionKinds: "函数类型",
+      maintainability: "维护指数分布",
+      parameters: "参数个数分布",
+      halsteadVolume: "Halstead 体积分布",
+      fileSize: "文件大小分布",
       markers: "标记",
       ruleViolations: "违规规则",
     },
@@ -332,6 +348,10 @@ const en: Strings = {
       avgCognitive: "Avg cognitive",
       maxCognitive: "Max cognitive",
       halsteadDifficulty: "Halstead difficulty",
+      physicalLines: "Physical lines",
+      logicalLines: "Logical lines",
+      avgFunctionLength: "Avg function length",
+      maxNesting: "Max nesting",
       violations: "Violations",
       markers: "Markers",
     },
@@ -343,6 +363,10 @@ const en: Strings = {
       nesting: "Nesting depth distribution",
       functionLength: "Function length distribution",
       functionKinds: "Function kinds",
+      maintainability: "Maintainability distribution",
+      parameters: "Parameters distribution",
+      halsteadVolume: "Halstead volume distribution",
+      fileSize: "File size distribution",
       markers: "Markers",
       ruleViolations: "Rule violations",
     },
