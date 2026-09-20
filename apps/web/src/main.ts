@@ -8,7 +8,7 @@ import {
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
-import { button, downloadJson, el } from "./dom.js";
+import { button, downloadJson, el, type ViewTargets } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { openSettings } from "./settings.js";
@@ -37,11 +37,26 @@ const state: {
 };
 
 let notice: string | undefined;
-let pager: HTMLElement | undefined;
-let pages: HTMLElement[] = [];
-let bodies: HTMLElement[] = [];
-let dots: HTMLButtonElement[] = [];
-let currentPage = 0;
+
+/* ------------------------------------------------------------------ */
+/* Shell: top bar (page head + controls) above the content area        */
+/* ------------------------------------------------------------------ */
+
+let headSlot: HTMLElement;
+let content: HTMLElement;
+
+function mountShell(): void {
+  headSlot = el("div", { class: "topbar__head" });
+  const controls = el("div", { class: "controls" });
+  const topbar = el(
+    "header",
+    { class: "topbar" },
+    el("div", { class: "topbar__inner" }, headSlot, controls),
+  );
+  content = el("div", { class: "content" });
+  app.replaceChildren(topbar, content);
+  mountControls(controls);
+}
 
 /* ------------------------------------------------------------------ */
 /* Landing                                                             */
@@ -49,8 +64,8 @@ let currentPage = 0;
 
 function renderLandingView(): void {
   teardownPager();
-  app.classList.remove("app--pager");
-  renderLanding(app, {
+  headSlot.replaceChildren();
+  renderLanding(content, {
     bannerUrl,
     onFolder: () => void handleFolder(),
     notice,
@@ -59,8 +74,16 @@ function renderLandingView(): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Pager (3 full-height pages)                                         */
+/* Pager (full-height pages)                                           */
 /* ------------------------------------------------------------------ */
+
+let pager: HTMLElement | undefined;
+let pages: HTMLElement[] = [];
+let bodies: HTMLElement[] = [];
+let heads: HTMLElement[] = [];
+let dots: HTMLButtonElement[] = [];
+let nav: HTMLElement | undefined;
+let currentPage = 0;
 
 function mountPager(): void {
   teardownPager();
@@ -68,15 +91,17 @@ function mountPager(): void {
   pager = el("div", { class: "pager" });
   pages = [];
   bodies = [];
+  heads = [];
   for (let index = 0; index < PAGE_COUNT; index++) {
     const body = el("div", { class: `page__body page__body--${PAGE_KEYS[index]}` });
     const section = el("section", { class: `page page--${PAGE_KEYS[index]}` }, body);
     pages.push(section);
     bodies.push(body);
+    heads.push(el("div", { class: "page__head-slot" }));
   }
   pager.append(...pages);
 
-  const nav = el("nav", { class: "page-dots" });
+  nav = el("nav", { class: "page-dots" });
   dots = PAGE_KEYS.map((_, index) => {
     const dot = el("button", { class: "page-dot" });
     dot.type = "button";
@@ -85,8 +110,8 @@ function mountPager(): void {
   });
   nav.append(...dots);
 
-  app.replaceChildren(pager, nav);
-  app.classList.add("app--pager");
+  content.replaceChildren(pager);
+  app.append(nav);
   pager.addEventListener("scroll", onPagerScroll, { passive: true });
   document.addEventListener("keydown", onKeydown);
 
@@ -97,7 +122,7 @@ function renderPages(): void {
   const report = state.report;
   if (!report || bodies.length === 0) return;
 
-  renderDashboard(bodies[0]!, report, {
+  renderDashboard({ head: heads[0]!, body: bodies[0]! }, report, {
     onOpenFile: selectFile,
     onNewAnalysis: () => {
       state.report = undefined;
@@ -114,15 +139,22 @@ function renderPages(): void {
   });
 
   renderDetailPage();
+  showPageHead(currentPage);
   updateDots();
 }
 
 function renderDetailPage(): void {
   const report = state.report;
   if (!report || bodies.length === 0) return;
-  renderDetail(bodies[1]!, report, state.sources, state.selectedPath, {
+  const targets: ViewTargets = { head: heads[1]!, body: bodies[1]! };
+  renderDetail(targets, report, state.sources, state.selectedPath, {
     onSelect: selectFile,
   });
+}
+
+function showPageHead(index: number): void {
+  const head = heads[index];
+  if (head) headSlot.replaceChildren(head);
 }
 
 function selectFile(path: string): void {
@@ -135,6 +167,7 @@ function goToPage(index: number): void {
   const target = pages[index];
   if (!target) return;
   currentPage = index;
+  showPageHead(index);
   updateDots();
   target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -145,6 +178,7 @@ function onPagerScroll(): void {
   const page = Math.round(pager.scrollTop / height);
   if (page !== currentPage) {
     currentPage = page;
+    showPageHead(page);
     updateDots();
   }
 }
@@ -188,9 +222,12 @@ function onKeydown(event: KeyboardEvent): void {
 
 function teardownPager(): void {
   document.removeEventListener("keydown", onKeydown);
+  nav?.remove();
+  nav = undefined;
   pager = undefined;
   pages = [];
   bodies = [];
+  heads = [];
   dots = [];
   currentPage = 0;
 }
@@ -257,8 +294,7 @@ function controlButton(label: string, active: boolean, onClick: () => void): HTM
   return node;
 }
 
-function mountControls(): void {
-  const bar = el("div", { class: "top-controls" });
+function mountControls(container: HTMLElement): void {
   const themeGroup = el("div", { class: "control-group" });
   const langGroup = el("div", { class: "control-group" });
 
@@ -290,9 +326,8 @@ function mountControls(): void {
     }
   });
 
-  bar.append(themeGroup, langGroup);
-  document.body.append(bar);
+  container.append(themeGroup, langGroup);
 }
 
-mountControls();
+mountShell();
 renderLandingView();

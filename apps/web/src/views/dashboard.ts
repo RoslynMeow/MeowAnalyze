@@ -8,7 +8,7 @@ import {
   type BucketRange,
   type DonutSegment,
 } from "../charts.js";
-import { button, countUp, el } from "../dom.js";
+import { button, countUp, el, type ViewTargets } from "../dom.js";
 import { t } from "../i18n.js";
 
 export interface DashboardHandlers {
@@ -56,12 +56,12 @@ const KIND_ORDER: readonly FunctionKind[] = [
 ];
 
 export function renderDashboard(
-  root: HTMLElement,
+  targets: ViewTargets,
   report: AnalysisReport,
   handlers: DashboardHandlers,
 ): void {
-  root.replaceChildren();
-  root.append(header(report, handlers), stats(report), donuts(report));
+  targets.head.replaceChildren(header(report, handlers));
+  targets.body.replaceChildren(stats(report), donuts(report));
 }
 
 function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {

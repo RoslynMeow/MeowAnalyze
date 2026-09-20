@@ -31,6 +31,10 @@ function sampleReport(): AnalysisReport {
   });
 }
 
+function targets(): { head: HTMLElement; body: HTMLElement } {
+  return { head: document.createElement("div"), body: document.createElement("div") };
+}
+
 describe("landing view", () => {
   it("shows the banner and only the open-folder option", () => {
     const root = document.createElement("div");
@@ -44,49 +48,46 @@ describe("landing view", () => {
 
 describe("dashboard view", () => {
   it("renders a data-only dashboard with stats and donut charts", () => {
-    const root = document.createElement("div");
-    renderDashboard(root, sampleReport(), {
+    const view = targets();
+    renderDashboard(view, sampleReport(), {
       onOpenFile: vi.fn(),
       onNewAnalysis: vi.fn(),
       onExport: vi.fn(),
       onOpenSettings: vi.fn(),
     });
 
-    expect(root.querySelectorAll(".kpi").length).toBeGreaterThanOrEqual(10);
-    expect(root.querySelector(".stats-grid")).not.toBeNull();
-    expect(root.querySelectorAll(".donut-card").length).toBeGreaterThanOrEqual(7);
+    expect(view.head.querySelector(".page__head")).not.toBeNull();
+    expect(view.body.querySelectorAll(".kpi").length).toBeGreaterThanOrEqual(10);
+    expect(view.body.querySelector(".stats-grid")).not.toBeNull();
+    expect(view.body.querySelectorAll(".donut-card").length).toBeGreaterThanOrEqual(7);
   });
 });
 
 describe("detail view", () => {
   it("lists files and previews the selected one", () => {
     const report = sampleReport();
-    const root = document.createElement("div");
+    const view = targets();
     const onSelect = vi.fn();
-    renderDetail(
-      root,
-      report,
-      [{ path: "src/a.ts", content: SOURCE }],
-      "src/a.ts",
-      { onSelect },
-    );
+    renderDetail(view, report, [{ path: "src/a.ts", content: SOURCE }], "src/a.ts", {
+      onSelect,
+    });
 
-    expect(root.querySelectorAll(".file-list__item").length).toBe(2);
-    expect(root.querySelectorAll(".source__line").length).toBeGreaterThan(0);
+    expect(view.body.querySelectorAll(".file-list__item").length).toBe(2);
+    expect(view.body.querySelectorAll(".source__line").length).toBeGreaterThan(0);
 
-    root.querySelectorAll<HTMLElement>(".file-list__item")[1]?.click();
+    view.body.querySelectorAll<HTMLElement>(".file-list__item")[1]?.click();
     expect(onSelect).toHaveBeenCalled();
   });
 
   it("locates and highlights a function in the source", () => {
     const report = sampleReport();
-    const root = document.createElement("div");
-    renderDetail(root, report, [{ path: "src/a.ts", content: SOURCE }], "src/a.ts", {
+    const view = targets();
+    renderDetail(view, report, [{ path: "src/a.ts", content: SOURCE }], "src/a.ts", {
       onSelect: vi.fn(),
     });
 
-    root.querySelector<HTMLElement>(".link")?.click();
-    expect(root.querySelectorAll(".source__line--active").length).toBeGreaterThan(0);
+    view.body.querySelector<HTMLElement>(".link")?.click();
+    expect(view.body.querySelectorAll(".source__line--active").length).toBeGreaterThan(0);
   });
 });
 

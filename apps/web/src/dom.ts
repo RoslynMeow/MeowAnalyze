@@ -1,5 +1,11 @@
 export type Child = Node | string | number | null | undefined;
 
+/** Where a view renders: a per-page header (shown in the top bar) and the body. */
+export interface ViewTargets {
+  head: HTMLElement;
+  body: HTMLElement;
+}
+
 export interface ElProps {
   class?: string;
   text?: string;

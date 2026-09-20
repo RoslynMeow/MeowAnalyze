@@ -1,6 +1,6 @@
 import type { AnalysisReport, FileReport, FunctionReport } from "@meowanalyze/core";
 import { complexityColor, maintainabilityColor } from "../charts.js";
-import { el } from "../dom.js";
+import { el, type ViewTargets } from "../dom.js";
 import { t } from "../i18n.js";
 import { decodeContent } from "../sources.js";
 import { dataTable, type Cell } from "../table.js";
@@ -12,14 +12,12 @@ export interface DetailHandlers {
 const MAX_SOURCE_LINES = 5000;
 
 export function renderDetail(
-  root: HTMLElement,
+  targets: ViewTargets,
   report: AnalysisReport,
   sources: ReadonlyArray<{ path: string; content: Uint8Array | string }>,
   selectedPath: string | undefined,
   handlers: DetailHandlers,
 ): void {
-  root.replaceChildren();
-
   const file = selectedPath
     ? report.files.find((entry) => entry.path === selectedPath)
     : undefined;
@@ -27,7 +25,7 @@ export function renderDetail(
     ? sources.find((entry) => entry.path === file.path)
     : undefined;
 
-  root.append(
+  targets.head.replaceChildren(
     el(
       "header",
       { class: "page__head" },
@@ -41,6 +39,9 @@ export function renderDetail(
         }),
       ),
     ),
+  );
+
+  targets.body.replaceChildren(
     el(
       "div",
       { class: "detail-layout" },
