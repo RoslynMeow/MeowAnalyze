@@ -7,6 +7,8 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 export default defineConfig(({ mode }) => {
   const single = mode === "single";
   return {
+    // Relative asset URLs so the built site also works from file:// (Electron).
+    base: "./",
     plugins: single ? [viteSingleFile()] : [],
     resolve: {
       alias: {

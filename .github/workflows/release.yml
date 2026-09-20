@@ -109,8 +109,39 @@ jobs:
             meowanalyze-web.html
           if-no-files-found: error
 
+  desktop:
+    needs: [version, test]
+    if: needs.version.outputs.publish == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build web + desktop
+        run: npm run build:desktop
+      - name: Package desktop app
+        run: npm run dist --workspace @meowanalyze/desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
+          if-no-files-found: error
+
   release:
-    needs: [version, cli, web]
+    needs: [version, cli, web, desktop]
     if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-latest
     steps:

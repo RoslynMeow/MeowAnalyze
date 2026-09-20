@@ -1,0 +1,19 @@
+{
+  "name": "@meowanalyze/desktop",
+  "version": "0.1.0",
+  "description": "MeowAnalyze desktop app (Electron) — reuses the web UI.",
+  "private": true,
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^44.4.3",
+    "electron-builder": "^26.15.3"
+  }
+}

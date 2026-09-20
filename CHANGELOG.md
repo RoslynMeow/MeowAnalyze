@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Desktop app (`@meowanalyze/desktop`): Electron, reusing the built web UI in
+  the renderer. The main process opens a native folder dialog and reads files
+  directly (no CLI subprocess); packaged as NSIS / dmg / AppImage + deb.
 - Core metrics: cognitive complexity (Sonar-style, nesting-weighted), Halstead
   metrics and a maintainability index (per function, per file and averaged), plus
   `TODO` / `FIXME` / `HACK` marker counts. Surfaced in the JSON report, the CLI

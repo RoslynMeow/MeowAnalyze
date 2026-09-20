@@ -12,12 +12,15 @@
     "node": ">=18"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json && npm run typecheck --workspace @meowanalyze/web",
+    "typecheck": "tsc -p tsconfig.json && npm run typecheck --workspace @meowanalyze/web && npm run typecheck --workspace @meowanalyze/desktop",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "npm run build --workspace @meowanalyze/core",
     "build:web": "npm run build --workspace @meowanalyze/web",
     "build:web:single": "npm run build:single --workspace @meowanalyze/web",
+    "build:desktop": "npm run build:web && npm run build --workspace @meowanalyze/desktop",
+    "dist:desktop": "npm run build:desktop && npm run dist --workspace @meowanalyze/desktop",
+    "start:desktop": "npm run start --workspace @meowanalyze/desktop",
     "dev": "tsx packages/cli/src/cli.ts",
     "dev:web": "npm run dev --workspace @meowanalyze/web",
     "bundle": "node scripts/bundle.mjs",

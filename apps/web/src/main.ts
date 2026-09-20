@@ -12,11 +12,7 @@ import { button, downloadJson, el } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { openSettings } from "./settings.js";
-import {
-  fileListToSources,
-  pickDirectory,
-  supportsDirectoryPicker,
-} from "./sources.js";
+import { chooseFolder } from "./platform.js";
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail } from "./views/detail.js";
 import { renderLanding } from "./views/landing.js";
@@ -207,20 +203,7 @@ function teardownPager(): void {
 
 async function handleFolder(): Promise<void> {
   try {
-    if (supportsDirectoryPicker()) {
-      runAnalysis(await pickDirectory(), "folder");
-      return;
-    }
-    const input = document.createElement("input");
-    input.type = "file";
-    (input as HTMLInputElement & { webkitdirectory: boolean }).webkitdirectory = true;
-    input.addEventListener("change", () => {
-      if (!input.files) return;
-      void fileListToSources(Array.from(input.files)).then((sources) =>
-        runAnalysis(sources, "folder"),
-      );
-    });
-    input.click();
+    runAnalysis(await chooseFolder(), "folder");
   } catch (error) {
     notice = error instanceof Error ? error.message : String(error);
     renderLandingView();

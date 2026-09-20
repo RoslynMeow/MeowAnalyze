@@ -108,6 +108,18 @@ npm run build:web:single   # 单文件 -> apps/web/dist-single/index.html
 
 响应式布局、表格可排序、一键导出 JSON。
 
+## 🖥 桌面应用
+
+桌面端用 **Electron**,**原样复用 Web UI**:渲染进程加载构建好的网页,主进程弹出原生"打开文件夹"对话框并读取文件(不启动 CLI 子进程)。
+
+```bash
+npm run build:desktop   # 构建 Web + 打包 Electron main/preload
+npm run start:desktop   # 启动(首次会下载 Electron 二进制)
+npm run dist:desktop    # 打包安装包到 apps/desktop/release
+```
+
+安装包(NSIS / dmg / AppImage + deb)由 CI 在各自系统上构建,并附到每次 Release。
+
 ## 🛠 CLI 参数
 
 ```
@@ -265,14 +277,15 @@ const registry = new LanguageRegistry().register(new MyLang());
 
 ```
 packages/
-  core/   @meowanalyze/core   浏览器安全引擎(无 fs):语言、指标、报告模型
-  cli/    @meowanalyze/cli    Node 宿主:文件遍历 + 终端报告 + CLI
+  core/      @meowanalyze/core      浏览器安全引擎(无 fs):语言、指标、报告模型
+  cli/       @meowanalyze/cli       Node 宿主:文件遍历 + 终端报告 + CLI
 apps/
-  web/    @meowanalyze/web    Vite Web 应用,在浏览器内运行核心
+  web/       @meowanalyze/web       Vite Web 应用,在浏览器内运行核心
+  desktop/   @meowanalyze/desktop   Electron 应用,复用 Web 构建产物
 docs/assets/banner.svg
 ```
 
-**核心**是纯的、平台无关;宿主(CLI、Web 应用以及将来的桌面 UI)只负责提供源码并渲染报告。
+**核心**是纯的、平台无关;宿主(CLI、Web 应用、桌面应用)只负责提供源码并渲染报告。
 
 ## 🗺 路线图
 
@@ -280,7 +293,7 @@ docs/assets/banner.svg
 - [x] 与文件系统解耦的浏览器安全核心
 - [x] 通过 Bun 产出多平台独立程序
 - [x] Web 应用(浏览器内运行核心:打开项目文件夹)
-- [ ] 桌面 UI(薄壳,内部调用平台 CLI 程序)
+- [x] 桌面应用(Electron,复用 Web UI)
 - [ ] 通过 tree-sitter 支持更多语言、认知复杂度、Halstead 与可维护性指数
 
 ## 💻 开发
@@ -289,6 +302,7 @@ docs/assets/banner.svg
 npm install
 npm run dev -- <path>     # 从源码运行 CLI
 npm run dev:web           # 从源码运行 Web 应用
+npm run build:desktop     # 构建桌面应用(Web + Electron)
 npm run typecheck         # 类型检查所有包
 npm test                  # 单元测试(Vitest)
 npm run build             # 构建 core 库

@@ -108,6 +108,18 @@ Open a project folder — the analysis core runs **entirely in your browser** an
 
 Responsive layout, sortable tables and one-click JSON export.
 
+## 🖥 Desktop app
+
+The desktop app is **Electron** and reuses the web UI unchanged: it loads the built web app in the renderer and, in the main process, opens a native folder dialog and reads the files (no CLI subprocess).
+
+```bash
+npm run build:desktop   # build the web app + bundle the Electron main/preload
+npm run start:desktop   # launch it (downloads the Electron binary on first run)
+npm run dist:desktop    # package installers into apps/desktop/release
+```
+
+Installers (NSIS / dmg / AppImage + deb) are built per-OS in CI and attached to every release.
+
 ## 🛠 CLI reference
 
 ```
@@ -265,14 +277,15 @@ const registry = new LanguageRegistry().register(new MyLang());
 
 ```
 packages/
-  core/   @meowanalyze/core   browser-safe engine (no fs): languages, metrics, report model
-  cli/    @meowanalyze/cli    Node host: filesystem walk + terminal report + CLI
+  core/      @meowanalyze/core      browser-safe engine (no fs): languages, metrics, report model
+  cli/       @meowanalyze/cli       Node host: filesystem walk + terminal report + CLI
 apps/
-  web/    @meowanalyze/web    Vite web app running the core in the browser
+  web/       @meowanalyze/web       Vite web app running the core in the browser
+  desktop/   @meowanalyze/desktop   Electron app that reuses the web build
 docs/assets/banner.svg
 ```
 
-The **core** is pure and platform-agnostic; hosts (CLI, web app and the upcoming desktop UI) only supply sources and render the report.
+The **core** is pure and platform-agnostic; hosts (CLI, web app, desktop app) only supply sources and render the report.
 
 ## 🗺 Roadmap
 
@@ -280,7 +293,7 @@ The **core** is pure and platform-agnostic; hosts (CLI, web app and the upcoming
 - [x] Browser-safe core decoupled from the filesystem
 - [x] Multi-platform standalone binaries via Bun
 - [x] Web app (runs the core in the browser: open a project folder)
-- [ ] Desktop UI (thin shell that wraps the platform CLI binary)
+- [x] Desktop app (Electron, reusing the web UI)
 - [ ] More languages via tree-sitter, cognitive complexity, Halstead & maintainability index
 
 ## 💻 Development
@@ -289,6 +302,7 @@ The **core** is pure and platform-agnostic; hosts (CLI, web app and the upcoming
 npm install
 npm run dev -- <path>     # run the CLI from source
 npm run dev:web           # run the web app from source
+npm run build:desktop     # build the desktop app (web + Electron)
 npm run typecheck         # type-check all packages
 npm test                  # unit tests (Vitest)
 npm run build             # build the core library
