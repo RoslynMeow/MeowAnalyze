@@ -102,7 +102,7 @@ Open a project folder — the analysis core runs **entirely in your browser** an
 
 **Left-hand tabs** (with `#/dashboard` and `#/detail` hash routing):
 
-1. **Dashboard** — a pure data screen: a maintainability index, twelve key numbers (files, functions, lines, comment %, average/max cyclomatic and cognitive complexity, Halstead difficulty, violations, markers) and pie charts only — lines of code, languages, and cyclomatic / cognitive / nesting / function-length / function-kind distributions, plus markers and violations-by-rule when present.
+1. **Dashboard** (数据大屏) — a pure data screen: 16 key numbers (files, functions, lines, comment %, average/max cyclomatic and cognitive complexity, max nesting, average function length, Halstead difficulty, violations, markers) and charts — ordered distributions as bar charts, parts-of-whole as donuts. Click any number or slice to open a drill-down drawer listing the underlying functions/files; click an entry to jump to that file and highlight it. ECharts is lazy-loaded.
 2. **File detail** — a file list with a source preview; click a function to scroll to and highlight its lines.
 
 Pages scroll normally (no forced one-screen height), with a responsive layout, sortable tables and one-click JSON export.

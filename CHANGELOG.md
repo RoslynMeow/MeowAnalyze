@@ -20,11 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   light/dark theme toggle (dark by default); both persisted in `localStorage`.
 - Web: a left-hand tab sidebar with `#/dashboard` / `#/detail` hash routing, a
   settings modal for thresholds, a home button and hidden scrollbars.
-- Web dashboard: 16 KPIs and 11+ pie charts (lines of code, languages, and
-  cyclomatic / cognitive / nesting / function-length / function-kind /
-  maintainability / parameters / Halstead volume / file-size distributions, plus
-  markers and violations-by-rule), with hover-exploding slices and staggered
-  entrance animations.
+- Web dashboard (数据大屏): 16 KPIs and charts — ordered distributions as bar
+  charts, parts-of-whole as donuts. Clicking a number or a slice opens a
+  drill-down drawer listing the underlying functions/files; clicking an entry
+  jumps to that file and highlights it. ECharts is lazy-loaded (code-split).
 - Web: the file detail tab lists files and previews source; clicking a function
   scrolls to and highlights its lines.
 

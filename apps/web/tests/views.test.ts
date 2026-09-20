@@ -50,7 +50,7 @@ describe("dashboard view", () => {
   it("renders a data-only dashboard with stats and donut charts", () => {
     const view = targets();
     renderDashboard(view, sampleReport(), {
-      onOpenFile: vi.fn(),
+      onJump: vi.fn(),
       onExport: vi.fn(),
       onOpenSettings: vi.fn(),
     });

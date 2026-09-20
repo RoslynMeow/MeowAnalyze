@@ -1,4 +1,4 @@
-import type { AnalysisReport, FunctionKind, FunctionReport } from "@meowanalyze/core";
+import type { AnalysisReport, FileReport, FunctionKind, FunctionReport } from "@meowanalyze/core";
 import {
   bucketize,
   complexityColor,
@@ -7,14 +7,37 @@ import {
   type BucketRange,
   type DonutSegment,
 } from "../charts.js";
-import { pieChart } from "../pie.js";
 import { button, countUp, el, type ViewTargets } from "../dom.js";
+import { openDrilldown, type DrillItem } from "../drilldown.js";
+import { renderBar, renderDonut } from "../echarts.js";
 import { t } from "../i18n.js";
 
 export interface DashboardHandlers {
-  onOpenFile: (path: string) => void;
+  onJump: (item: DrillItem) => void;
   onExport: () => void;
   onOpenSettings: () => void;
+}
+
+interface Entry {
+  file: string;
+  fn: FunctionReport;
+}
+
+interface DrillSpec {
+  title: string;
+  chart: "donut" | "bar";
+  segments: DonutSegment[];
+  items: DrillItem[];
+  ranges?: readonly BucketRange[];
+  centerValue?: string;
+  centerLabel?: string;
+}
+
+interface KpiEntry {
+  label: string;
+  value: number;
+  color?: string;
+  spec: DrillSpec;
 }
 
 const CYCLOMATIC_BUCKETS: readonly BucketRange[] = [
@@ -65,6 +88,13 @@ const VOLUME_BUCKETS: readonly BucketRange[] = [
   { upTo: Number.POSITIVE_INFINITY, label: "400+", color: "#f85149" },
 ];
 
+const DIFFICULTY_BUCKETS: readonly BucketRange[] = [
+  { upTo: 5, label: "0–5", color: "#3fb950" },
+  { upTo: 15, label: "6–15", color: "#d29922" },
+  { upTo: 30, label: "16–30", color: "#f0883e" },
+  { upTo: Number.POSITIVE_INFINITY, label: "30+", color: "#f85149" },
+];
+
 const FILE_SIZE_BUCKETS: readonly BucketRange[] = [
   { upTo: 100, label: "1–100", color: "#3fb950" },
   { upTo: 300, label: "101–300", color: "#d29922" },
@@ -88,11 +118,237 @@ export function renderDashboard(
 ): void {
   targets.head.replaceChildren(header(report, handlers));
 
+  const entries = allFunctions(report);
+  const functions = entries.map((entry) => entry.fn);
+  const files = report.files;
+  const s = t().dashboard;
+
+  const valueOf = {
+    cyclomatic: (fn: FunctionReport) => fn.cyclomatic,
+    cognitive: (fn: FunctionReport) => fn.cognitive,
+    nesting: (fn: FunctionReport) => fn.maxNesting,
+    loc: (fn: FunctionReport) => fn.loc,
+    params: (fn: FunctionReport) => fn.params,
+    maintainability: (fn: FunctionReport) => fn.maintainability,
+    volume: (fn: FunctionReport) => fn.halstead.volume,
+    difficulty: (fn: FunctionReport) => fn.halstead.difficulty,
+  };
+
+  const functionItems = (
+    selector: (fn: FunctionReport) => number,
+  ): DrillItem[] =>
+    entries.map((entry) => ({
+      label: entry.fn.name,
+      file: entry.file,
+      line: entry.fn.range.start.line,
+      endLine: entry.fn.range.end.line,
+      value: selector(entry.fn),
+      category: entry.fn.kind,
+    }));
+
+  const fileItems = (selector: (file: FileReport) => number): DrillItem[] =>
+    files.map((file) => ({
+      label: file.path,
+      file: file.path,
+      value: selector(file),
+      category: file.language,
+    }));
+
+  const bucketSpec = (
+    title: string,
+    values: number[],
+    ranges: readonly BucketRange[],
+    items: DrillItem[],
+    centerValue: string,
+    centerLabel: string,
+  ): DrillSpec => ({
+    title,
+    chart: "bar",
+    segments: bucketize(values, ranges),
+    ranges,
+    items,
+    centerValue,
+    centerLabel,
+  });
+
+  const cyclomaticSpec = bucketSpec(
+    s.charts.cyclomatic,
+    functions.map(valueOf.cyclomatic),
+    CYCLOMATIC_BUCKETS,
+    functionItems(valueOf.cyclomatic),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const cognitiveSpec = bucketSpec(
+    s.charts.cognitive,
+    functions.map(valueOf.cognitive),
+    COGNITIVE_BUCKETS,
+    functionItems(valueOf.cognitive),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const nestingSpec = bucketSpec(
+    s.charts.nesting,
+    functions.map(valueOf.nesting),
+    NESTING_BUCKETS,
+    functionItems(valueOf.nesting),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const lengthSpec = bucketSpec(
+    s.charts.functionLength,
+    functions.map(valueOf.loc),
+    LENGTH_BUCKETS,
+    functionItems(valueOf.loc),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const paramsSpec = bucketSpec(
+    s.charts.parameters,
+    functions.map(valueOf.params),
+    PARAM_BUCKETS,
+    functionItems(valueOf.params),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const maintainabilitySpec = bucketSpec(
+    s.charts.maintainability,
+    functions.map(valueOf.maintainability),
+    MAINTAINABILITY_BUCKETS,
+    functionItems(valueOf.maintainability),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const volumeSpec = bucketSpec(
+    s.charts.halsteadVolume,
+    functions.map(valueOf.volume),
+    VOLUME_BUCKETS,
+    functionItems(valueOf.volume),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const difficultySpec = bucketSpec(
+    s.kpi.halsteadDifficulty,
+    functions.map(valueOf.difficulty),
+    DIFFICULTY_BUCKETS,
+    functionItems(valueOf.difficulty),
+    String(functions.length),
+    s.donut.functions,
+  );
+  const fileSizeSpec = bucketSpec(
+    s.charts.fileSize,
+    files.map((file) => file.loc.code),
+    FILE_SIZE_BUCKETS,
+    fileItems((file) => file.loc.code),
+    String(files.length),
+    s.donut.files,
+  );
+
+  const locSpec: DrillSpec = {
+    title: s.charts.linesOfCode,
+    chart: "donut",
+    segments: [
+      { label: s.segment.code, value: report.summary.loc.code, color: "#58a6ff" },
+      { label: s.segment.comment, value: report.summary.loc.comment, color: "#3fb950" },
+      { label: s.segment.blank, value: report.summary.loc.blank, color: "#8b949e" },
+    ],
+    items: fileItems((file) => file.loc.code),
+    centerValue: String(report.summary.loc.physical),
+    centerLabel: s.donut.physical,
+  };
+
+  const languageSpec: DrillSpec = {
+    title: s.charts.languages,
+    chart: "donut",
+    segments: Object.entries(report.summary.filesByLanguage)
+      .sort((a, b) => b[1] - a[1])
+      .map(([language, count], index) => ({
+        label: language,
+        value: count,
+        color: PALETTE[index % PALETTE.length] ?? "#58a6ff",
+      })),
+    items: fileItems((file) => file.loc.code),
+    centerValue: String(files.length),
+    centerLabel: s.donut.files,
+  };
+
+  const kindsSpec: DrillSpec = {
+    title: s.charts.functionKinds,
+    chart: "donut",
+    segments: functionKinds(functions),
+    items: functionItems(valueOf.cyclomatic),
+    centerValue: String(functions.length),
+    centerLabel: s.donut.functions,
+  };
+
+  const markerSpec: DrillSpec = {
+    title: s.charts.markers,
+    chart: "donut",
+    segments: markerSegments(report),
+    items: fileItems(markerCount).filter((item) => item.value > 0),
+    centerValue: String(
+      report.summary.markers.todo + report.summary.markers.fixme + report.summary.markers.hack,
+    ),
+    centerLabel: s.charts.markers,
+  };
+
+  const ruleSpec: DrillSpec = {
+    title: s.charts.ruleViolations,
+    chart: "donut",
+    segments: violationsByRule(report),
+    items: violationItems(report),
+    centerValue: String(report.summary.violations.total),
+    centerLabel: s.charts.ruleViolations,
+  };
+
+  const commentTotal = report.summary.loc.code + report.summary.loc.comment;
+  const density = commentTotal > 0 ? (report.summary.loc.comment / commentTotal) * 100 : 0;
+  const markerTotal = report.summary.markers.todo + report.summary.markers.fixme + report.summary.markers.hack;
+
+  const kpis: KpiEntry[] = [
+    { label: s.kpi.maintainability, value: Math.round(report.summary.maintainability), color: maintainabilityColor(report.summary.maintainability), spec: fileSizeSpec },
+    { label: s.kpi.files, value: files.length, spec: fileSizeSpec },
+    { label: s.kpi.functions, value: functions.length, spec: cyclomaticSpec },
+    { label: s.kpi.codeLines, value: report.summary.loc.code, spec: locSpec },
+    { label: s.kpi.commentPct, value: round1(density), spec: locSpec },
+    { label: s.kpi.avgCyclomatic, value: round1(report.summary.metrics.cyclomatic.mean), spec: cyclomaticSpec },
+    { label: s.kpi.maxCyclomatic, value: report.summary.metrics.cyclomatic.max, color: complexityColor(report.summary.metrics.cyclomatic.max), spec: cyclomaticSpec },
+    { label: s.kpi.avgCognitive, value: round1(report.summary.metrics.cognitive.mean), spec: cognitiveSpec },
+    { label: s.kpi.maxCognitive, value: report.summary.metrics.cognitive.max, color: complexityColor(report.summary.metrics.cognitive.max), spec: cognitiveSpec },
+    { label: s.kpi.maxNesting, value: report.summary.metrics.nesting.max, spec: nestingSpec },
+    { label: s.kpi.avgFunctionLength, value: round1(report.summary.metrics.functionLoc.mean), spec: lengthSpec },
+    { label: s.kpi.halsteadDifficulty, value: round1(report.summary.metrics.halsteadDifficulty.mean), spec: difficultySpec },
+    { label: s.kpi.physicalLines, value: report.summary.loc.physical, spec: fileSizeSpec },
+    { label: s.kpi.logicalLines, value: report.summary.loc.logical, spec: fileSizeSpec },
+    { label: s.kpi.violations, value: report.summary.violations.total, color: report.summary.violations.total > 0 ? "#d29922" : undefined, spec: ruleSpec },
+    { label: s.kpi.markers, value: markerTotal, color: markerTotal > 0 ? "#d29922" : undefined, spec: markerSpec },
+  ];
+
+  const charts: DrillSpec[] = [
+    locSpec,
+    languageSpec,
+    cyclomaticSpec,
+    cognitiveSpec,
+    nestingSpec,
+    lengthSpec,
+    kindsSpec,
+    maintainabilitySpec,
+    paramsSpec,
+    volumeSpec,
+    fileSizeSpec,
+  ];
+  if (markerTotal > 0) charts.push(markerSpec);
+  if (report.summary.violations.total > 0) charts.push(ruleSpec);
+
   const pending: Array<() => void> = [];
-  const body = el("div", { class: "dashboard-body" }, stats(report), donuts(report, pending));
+  const body = el(
+    "div",
+    { class: "dashboard-body" },
+    el("div", { class: "stats-grid" }, ...kpis.map((entry) => kpiCard(entry, handlers))),
+    el("div", { class: "donut-row" }, ...charts.map((spec) => chartCard(spec, handlers, pending))),
+  );
   targets.body.replaceChildren(body);
 
-  // Charts need their containers to be laid out first.
   const run = (): void => {
     for (const init of pending) init();
   };
@@ -102,7 +358,6 @@ export function renderDashboard(
 
 function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
   const s = t();
-
   return el(
     "header",
     { class: "page__head" },
@@ -124,120 +379,51 @@ function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElemen
   );
 }
 
-function stats(report: AnalysisReport): HTMLElement {
-  const { summary } = report;
-  const s = t().dashboard.kpi;
-  const commentTotal = summary.loc.code + summary.loc.comment;
-  const density = commentTotal > 0 ? (summary.loc.comment / commentTotal) * 100 : 0;
-  const markerCount = summary.markers.todo + summary.markers.fixme + summary.markers.hack;
-
-  return el(
-    "div",
-    { class: "stats-grid" },
-    miKpi(summary.maintainability),
-    kpi(s.files, summary.files),
-    kpi(s.functions, summary.metrics.cyclomatic.count),
-    kpi(s.codeLines, summary.loc.code),
-    kpi(s.commentPct, round1(density)),
-    kpi(s.avgCyclomatic, round1(summary.metrics.cyclomatic.mean)),
-    kpi(s.maxCyclomatic, summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
-    kpi(s.avgCognitive, round1(summary.metrics.cognitive.mean)),
-    kpi(s.maxCognitive, summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
-    kpi(s.maxNesting, summary.metrics.nesting.max),
-    kpi(s.avgFunctionLength, round1(summary.metrics.functionLoc.mean)),
-    kpi(s.halsteadDifficulty, round1(summary.metrics.halsteadDifficulty.mean)),
-    kpi(s.physicalLines, summary.loc.physical),
-    kpi(s.logicalLines, summary.loc.logical),
-    kpi(s.violations, summary.violations.total, summary.violations.total > 0 ? "#d29922" : undefined),
-    kpi(s.markers, markerCount, markerCount > 0 ? "#d29922" : undefined),
-  );
-}
-
-function miKpi(value: number): HTMLElement {
-  const valueNode = el("div", { class: "kpi__value", text: String(Math.round(value)) });
-  valueNode.style.color = maintainabilityColor(value);
-  return el(
-    "div",
-    { class: "kpi" },
-    valueNode,
-    el("div", { class: "kpi__label", text: `${t().dashboard.kpi.maintainability} · ${maintainabilityLabel(value)}` }),
-  );
-}
-
-function maintainabilityLabel(value: number): string {
-  const s = t().dashboard.maintainability;
-  if (value < 40) return s.low;
-  if (value < 65) return s.moderate;
-  return s.healthy;
-}
-
-function kpi(label: string, value: number, color?: string): HTMLElement {
+function kpiCard(entry: KpiEntry, handlers: DashboardHandlers): HTMLElement {
   const valueNode = el("div", { class: "kpi__value" });
-  if (color) valueNode.style.color = color;
-  if (Number.isInteger(value)) countUp(valueNode, value);
-  else valueNode.textContent = String(value);
-  return el("div", { class: "kpi" }, valueNode, el("div", { class: "kpi__label", text: label }));
+  if (entry.color) valueNode.style.color = entry.color;
+  if (Number.isInteger(entry.value)) countUp(valueNode, entry.value);
+  else valueNode.textContent = String(entry.value);
+
+  return el(
+    "button",
+    {
+      class: "kpi kpi--clickable",
+      onClick: () => openDrilldown(entry.spec, { onJump: handlers.onJump }),
+    },
+    valueNode,
+    el("div", { class: "kpi__label", text: entry.label }),
+  );
 }
 
-function donuts(
-  report: AnalysisReport,
+function chartCard(
+  spec: DrillSpec,
+  handlers: DashboardHandlers,
   pending: Array<() => void>,
 ): HTMLElement {
-  const s = t().dashboard;
-  const functions = allFunctions(report).map((entry) => entry.fn);
+  const host = el("div", { class: "chart-host" });
+  pending.push(() => {
+    const onSelect = (name: string): void =>
+      openDrilldown(filterSpec(spec, name), { onJump: handlers.onJump });
+    void (spec.chart === "bar"
+      ? renderBar(host, spec.segments, onSelect)
+      : renderDonut(host, spec.segments, spec.centerValue, spec.centerLabel, onSelect));
+  });
+  return el("div", { class: "donut-card" }, el("h3", { text: spec.title }), host);
+}
 
-  const card = (
-    title: string,
-    segments: DonutSegment[],
-    centerValue: string,
-    centerLabel: string,
-  ): HTMLElement => {
-    const host = el("div", { class: "chart-host" });
-    pending.push(() => pieChart(host, { segments, centerValue, centerLabel }));
-    return el("div", { class: "donut-card" }, el("h3", { text: title }), host);
-  };
+function bucketLabel(value: number, ranges: readonly BucketRange[]): string {
+  const index = ranges.findIndex((range) => value <= range.upTo);
+  return ranges[index === -1 ? ranges.length - 1 : index]?.label ?? "";
+}
 
-  const loc: DonutSegment[] = [
-    { label: s.segment.code, value: report.summary.loc.code, color: "#58a6ff" },
-    { label: s.segment.comment, value: report.summary.loc.comment, color: "#3fb950" },
-    { label: s.segment.blank, value: report.summary.loc.blank, color: "#8b949e" },
-  ];
-
-  const languages: DonutSegment[] = Object.entries(report.summary.filesByLanguage)
-    .sort((a, b) => b[1] - a[1])
-    .map(([language, count], index) => ({
-      label: language,
-      value: count,
-      color: PALETTE[index % PALETTE.length] ?? "#58a6ff",
-    }));
-
-  const cards: HTMLElement[] = [
-    card(s.charts.linesOfCode, loc, String(report.summary.loc.physical), s.donut.physical),
-    card(s.charts.languages, languages, String(report.summary.files), s.donut.files),
-    card(s.charts.cyclomatic, bucketize(functions.map((f) => f.cyclomatic), CYCLOMATIC_BUCKETS), String(functions.length), s.donut.functions),
-    card(s.charts.cognitive, bucketize(functions.map((f) => f.cognitive), COGNITIVE_BUCKETS), String(functions.length), s.donut.functions),
-    card(s.charts.nesting, bucketize(functions.map((f) => f.maxNesting), NESTING_BUCKETS), String(functions.length), s.donut.functions),
-    card(s.charts.functionLength, bucketize(functions.map((f) => f.loc), LENGTH_BUCKETS), String(functions.length), s.donut.functions),
-    card(s.charts.functionKinds, functionKinds(functions), String(functions.length), s.donut.functions),
-    card(s.charts.maintainability, bucketize(functions.map((f) => f.maintainability), MAINTAINABILITY_BUCKETS), String(functions.length), s.donut.functions),
-    card(s.charts.parameters, bucketize(functions.map((f) => f.params), PARAM_BUCKETS), String(functions.length), s.donut.functions),
-    card(s.charts.halsteadVolume, bucketize(functions.map((f) => f.halstead.volume), VOLUME_BUCKETS), String(functions.length), s.donut.functions),
-    card(s.charts.fileSize, bucketize(report.files.map((f) => f.loc.code), FILE_SIZE_BUCKETS), String(report.files.length), s.donut.files),
-  ];
-
-  const markers = markerSegments(report);
-  if (markers.length > 0) {
-    cards.push(
-      card(s.charts.markers, markers, String(report.summary.markers.todo + report.summary.markers.fixme + report.summary.markers.hack), s.charts.markers),
-    );
-  }
-
-  const rules = violationsByRule(report);
-  if (rules.length > 0) {
-    cards.push(card(s.charts.ruleViolations, rules, String(report.summary.violations.total), s.charts.ruleViolations));
-  }
-
-  return el("div", { class: "donut-row" }, ...cards);
+function filterSpec(spec: DrillSpec, name: string): DrillSpec {
+  const items = spec.items.filter((item) => {
+    if (spec.ranges) return bucketLabel(item.value, spec.ranges) === name;
+    if (item.category) return item.category === name;
+    return true;
+  });
+  return { ...spec, title: `${spec.title} · ${name}`, items };
 }
 
 function functionKinds(functions: readonly FunctionReport[]): DonutSegment[] {
@@ -275,14 +461,33 @@ function violationsByRule(report: AnalysisReport): DonutSegment[] {
     }));
 }
 
+function violationItems(report: AnalysisReport): DrillItem[] {
+  const items: DrillItem[] = [];
+  for (const file of report.files) {
+    for (const violation of file.violations) {
+      items.push({
+        label: violation.rule,
+        file: file.path,
+        line: violation.location.start.line,
+        endLine: violation.location.end.line,
+        value: violation.actual,
+        category: violation.rule,
+      });
+    }
+  }
+  return items;
+}
+
+function markerCount(file: FileReport): number {
+  return file.markers.todo + file.markers.fixme + file.markers.hack;
+}
+
 function round1(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-function allFunctions(
-  report: AnalysisReport,
-): Array<{ file: string; fn: FunctionReport }> {
-  const all: Array<{ file: string; fn: FunctionReport }> = [];
+function allFunctions(report: AnalysisReport): Entry[] {
+  const all: Entry[] = [];
   for (const file of report.files) {
     for (const fn of file.functions) all.push({ file: file.path, fn });
   }

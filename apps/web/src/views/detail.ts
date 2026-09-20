@@ -9,6 +9,11 @@ export interface DetailHandlers {
   onSelect: (path: string) => void;
 }
 
+export interface Highlight {
+  line: number;
+  endLine?: number;
+}
+
 const MAX_SOURCE_LINES = 5000;
 
 export function renderDetail(
@@ -17,6 +22,7 @@ export function renderDetail(
   sources: ReadonlyArray<{ path: string; content: Uint8Array | string }>,
   selectedPath: string | undefined,
   handlers: DetailHandlers,
+  highlight?: Highlight,
 ): void {
   const file = selectedPath
     ? report.files.find((entry) => entry.path === selectedPath)
@@ -46,7 +52,7 @@ export function renderDetail(
       "div",
       { class: "detail-layout" },
       fileList(report, file?.path, handlers),
-      preview(file, source ? decodeContent(source.content) : undefined),
+      preview(file, source ? decodeContent(source.content) : undefined, highlight),
     ),
   );
 }
@@ -83,7 +89,11 @@ function fileList(
   );
 }
 
-function preview(file: FileReport | undefined, source: string | undefined): HTMLElement {
+function preview(
+  file: FileReport | undefined,
+  source: string | undefined,
+  highlight?: Highlight,
+): HTMLElement {
   const pane = el("div", { class: "preview-pane" });
   if (!file) {
     pane.append(el("p", { class: "preview-empty", text: t().detail.selectHint }));
@@ -120,7 +130,12 @@ function preview(file: FileReport | undefined, source: string | undefined): HTML
     ),
   );
 
-  if (sourcePanel) pane.append(sourcePanel.element);
+  if (sourcePanel) {
+    pane.append(sourcePanel.element);
+    if (highlight) {
+      sourcePanel.highlightRange(highlight.line, highlight.endLine ?? highlight.line);
+    }
+  }
   return pane;
 }
 
@@ -165,6 +180,7 @@ function section(title: string, ...children: Array<Node | string | null>): HTMLE
 interface SourcePanel {
   element: HTMLElement;
   highlight: (fn: FunctionReport) => void;
+  highlightRange: (from: number, to: number) => void;
 }
 
 function buildSource(source: string): SourcePanel {
@@ -173,7 +189,11 @@ function buildSource(source: string): SourcePanel {
 
   if (lines.length > MAX_SOURCE_LINES) {
     pre.append(el("div", { class: "source__too-large", text: t().detail.sourceTooLarge(lines.length) }));
-    return { element: section(t().detail.source, pre), highlight: () => undefined };
+    return {
+      element: section(t().detail.source, pre),
+      highlight: () => undefined,
+      highlightRange: () => undefined,
+    };
   }
 
   const lineEls: HTMLElement[] = [];
@@ -189,11 +209,9 @@ function buildSource(source: string): SourcePanel {
   });
 
   let active: HTMLElement[] = [];
-  const highlight = (fn: FunctionReport): void => {
+  const highlightRange = (from: number, to: number): void => {
     for (const node of active) node.classList.remove("source__line--active");
     active = [];
-    const from = fn.range.start.line;
-    const to = fn.range.end.line;
     for (let line = from; line <= to; line++) {
       const node = lineEls[line - 1];
       if (node) {
@@ -203,8 +221,10 @@ function buildSource(source: string): SourcePanel {
     }
     lineEls[from - 1]?.scrollIntoView?.({ behavior: "smooth", block: "center" });
   };
+  const highlight = (fn: FunctionReport): void =>
+    highlightRange(fn.range.start.line, fn.range.end.line);
 
-  return { element: section(t().detail.source, pre), highlight };
+  return { element: section(t().detail.source, pre), highlight, highlightRange };
 }
 
 function functionsTable(

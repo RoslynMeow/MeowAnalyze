@@ -1119,6 +1119,142 @@ th.sortable:hover {
   }
 }
 
+.kpi--clickable {
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------- */
+/* Drill-down drawer                                                 */
+/* ---------------------------------------------------------------- */
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(3, 6, 10, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.drawer-overlay--open {
+  opacity: 1;
+}
+
+.drawer {
+  width: min(560px, 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  background: var(--bg-soft);
+  border-left: 1px solid var(--border);
+  transform: translateX(24px);
+  transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
+
+.drawer-overlay--open .drawer {
+  transform: none;
+}
+
+.drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.drawer__title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.drawer__close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.drawer__close:hover {
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.drawer__chart {
+  width: 100%;
+  height: 240px;
+  flex: 0 0 auto;
+}
+
+.drawer__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.drawer__list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawer__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "label value"
+    "file value";
+  gap: 0 12px;
+  padding: 8px 10px;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.drawer__item:hover {
+  background: rgba(88, 166, 255, 0.08);
+  border-color: var(--border);
+}
+
+.drawer__item-label {
+  grid-area: label;
+  font-size: 13px;
+}
+
+.drawer__item-file {
+  grid-area: file;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.drawer__item-value {
+  grid-area: value;
+  align-self: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

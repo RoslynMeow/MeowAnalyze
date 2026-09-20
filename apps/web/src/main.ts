@@ -12,9 +12,10 @@ import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { openSettings } from "./settings.js";
 import { chooseFolder } from "./platform.js";
-import { disposeCharts } from "./pie.js";
+import { disposeCharts } from "./echarts.js";
+import { closeDrilldown, type DrillItem } from "./drilldown.js";
 import { renderDashboard } from "./views/dashboard.js";
-import { renderDetail } from "./views/detail.js";
+import { renderDetail, type Highlight } from "./views/detail.js";
 import { renderLanding } from "./views/landing.js";
 
 const appEl = document.getElementById("app");
@@ -29,6 +30,7 @@ const state: {
   root: string;
   report?: AnalysisReport;
   selectedPath?: string;
+  highlight?: Highlight;
   thresholds: Thresholds;
   tab: Tab;
 } = {
@@ -91,6 +93,7 @@ function goHome(): void {
   state.report = undefined;
   state.sources = [];
   state.selectedPath = undefined;
+  state.highlight = undefined;
   renderLandingView();
 }
 
@@ -144,6 +147,7 @@ window.addEventListener("hashchange", () => {
 /* ------------------------------------------------------------------ */
 
 function renderLandingView(): void {
+  closeDrilldown();
   disposeCharts();
   sidenav.hidden = true;
   brand.hidden = false;
@@ -171,6 +175,7 @@ function renderContent(): void {
   sidenav.hidden = false;
   brand.hidden = true;
   homeBtn.hidden = false;
+  closeDrilldown();
   disposeCharts();
   content.replaceChildren();
 
@@ -181,10 +186,10 @@ function renderContent(): void {
   if (state.tab === "detail") {
     renderDetail(targets, report, state.sources, state.selectedPath, {
       onSelect: selectFile,
-    });
+    }, state.highlight);
   } else {
     renderDashboard(targets, report, {
-      onOpenFile: selectFile,
+      onJump: jumpToItem,
       onExport: () => downloadJson(report, "meowanalyze-report.json"),
       onOpenSettings: () =>
         openSettings(state.thresholds, (thresholds) => {
@@ -199,6 +204,13 @@ function renderContent(): void {
 
 function selectFile(path: string): void {
   state.selectedPath = path;
+  state.highlight = undefined;
+  goTab("detail");
+}
+
+function jumpToItem(item: DrillItem): void {
+  state.selectedPath = item.file;
+  state.highlight = item.line ? { line: item.line, endLine: item.endLine } : undefined;
   goTab("detail");
 }
 
@@ -232,6 +244,7 @@ function runAnalysis(sources: SourceInput[], root: string): void {
   state.root = root;
   state.report = report;
   state.selectedPath = undefined;
+  state.highlight = undefined;
   state.tab = "dashboard";
   if (location.hash !== "#/dashboard") location.hash = "#/dashboard";
   renderContent();

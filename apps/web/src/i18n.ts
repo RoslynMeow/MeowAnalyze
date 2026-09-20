@@ -139,7 +139,7 @@ export interface Strings {
 
 const zh: Strings = {
   pages: {
-    dashboard: "大屏",
+    dashboard: "数据大屏",
     detail: "文件详情",
   },
   common: {
