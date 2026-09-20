@@ -49,11 +49,7 @@ describe("landing view", () => {
 describe("dashboard view", () => {
   it("renders a data-only dashboard with stats and donut charts", () => {
     const view = targets();
-    renderDashboard(view, sampleReport(), {
-      onJump: vi.fn(),
-      onExport: vi.fn(),
-      onOpenSettings: vi.fn(),
-    });
+    renderDashboard(view, sampleReport(), { onJump: vi.fn() });
 
     expect(view.head.querySelector(".page__head")).not.toBeNull();
     expect(view.body.querySelectorAll(".kpi").length).toBeGreaterThanOrEqual(10);

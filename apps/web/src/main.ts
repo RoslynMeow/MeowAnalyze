@@ -51,6 +51,8 @@ let content: HTMLElement;
 let sidenav: HTMLElement;
 let homeBtn: HTMLButtonElement;
 let brand: HTMLElement;
+let settingsBtn: HTMLButtonElement;
+let exportBtn: HTMLButtonElement;
 let tabButtons: HTMLButtonElement[] = [];
 
 function mountShell(): void {
@@ -80,7 +82,7 @@ function mountShell(): void {
 
   app.replaceChildren(topbar, main);
   mountControls(controls);
-  mountTabs();
+  mountSidenav();
   updateHomeLabel();
 }
 
@@ -101,14 +103,36 @@ function goHome(): void {
 /* Tabs + hash routing                                                 */
 /* ------------------------------------------------------------------ */
 
-function mountTabs(): void {
+function mountSidenav(): void {
   tabButtons = TABS.map((tab) => {
     const node = el("button", { class: "sidenav__item", text: t().pages[tab] });
     node.type = "button";
     node.addEventListener("click", () => goTab(tab));
     return node;
   });
-  sidenav.replaceChildren(...tabButtons);
+
+  settingsBtn = el("button", { class: "sidenav__item sidenav__action", onClick: openSettingsDialog });
+  settingsBtn.type = "button";
+  exportBtn = el("button", { class: "sidenav__item sidenav__action", onClick: exportReport });
+  exportBtn.type = "button";
+
+  sidenav.replaceChildren(
+    ...tabButtons,
+    el("div", { class: "sidenav__spacer" }),
+    settingsBtn,
+    exportBtn,
+  );
+}
+
+function openSettingsDialog(): void {
+  openSettings(state.thresholds, (thresholds) => {
+    state.thresholds = thresholds;
+    rerun();
+  });
+}
+
+function exportReport(): void {
+  if (state.report) downloadJson(state.report, "meowanalyze-report.json");
 }
 
 function updateTabs(): void {
@@ -119,6 +143,8 @@ function updateTabs(): void {
     node.classList.toggle("sidenav__item--active", active);
     node.setAttribute("aria-selected", active ? "true" : "false");
   });
+  settingsBtn.textContent = t().common.settings;
+  exportBtn.textContent = t().common.exportJson;
 }
 
 function tabFromHash(): Tab {
@@ -188,15 +214,7 @@ function renderContent(): void {
       onSelect: selectFile,
     }, state.highlight);
   } else {
-    renderDashboard(targets, report, {
-      onJump: jumpToItem,
-      onExport: () => downloadJson(report, "meowanalyze-report.json"),
-      onOpenSettings: () =>
-        openSettings(state.thresholds, (thresholds) => {
-          state.thresholds = thresholds;
-          rerun();
-        }),
-    });
+    renderDashboard(targets, report, { onJump: jumpToItem });
   }
 
   updateTabs();
@@ -302,7 +320,7 @@ function mountControls(container: HTMLElement): void {
     renderTheme();
     updateHomeLabel();
     if (state.report) {
-      mountTabs();
+      mountSidenav();
       renderContent();
     } else {
       renderLandingView();

@@ -7,15 +7,13 @@ import {
   type BucketRange,
   type DonutSegment,
 } from "../charts.js";
-import { button, countUp, el, type ViewTargets } from "../dom.js";
+import { countUp, el, type ViewTargets } from "../dom.js";
 import { openDrilldown, type DrillItem } from "../drilldown.js";
 import { renderBar, renderDonut } from "../echarts.js";
 import { t } from "../i18n.js";
 
 export interface DashboardHandlers {
   onJump: (item: DrillItem) => void;
-  onExport: () => void;
-  onOpenSettings: () => void;
 }
 
 interface Entry {
@@ -116,7 +114,7 @@ export function renderDashboard(
   report: AnalysisReport,
   handlers: DashboardHandlers,
 ): void {
-  targets.head.replaceChildren(header(report, handlers));
+  targets.head.replaceChildren(header());
 
   const entries = allFunctions(report);
   const functions = entries.map((entry) => entry.fn);
@@ -356,26 +354,11 @@ export function renderDashboard(
   else run();
 }
 
-function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
-  const s = t();
+function header(): HTMLElement {
   return el(
     "header",
     { class: "page__head" },
-    el(
-      "div",
-      {},
-      el("h1", { class: "page__title", text: s.pages.dashboard }),
-      el("p", {
-        class: "page__meta",
-        text: `${report.root} · ${report.durationMs}ms · v${report.toolVersion}`,
-      }),
-    ),
-    el(
-      "div",
-      { class: "page__actions" },
-      button(s.common.settings, handlers.onOpenSettings),
-      button(s.common.exportJson, handlers.onExport),
-    ),
+    el("h1", { class: "page__title", text: t().pages.dashboard }),
   );
 }
 

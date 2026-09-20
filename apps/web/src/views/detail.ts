@@ -40,7 +40,7 @@ export function renderDetail(
         {},
         el("h1", { class: "page__title", text: t().pages.detail }),
         el("p", {
-          class: "page__meta",
+          class: "page__subtitle",
           text: file ? file.path : t().detail.selectHint,
         }),
       ),
