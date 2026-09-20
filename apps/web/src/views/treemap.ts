@@ -23,14 +23,21 @@ export function renderTreemap(
   const tree = buildTree(report);
   let lastWidth = 0;
   let lastHeight = 0;
+  let drawn = false;
 
   const draw = (): void => {
     const rect = wrap.getBoundingClientRect();
-    const width = Math.max(320, Math.round(rect.width) || 1000);
-    const height = Math.max(240, Math.round(rect.height) || 620);
-    if (width === lastWidth && height === lastHeight) return;
+    let width = Math.round(rect.width);
+    let height = Math.round(rect.height);
+    if (width < 2 || height < 2) {
+      if (drawn) return; // keep the current render; wait for a real layout
+      width = 1000;
+      height = 620;
+    }
+    if (drawn && width === lastWidth && height === lastHeight) return;
     lastWidth = width;
     lastHeight = height;
+    drawn = true;
     wrap.replaceChildren(
       nestedTreemapChart(tree, { width, height, onSelect: handlers.onOpenFile }),
     );
@@ -38,6 +45,10 @@ export function renderTreemap(
 
   draw();
 
+  // Re-measure once the browser has laid the page out, and on every resize.
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(draw);
+  }
   if (typeof ResizeObserver !== "undefined") {
     const observer = new ResizeObserver(() => draw());
     observer.observe(wrap);
