@@ -16,13 +16,12 @@ import { chooseFolder } from "./platform.js";
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail } from "./views/detail.js";
 import { renderLanding } from "./views/landing.js";
-import { renderTreemap } from "./views/treemap.js";
 
 const appEl = document.getElementById("app");
 if (!appEl) throw new Error("missing #app");
 const app: HTMLElement = appEl;
 
-const PAGE_KEYS = ["dashboard", "treemap", "detail"] as const;
+const PAGE_KEYS = ["dashboard", "detail"] as const;
 const PAGE_COUNT = PAGE_KEYS.length;
 
 const state: {
@@ -114,7 +113,6 @@ function renderPages(): void {
       }),
   });
 
-  renderTreemap(bodies[1]!, report, { onOpenFile: selectFile });
   renderDetailPage();
   updateDots();
 }
@@ -122,7 +120,7 @@ function renderPages(): void {
 function renderDetailPage(): void {
   const report = state.report;
   if (!report || bodies.length === 0) return;
-  renderDetail(bodies[2]!, report, state.sources, state.selectedPath, {
+  renderDetail(bodies[1]!, report, state.sources, state.selectedPath, {
     onSelect: selectFile,
   });
 }
@@ -130,7 +128,7 @@ function renderDetailPage(): void {
 function selectFile(path: string): void {
   state.selectedPath = path;
   renderDetailPage();
-  goToPage(2);
+  goToPage(1);
 }
 
 function goToPage(index: number): void {

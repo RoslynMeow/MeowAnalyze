@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Web: the file-map page is temporarily removed; the app is now two pages
+  (dashboard + file detail).
+- Web: the dashboard surfaces more data — average cyclomatic/cognitive
+  complexity and Halstead difficulty KPIs, plus nesting, function-length and
+  function-kind distribution charts, and markers / violations-by-rule charts.
+- Core: `FileMetrics` gains `halsteadDifficulty` and `halsteadEffort`.
+
 ### Added
 
 - Desktop app (`@meowanalyze/desktop`): Electron, reusing the built web UI in

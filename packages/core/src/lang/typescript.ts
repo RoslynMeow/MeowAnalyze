@@ -67,6 +67,8 @@ export class TypeScriptAnalyzer implements LanguageAnalyzer {
       params: distributionOf(functions.map((f) => f.params)),
       maintainability: distributionOf(functions.map((f) => f.maintainability)),
       halsteadVolume: distributionOf(functions.map((f) => f.halstead.volume)),
+      halsteadDifficulty: distributionOf(functions.map((f) => f.halstead.difficulty)),
+      halsteadEffort: distributionOf(functions.map((f) => f.halstead.effort)),
     };
 
     const totalVolume = functions.reduce((sum, f) => sum + f.halstead.volume, 0);

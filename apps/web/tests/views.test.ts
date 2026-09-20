@@ -5,7 +5,6 @@ import { openSettings } from "../src/settings.js";
 import { renderDashboard } from "../src/views/dashboard.js";
 import { renderDetail } from "../src/views/detail.js";
 import { renderLanding } from "../src/views/landing.js";
-import { buildTree, renderTreemap } from "../src/views/treemap.js";
 
 const SOURCE = `export function simple(a: number) {
   return a + 1;
@@ -53,30 +52,9 @@ describe("dashboard view", () => {
       onOpenSettings: vi.fn(),
     });
 
-    expect(root.querySelectorAll(".kpi").length).toBeGreaterThan(0);
+    expect(root.querySelectorAll(".kpi").length).toBeGreaterThanOrEqual(10);
     expect(root.querySelector(".stats-grid")).not.toBeNull();
-    expect(root.querySelectorAll(".donut-card").length).toBe(4);
-    expect(root.querySelector(".top-functions")).toBeNull();
-  });
-});
-
-describe("treemap view", () => {
-  it("builds a folder tree sized by code lines", () => {
-    const tree = buildTree(sampleReport());
-    expect(tree.value).toBeGreaterThan(0);
-    const names = tree.children?.map((child) => child.name) ?? [];
-    expect(names).toContain("src");
-  });
-
-  it("renders clickable cells", () => {
-    const root = document.createElement("div");
-    const onOpenFile = vi.fn();
-    renderTreemap(root, sampleReport(), { onOpenFile });
-
-    const cell = root.querySelector<SVGElement>("[data-key]");
-    expect(cell).not.toBeNull();
-    cell?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(onOpenFile).toHaveBeenCalled();
+    expect(root.querySelectorAll(".donut-card").length).toBeGreaterThanOrEqual(7);
   });
 });
 

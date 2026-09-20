@@ -164,6 +164,12 @@ function summarize(files: FileReport[]): Summary {
       halsteadVolume: mergeDistributions(
         files.map((f) => f.metrics.halsteadVolume),
       ),
+      halsteadDifficulty: mergeDistributions(
+        files.map((f) => f.metrics.halsteadDifficulty),
+      ),
+      halsteadEffort: mergeDistributions(
+        files.map((f) => f.metrics.halsteadEffort),
+      ),
     },
     markers,
     violations,

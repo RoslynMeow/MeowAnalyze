@@ -995,20 +995,6 @@ th.sortable:hover {
   margin: 0 auto;
 }
 
-.page--treemap {
-  padding: 64px 0 0;
-}
-
-.page__body--treemap {
-  display: flex;
-  flex-direction: column;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  gap: 0;
-  overflow: hidden;
-}
-
 .page__body--detail {
   overflow: hidden;
 }
@@ -1120,37 +1106,6 @@ th.sortable:hover {
 }
 
 /* ---------------------------------------------------------------- */
-/* Treemap page                                                      */
-/* ---------------------------------------------------------------- */
-
-.treemap-wrap {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-}
-
-.chart--treemap {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.chart__folder {
-  fill: rgba(88, 166, 255, 0.04);
-  stroke: var(--border);
-  stroke-width: 1;
-}
-
-.chart__folder-label {
-  fill: var(--muted);
-  font-size: 11px;
-  pointer-events: none;
-}
-
-/* ---------------------------------------------------------------- */
 /* Detail page                                                       */
 /* ---------------------------------------------------------------- */
 
@@ -1243,10 +1198,6 @@ th.sortable:hover {
 @media (max-width: 900px) {
   .page {
     padding: 64px 14px 16px;
-  }
-
-  .page--treemap {
-    padding: 64px 0 0;
   }
 
   .detail-layout {

@@ -100,11 +100,10 @@ Open a project folder — the analysis core runs **entirely in your browser** an
 
 **Input:** open a project folder (File System Access API, with a `webkitdirectory` fallback). A thresholds panel re-runs the analysis live.
 
-**Three full-screen pages** (scroll-snap, page dots, arrow keys):
+**Two full-screen pages** (scroll-snap, page dots, arrow keys):
 
-1. **Dashboard** — a pure data screen: a maintainability gauge, key numbers and pie charts only (lines of code, languages, cyclomatic/cognitive buckets).
-2. **File map** — a full-bleed, nested, SpaceSniffer-style treemap: folders contain files, sized by code lines and colored by max complexity. Click a cell to open the file.
-3. **File detail** — a file list with a source preview; click a function to scroll to and highlight its lines.
+1. **Dashboard** — a pure data screen: a maintainability index, twelve key numbers (files, functions, lines, comment %, average/max cyclomatic and cognitive complexity, Halstead difficulty, violations, markers) and pie charts only — lines of code, languages, and cyclomatic / cognitive / nesting / function-length / function-kind distributions, plus markers and violations-by-rule when present.
+2. **File detail** — a file list with a source preview; click a function to scroll to and highlight its lines.
 
 Responsive layout, sortable tables and one-click JSON export.
 

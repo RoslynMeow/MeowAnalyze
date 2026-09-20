@@ -114,6 +114,8 @@ export interface FileMetrics {
   params: Distribution;
   maintainability: Distribution;
   halsteadVolume: Distribution;
+  halsteadDifficulty: Distribution;
+  halsteadEffort: Distribution;
 }
 
 export interface FileReport {

@@ -3,7 +3,6 @@ export type Lang = "zh" | "en";
 export interface Strings {
   pages: {
     dashboard: string;
-    treemap: string;
     detail: string;
   };
   common: {
@@ -62,26 +61,24 @@ export interface Strings {
       functions: string;
       codeLines: string;
       commentPct: string;
+      avgCyclomatic: string;
       maxCyclomatic: string;
+      avgCognitive: string;
       maxCognitive: string;
+      halsteadDifficulty: string;
       violations: string;
       markers: string;
     };
     charts: {
-      cyclomatic: string;
-      cognitive: string;
-      topFunctions: string;
       linesOfCode: string;
       languages: string;
-      filesTreemap: string;
-      ruleViolations: string;
-    };
-    topFunctions: string;
-    topTable: {
-      function: string;
-      file: string;
       cyclomatic: string;
       cognitive: string;
+      nesting: string;
+      functionLength: string;
+      functionKinds: string;
+      markers: string;
+      ruleViolations: string;
     };
     donut: {
       physical: string;
@@ -93,14 +90,14 @@ export interface Strings {
       comment: string;
       blank: string;
     };
-    fileCard: {
-      cyclo: (n: number) => string;
-      cognitive: (n: number) => string;
-      code: (n: number) => string;
-      functions: (n: number) => string;
-      maintainability: (n: number) => string;
+    kinds: {
+      function: string;
+      method: string;
+      arrow: string;
+      constructor: string;
+      getter: string;
+      setter: string;
     };
-    filesTitle: (n: number) => string;
   };
   detail: {
     locPill: (
@@ -139,7 +136,6 @@ export interface Strings {
 const zh: Strings = {
   pages: {
     dashboard: "大屏",
-    treemap: "文件地图",
     detail: "文件详情",
   },
   common: {
@@ -198,26 +194,24 @@ const zh: Strings = {
       functions: "函数",
       codeLines: "代码行",
       commentPct: "注释占比",
+      avgCyclomatic: "平均圈复杂度",
       maxCyclomatic: "最大圈复杂度",
+      avgCognitive: "平均认知复杂度",
       maxCognitive: "最大认知复杂度",
+      halsteadDifficulty: "Halstead 难度",
       violations: "违规",
       markers: "标记",
     },
     charts: {
-      cyclomatic: "圈复杂度分布",
-      cognitive: "认知复杂度分布",
-      topFunctions: "最复杂的函数 —— 点击下钻",
       linesOfCode: "代码行构成",
       languages: "语言",
-      filesTreemap: "按代码行数的文件树状图 —— 颜色为最大认知复杂度,点击下钻",
+      cyclomatic: "圈复杂度分布",
+      cognitive: "认知复杂度分布",
+      nesting: "嵌套深度分布",
+      functionLength: "函数长度分布",
+      functionKinds: "函数类型",
+      markers: "标记",
       ruleViolations: "违规规则",
-    },
-    topFunctions: "最复杂的函数",
-    topTable: {
-      function: "函数",
-      file: "文件",
-      cyclomatic: "圈复杂",
-      cognitive: "认知",
     },
     donut: {
       physical: "物理行",
@@ -229,14 +223,14 @@ const zh: Strings = {
       comment: "注释",
       blank: "空行",
     },
-    fileCard: {
-      cyclo: (n) => `圈复杂度 ${n}`,
-      cognitive: (n) => `认知 ${n}`,
-      code: (n) => `${n} 代码行`,
-      functions: (n) => `${n} 函数`,
-      maintainability: (n) => `MI ${n}`,
+    kinds: {
+      function: "函数",
+      method: "方法",
+      arrow: "箭头函数",
+      constructor: "构造函数",
+      getter: "取值器",
+      setter: "设值器",
     },
-    filesTitle: (n) => `文件(${n})`,
   },
   detail: {
     locPill: (physical, code, comment, blank, logical) =>
@@ -270,7 +264,6 @@ const zh: Strings = {
 const en: Strings = {
   pages: {
     dashboard: "Dashboard",
-    treemap: "File map",
     detail: "File detail",
   },
   common: {
@@ -329,26 +322,24 @@ const en: Strings = {
       functions: "Functions",
       codeLines: "Code lines",
       commentPct: "Comment %",
+      avgCyclomatic: "Avg cyclomatic",
       maxCyclomatic: "Max cyclomatic",
+      avgCognitive: "Avg cognitive",
       maxCognitive: "Max cognitive",
+      halsteadDifficulty: "Halstead difficulty",
       violations: "Violations",
       markers: "Markers",
     },
     charts: {
-      cyclomatic: "Cyclomatic complexity distribution",
-      cognitive: "Cognitive complexity distribution",
-      topFunctions: "Most complex functions — click to drill down",
       linesOfCode: "Lines of code",
       languages: "Languages",
-      filesTreemap: "Files by code lines — color = max cognitive, click to drill down",
+      cyclomatic: "Cyclomatic complexity distribution",
+      cognitive: "Cognitive complexity distribution",
+      nesting: "Nesting depth distribution",
+      functionLength: "Function length distribution",
+      functionKinds: "Function kinds",
+      markers: "Markers",
       ruleViolations: "Rule violations",
-    },
-    topFunctions: "Most complex functions",
-    topTable: {
-      function: "function",
-      file: "file",
-      cyclomatic: "cyclo",
-      cognitive: "cog",
     },
     donut: {
       physical: "physical",
@@ -360,14 +351,14 @@ const en: Strings = {
       comment: "comment",
       blank: "blank",
     },
-    fileCard: {
-      cyclo: (n) => `cyclo ${n}`,
-      cognitive: (n) => `cog ${n}`,
-      code: (n) => `${n} code`,
-      functions: (n) => `${n} fns`,
-      maintainability: (n) => `MI ${n}`,
+    kinds: {
+      function: "function",
+      method: "method",
+      arrow: "arrow",
+      constructor: "constructor",
+      getter: "getter",
+      setter: "setter",
     },
-    filesTitle: (n) => `Files (${n})`,
   },
   detail: {
     locPill: (physical, code, comment, blank, logical) =>
