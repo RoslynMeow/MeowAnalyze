@@ -14,7 +14,6 @@ import {
   fileListToSources,
   pickDirectory,
   supportsDirectoryPicker,
-  zipToSources,
 } from "./sources.js";
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail } from "./views/detail.js";
@@ -40,7 +39,6 @@ let notice: string | undefined;
 function showLanding(): void {
   renderLanding(app, {
     bannerUrl,
-    onZip: (file) => void handleZip(file),
     onFolder: () => void handleFolder(),
     notice,
   });
@@ -84,11 +82,6 @@ function showDetail(path: string): void {
   renderDetail(app, file, source ? decodeContent(source.content) : undefined, {
     onBack: showDashboard,
   });
-}
-
-async function handleZip(file: File): Promise<void> {
-  const sources = zipToSources(new Uint8Array(await file.arrayBuffer()));
-  runAnalysis(sources, file.name.replace(/\.zip$/i, ""));
 }
 
 async function handleFolder(): Promise<void> {

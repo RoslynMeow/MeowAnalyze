@@ -1,10 +1,6 @@
-import { strToU8, zipSync } from "fflate";
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import {
-  isIgnoredPath,
-  stripCommonRoot,
-  zipToSources,
-} from "../src/sources.js";
+import { fileListToSources, isIgnoredPath } from "../src/sources.js";
 
 describe("isIgnoredPath", () => {
   it("ignores vendored and build folders", () => {
@@ -14,33 +10,19 @@ describe("isIgnoredPath", () => {
   });
 });
 
-describe("stripCommonRoot", () => {
-  it("removes a shared top-level folder", () => {
-    const sources = stripCommonRoot([
-      { path: "proj/src/a.ts", content: "a" },
-      { path: "proj/README.md", content: "b" },
-    ]);
-    expect(sources.map((s) => s.path)).toEqual(["src/a.ts", "README.md"]);
-  });
-
-  it("leaves paths alone when there is no shared root", () => {
-    const sources = stripCommonRoot([
-      { path: "a.ts", content: "a" },
-      { path: "src/b.ts", content: "b" },
-    ]);
-    expect(sources.map((s) => s.path)).toEqual(["a.ts", "src/b.ts"]);
-  });
-});
-
-describe("zipToSources", () => {
-  it("extracts, filters and normalizes archive entries", () => {
-    const archive = zipSync({
-      "proj/src/a.ts": strToU8("export const a = 1;\n"),
-      "proj/node_modules/b.ts": strToU8("ignore me"),
-      "proj/README.md": strToU8("# hello"),
+describe("fileListToSources", () => {
+  it("keeps relative paths and skips ignored folders", async () => {
+    const files = [
+      new File(["export const a = 1;"], "a.ts", { type: "text/plain" }),
+      new File(["ignored"], "node_modules/b.ts", { type: "text/plain" }),
+    ];
+    // jsdom's File has no webkitRelativePath; emulate it for the second file.
+    Object.defineProperty(files[1], "webkitRelativePath", {
+      value: "node_modules/b.ts",
     });
-    const sources = zipToSources(archive);
-    expect(sources.map((s) => s.path)).toEqual(["README.md", "src/a.ts"]);
-    expect(sources[1]?.content).toBeInstanceOf(Uint8Array);
+
+    const sources = await fileListToSources(files);
+    expect(sources.map((source) => source.path)).toEqual(["a.ts"]);
+    expect(sources[0]?.content).toBeInstanceOf(Uint8Array);
   });
 });

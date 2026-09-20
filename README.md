@@ -94,9 +94,9 @@ npm run build:web:single   # one self-contained file -> apps/web/dist-single/ind
 
 **Embed / offline:** `meowanalyze-web.html` inlines all JavaScript, CSS and the banner into one file, so it works with no server at all — open it from disk, share a single file, or drop it into an `<iframe>`.
 
-Drop a `.zip` archive, pick a folder, or paste code — the analysis core runs **entirely in your browser** and nothing is uploaded.
+Open a project folder — the analysis core runs **entirely in your browser** and nothing is uploaded.
 
-**Inputs:** drop a `.zip` (fflate), pick a folder (File System Access API, with a `webkitdirectory` fallback), or paste code. A thresholds panel re-runs the analysis live.
+**Input:** open a project folder (File System Access API, with a `webkitdirectory` fallback). A thresholds panel re-runs the analysis live.
 
 **Visuals & interaction:**
 
@@ -155,7 +155,7 @@ max_file_size = 2097152
 
 ### `analyzeSources` — browser-safe core
 
-The engine performs **no I/O**. Feed it in-memory sources and get a report. Ideal for a web app that reads a dropped `.zip` or a folder handle.
+The engine performs **no I/O**. Feed it in-memory sources and get a report. Ideal for a web app that reads a folder handle.
 
 ```ts
 import { analyzeSources } from "@meowanalyze/core";
@@ -272,7 +272,7 @@ The **core** is pure and platform-agnostic; hosts (CLI, web app and the upcoming
 - [x] CLI with terminal + JSON output, thresholds and CI gating
 - [x] Browser-safe core decoupled from the filesystem
 - [x] Multi-platform standalone binaries via Bun
-- [x] Web app (runs the core in the browser: drop a `.zip`, pick a folder or paste code)
+- [x] Web app (runs the core in the browser: open a project folder)
 - [ ] Desktop UI (thin shell that wraps the platform CLI binary)
 - [ ] More languages via tree-sitter, cognitive complexity, Halstead & maintainability index
 

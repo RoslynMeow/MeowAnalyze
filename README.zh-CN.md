@@ -93,9 +93,9 @@ npm run build:web:single   # 单文件 -> apps/web/dist-single/index.html
 
 **内嵌 / 离线**:`meowanalyze-web.html` 把全部 JS、CSS 和 banner 内联成一个文件,无需服务器 —— 可直接从本地打开、单文件分享,或放进 `<iframe>`。
 
-拖入 `.zip`、选择文件夹或粘贴代码 —— 分析核心**完全在浏览器内运行**,代码不会上传。
+打开项目文件夹 —— 分析核心**完全在浏览器内运行**,代码不会上传。
 
-**输入方式**:拖入 `.zip`(fflate)、选择文件夹(File System Access API,回退到 `webkitdirectory`)或粘贴代码;阈值面板可即时重算。
+**输入方式**:打开项目文件夹(File System Access API,回退到 `webkitdirectory`);阈值面板可即时重算。
 
 **图表与交互:**
 
@@ -154,7 +154,7 @@ max_file_size = 2097152
 
 ### `analyzeSources` — 浏览器安全核心
 
-引擎**不做任何 I/O**。把内存中的源码喂进去,拿到报告。非常适合读取拖入的 `.zip` 或文件夹句柄的 Web 应用。
+引擎**不做任何 I/O**。把内存中的源码喂进去,拿到报告。非常适合读取文件夹句柄的 Web 应用。
 
 ```ts
 import { analyzeSources } from "@meowanalyze/core";
@@ -271,7 +271,7 @@ docs/assets/banner.svg
 - [x] CLI:终端 + JSON 输出、阈值与 CI 门禁
 - [x] 与文件系统解耦的浏览器安全核心
 - [x] 通过 Bun 产出多平台独立程序
-- [x] Web 应用(浏览器内运行核心:拖入 `.zip`、选择文件夹或粘贴代码)
+- [x] Web 应用(浏览器内运行核心:打开项目文件夹)
 - [ ] 桌面 UI(薄壳,内部调用平台 CLI 程序)
 - [ ] 通过 tree-sitter 支持更多语言、认知复杂度、Halstead 与可维护性指数
 

@@ -32,17 +32,16 @@ function sampleReport(): AnalysisReport {
 }
 
 describe("landing view", () => {
-  it("shows the banner and only upload / folder options", () => {
+  it("shows the banner and only the open-folder option", () => {
     const root = document.createElement("div");
     renderLanding(root, {
       bannerUrl: "banner.svg",
-      onZip: vi.fn(),
       onFolder: vi.fn(),
     });
 
     expect(root.querySelector("img.landing__banner")).not.toBeNull();
     const buttons = root.querySelectorAll("button.button");
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(1);
     expect(root.querySelector("textarea")).toBeNull();
   });
 });

@@ -2,7 +2,6 @@ import { button, el } from "../dom.js";
 
 export interface LandingHandlers {
   bannerUrl: string;
-  onZip: (file: File) => void;
   onFolder: () => void;
   notice?: string;
 }
@@ -14,16 +13,6 @@ export function renderLanding(root: HTMLElement, handlers: LandingHandlers): voi
   banner.src = handlers.bannerUrl;
   banner.alt = "MeowAnalyze";
 
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = ".zip,application/zip";
-  fileInput.hidden = true;
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    if (file) handlers.onZip(file);
-    fileInput.value = "";
-  });
-
   const view = el(
     "div",
     { class: "view landing" },
@@ -34,13 +23,11 @@ export function renderLanding(root: HTMLElement, handlers: LandingHandlers): voi
       el(
         "div",
         { class: "landing__actions" },
-        button("Upload .zip", () => fileInput.click(), "button--primary"),
-        button("Open folder", handlers.onFolder),
+        button("Open folder", handlers.onFolder, "button--primary"),
       ),
       handlers.notice
         ? el("p", { class: "landing__notice", text: handlers.notice })
         : null,
-      fileInput,
     ),
   );
 
