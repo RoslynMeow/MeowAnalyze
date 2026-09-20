@@ -91,6 +91,16 @@ npm run build:web    # static build in apps/web/dist
 
 Drop a `.zip` archive, pick a folder, or paste code — the analysis core runs **entirely in your browser** and nothing is uploaded.
 
+**Inputs:** drop a `.zip` (fflate), pick a folder (File System Access API, with a `webkitdirectory` fallback), or paste code. A thresholds panel re-runs the analysis live.
+
+**Visuals & interaction:**
+
+- cyclomatic complexity histogram (bars turn yellow at 10, red at 20)
+- lines-of-code and language donut charts
+- most-complex-functions bar chart — click a bar to jump to its file
+- files treemap sized by code lines and colored by max complexity — click a tile to open the file
+- sortable tables, a file filter, and one-click JSON export
+
 ## 🛠 CLI reference
 
 ```

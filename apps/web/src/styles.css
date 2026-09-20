@@ -308,3 +308,201 @@ tbody tr:hover {
   font-size: 12px;
   padding: 0 16px 32px;
 }
+
+/* ---------------------------------------------------------------- */
+/* Charts                                                            */
+/* ---------------------------------------------------------------- */
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.chart-block h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-block--wide {
+  grid-column: 1 / -1;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart__grid {
+  stroke: #21262d;
+  stroke-width: 1;
+}
+
+.chart__axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart__tick {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.chart__label {
+  fill: var(--text);
+  font-size: 12px;
+}
+
+.chart__value {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.chart__track {
+  fill: #21262d;
+}
+
+.chart__bar {
+  transition: opacity 0.12s ease;
+}
+
+.chart__bar:hover {
+  opacity: 0.82;
+}
+
+.chart__bar--clickable,
+.chart__cell {
+  cursor: pointer;
+}
+
+.chart__cell {
+  transition: opacity 0.12s ease;
+}
+
+.chart__cell:hover {
+  opacity: 0.82;
+  stroke: #e6edf3;
+  stroke-width: 1.5;
+}
+
+.chart__cell-label {
+  fill: #0d1117;
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.chart__arc {
+  transition: opacity 0.12s ease;
+}
+
+.chart__arc:hover {
+  opacity: 0.82;
+}
+
+.chart__center-value {
+  fill: var(--text);
+  font-size: 26px;
+  font-weight: 700;
+  dominant-baseline: middle;
+}
+
+.chart__center-label {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.chart__empty {
+  fill: var(--muted);
+  font-size: 13px;
+}
+
+.chart-caption {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.donut {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.chart--donut {
+  width: 160px;
+  flex: 0 0 auto;
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--muted);
+  display: grid;
+  gap: 6px;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* ---------------------------------------------------------------- */
+/* Sortable tables & filter                                          */
+/* ---------------------------------------------------------------- */
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  color: var(--text);
+}
+
+.sort-arrow {
+  color: var(--accent);
+  font-size: 10px;
+}
+
+.files-toolbar {
+  margin-bottom: 12px;
+}
+
+.filter {
+  width: 100%;
+  background: #0b0f14;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.file.flash {
+  animation: flash 1.2s ease;
+  border-color: var(--accent);
+}
+
+@keyframes flash {
+  0% {
+    background: rgba(255, 180, 84, 0.22);
+  }
+  100% {
+    background: #0b0f14;
+  }
+}
