@@ -1,0 +1,50 @@
+{
+  "name": "meowanalyze",
+  "version": "0.1.0",
+  "description": "A full-featured static code analyzer: language detection, cyclomatic complexity, nesting depth and more.",
+  "type": "module",
+  "bin": {
+    "meowanalyze": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "static-analysis",
+    "cyclomatic-complexity",
+    "code-metrics",
+    "cli"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "ignore": "^7.0.9",
+    "picocolors": "^1.1.1",
+    "smol-toml": "^1.8.0",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.13",
+    "vitest": "^5.0.1"
+  }
+}
