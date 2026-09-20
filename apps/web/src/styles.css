@@ -979,7 +979,7 @@ th.sortable:hover {
   scroll-snap-stop: always;
   display: flex;
   flex-direction: column;
-  padding: 56px 32px 20px;
+  padding: 64px 32px 24px;
   box-sizing: border-box;
 }
 
@@ -996,7 +996,7 @@ th.sortable:hover {
 }
 
 .page--treemap {
-  padding: 0;
+  padding: 64px 0 0;
 }
 
 .page__body--treemap {
@@ -1242,11 +1242,11 @@ th.sortable:hover {
 
 @media (max-width: 900px) {
   .page {
-    padding: 52px 14px 14px;
+    padding: 64px 14px 16px;
   }
 
   .page--treemap {
-    padding: 0;
+    padding: 64px 0 0;
   }
 
   .detail-layout {

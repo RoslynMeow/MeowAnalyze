@@ -29,7 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web: page 1 is a pure data screen (equal-sized stat cards + pie charts).
   Responsive grids and `100dvh` sizing so each page fits the viewport.
 - Web: page 2 is now a full-bleed file map only (no title, hint or side panel);
-  it measures its container and redraws on resize.
+  it measures its container and redraws on resize. Tiny files get a minimum cell
+  size, crowded folders fold their smallest entries into a "…" cell, and a top
+  inset keeps the map clear of the fixed controls.
 
 ### Planned
 

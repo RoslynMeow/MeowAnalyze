@@ -55,6 +55,10 @@ export function renderTreemap(
   }
 }
 
+const MAX_CHILDREN = 48;
+const MIN_AREA_RATIO = 0.0009; // ~22x22px on a 1000x600 map
+const MAX_FLOOR_SHARE = 0.35; // floors may claim at most this share of the map
+
 /** Build a folder tree whose leaves are files, sized by code lines. */
 export function buildTree(report: AnalysisReport): TreeNode {
   const root: TreeNode = { name: "", value: 0, children: [] };
@@ -79,12 +83,60 @@ export function buildTree(report: AnalysisReport): TreeNode {
     });
   }
 
-  const aggregate = (node: TreeNode): number => {
-    if (!node.children || node.children.length === 0) return node.value;
-    node.value = node.children.reduce((sum, child) => sum + aggregate(child), 0);
-    return node.value;
-  };
+  aggregate(root);
+  pruneLargeFolders(root);
+  aggregate(root);
+  applyMinimumArea(root);
   aggregate(root);
 
   return root;
+}
+
+function aggregate(node: TreeNode): number {
+  if (!node.children || node.children.length === 0) return node.value;
+  node.value = node.children.reduce((sum, child) => sum + aggregate(child), 0);
+  return node.value;
+}
+
+/** Fold the smallest entries of crowded folders into a single "…" cell. */
+function pruneLargeFolders(node: TreeNode): void {
+  if (!node.children || node.children.length === 0) return;
+  if (node.children.length > MAX_CHILDREN) {
+    const sorted = [...node.children].sort((a, b) => b.value - a.value);
+    const keep = sorted.slice(0, MAX_CHILDREN - 1);
+    const rest = sorted.slice(MAX_CHILDREN - 1);
+    keep.push({
+      name: "…",
+      value: rest.reduce((sum, child) => sum + child.value, 0),
+      color: "#484f58",
+    });
+    node.children = keep;
+  }
+  for (const child of node.children) pruneLargeFolders(child);
+}
+
+/** Floor tiny files so no cell becomes invisible in large projects. */
+function applyMinimumArea(root: TreeNode): void {
+  const leaves: TreeNode[] = [];
+  collectLeaves(root, leaves);
+  if (leaves.length <= 1) return;
+
+  const total = leaves.reduce((sum, leaf) => sum + leaf.value, 0);
+  if (total <= 0) return;
+
+  const floor = Math.max(
+    1,
+    Math.min(total * MIN_AREA_RATIO, (total * MAX_FLOOR_SHARE) / leaves.length),
+  );
+  for (const leaf of leaves) {
+    if (leaf.value < floor) leaf.value = floor;
+  }
+}
+
+function collectLeaves(node: TreeNode, out: TreeNode[]): void {
+  if (!node.children || node.children.length === 0) {
+    out.push(node);
+    return;
+  }
+  for (const child of node.children) collectLeaves(child, out);
 }
