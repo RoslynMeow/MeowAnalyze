@@ -88,6 +88,8 @@ export function bucketize(
 export interface TreeNode {
   name: string;
   value: number;
+  /** Real size for tooltips (e.g. code lines); `value` is the layout weight. */
+  lines?: number;
   color?: string;
   key?: string;
   children?: TreeNode[];
@@ -176,8 +178,8 @@ export function nestedTreemapChart(
     withTitle(
       rect,
       isLeaf
-        ? `${box.node.name}: ${box.node.value} code lines`
-        : `${box.node.name || "root"} (${box.node.value} lines)`,
+        ? `${box.node.name}: ${box.node.lines ?? box.node.value} code lines`
+        : `${box.node.name || "root"} (${box.node.lines ?? box.node.value} lines)`,
     );
     if (isLeaf) withDelay(rect, index, 12);
     svgRoot.append(rect);

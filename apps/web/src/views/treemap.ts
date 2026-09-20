@@ -56,15 +56,19 @@ export function renderTreemap(
 }
 
 const MAX_CHILDREN = 48;
-const MIN_AREA_RATIO = 0.0009; // ~22x22px on a 1000x600 map
+const MIN_AREA_RATIO = 0.0008; // ~22x22px on a 1000x600 map
 const MAX_FLOOR_SHARE = 0.35; // floors may claim at most this share of the map
 
-/** Build a folder tree whose leaves are files, sized by code lines. */
+/**
+ * Build a folder tree whose leaves are files. Cell area uses √code-lines so the
+ * size range stays readable; the real line count is kept for tooltips.
+ */
 export function buildTree(report: AnalysisReport): TreeNode {
   const root: TreeNode = { name: "", value: 0, children: [] };
 
   for (const file of report.files) {
     const parts = file.path.split("/");
+    const lines = Math.max(1, file.loc.code);
     let node = root;
     parts.forEach((part, index) => {
       const isLeaf = index === parts.length - 1;
@@ -75,7 +79,8 @@ export function buildTree(report: AnalysisReport): TreeNode {
         node.children.push(child);
       }
       if (isLeaf) {
-        child.value = Math.max(1, file.loc.code);
+        child.value = Math.sqrt(lines);
+        child.lines = lines;
         child.key = file.path;
         child.color = complexityColor(file.metrics.cognitive.max);
       }
@@ -94,7 +99,13 @@ export function buildTree(report: AnalysisReport): TreeNode {
 
 function aggregate(node: TreeNode): number {
   if (!node.children || node.children.length === 0) return node.value;
-  node.value = node.children.reduce((sum, child) => sum + aggregate(child), 0);
+  node.value = 0;
+  node.lines = 0;
+  for (const child of node.children) {
+    aggregate(child);
+    node.value += child.value;
+    node.lines = (node.lines ?? 0) + (child.lines ?? 0);
+  }
   return node.value;
 }
 
@@ -108,6 +119,7 @@ function pruneLargeFolders(node: TreeNode): void {
     keep.push({
       name: "…",
       value: rest.reduce((sum, child) => sum + child.value, 0),
+      lines: rest.reduce((sum, child) => sum + (child.lines ?? 0), 0),
       color: "#484f58",
     });
     node.children = keep;
