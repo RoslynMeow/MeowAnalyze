@@ -6,6 +6,8 @@ export interface HelpSection {
   /** LaTeX formulas, rendered as MathML. */
   formulas?: readonly string[];
   items?: readonly string[];
+  /** A closing remark, shown muted under the formulas. */
+  note?: string;
 }
 
 export interface Strings {
@@ -24,7 +26,6 @@ export interface Strings {
   };
   help: {
     title: string;
-    intro: string;
     sections: readonly HelpSection[];
   };
   theme: {
@@ -191,82 +192,130 @@ const zh: Strings = {
   },
   help: {
     title: "帮助 · 指标说明",
-    intro: "这里解释每一项指标的定义与计算公式，公式由 LaTeX 渲染。",
     sections: [
       {
         title: "语言检测",
-        body: "先按文件扩展名判断语言。TypeScript / JavaScript 使用官方编译器解析为 AST，再在 AST 上统计各项指标。",
+        body: "分析器先按文件扩展名识别语言。当前支持 TypeScript 与 JavaScript（.ts/.tsx/.mts/.cts/.js/.jsx/.mjs/.cjs），使用 TypeScript 官方编译器把源码解析成 AST，再在 AST 与词法扫描之上计算所有指标。二进制文件与超过大小上限的文件会被跳过。",
+        note: "更多语言计划通过 tree-sitter 接入。",
       },
       {
-        title: "圈复杂度",
-        body: "衡量函数中独立执行路径的数量。函数基础值为 1，每个决策点加 1。",
-        formulas: ["CC = 1 + \\#\\{\\text{决策点}\\}"],
+        title: "圈复杂度（Cyclomatic Complexity）",
+        body: "由 McCabe 提出，衡量一个函数中线性无关路径的数量，也就是覆盖所有分支所需的测试用例下限，反映控制流的复杂程度。它既可以由控制流图计算，也可以等价地由决策点计数得到。",
+        formulas: ["M = E - N + 2P", "M(f) = 1 + \\left|D(f)\\right|"],
         items: [
+          "E：控制流图的边数，N：节点数，P：连通分量数（单个函数 P = 1）",
+          "D(f)：函数内的决策点集合",
           "if / else if",
           "for、for-in、for-of",
           "while、do-while",
           "switch 的每个 case",
           "catch",
-          "三元表达式 ?:",
+          "三元运算符 ?:",
           "逻辑运算符 &&、||、??",
         ],
+        note: "函数基础值为 1；嵌套函数单独计算，不累加到外层。",
       },
       {
-        title: "认知复杂度",
-        body: "Sonar 风格，按嵌套深度加权：每个结构记 1 + 当前嵌套层数；else if 链保持平坦；同类逻辑运算符的连续序列只记 1 分。",
-        formulas: ["Cog = \\sum_{i}\\left(1 + \\text{nesting}_i\\right) + \\#\\{\\text{逻辑序列}\\}"],
+        title: "认知复杂度（Cognitive Complexity）",
+        body: "在圈复杂度之外，进一步刻画“人读懂代码的难度”：结构嵌套越深越难理解，因此按嵌套深度加权；同时避免惩罚等价的简单写法（如 else if）。",
+        formulas: [
+          "\\mathrm{Cog}(f) = \\sum_{i \\in S(f)}\\left(1 + \\nu_i\\right) + \\left|R(f)\\right|",
+        ],
+        items: [
+          "S(f)：函数内的控制结构集合，νᵢ 为第 i 个结构的嵌套层数",
+          "每个 if / 循环 / switch / catch / ?: 记 1 + 嵌套层数",
+          "else if 链保持同一层，不额外增加嵌套",
+          "R(f)：同类逻辑运算符的连续序列数；a && b && c 只记 1",
+        ],
+        note: "与圈复杂度的区别：嵌套会显著放大认知复杂度，而 else if 几乎不被惩罚。",
       },
       {
-        title: "嵌套深度",
-        body: "函数体内控制结构（if、循环、switch、try）的最大嵌套层数。",
-        formulas: ["D = \\max_{n}\\,\\text{nesting}(n)"],
+        title: "嵌套深度（Nesting Depth）",
+        body: "函数体内控制结构相互嵌套的最大层数，用来衡量代码的最大缩进深度。",
+        formulas: [
+          "D(f) = \\max_{s \\in S(f)} \\mathrm{depth}(s)",
+          "\\mathrm{depth}(s) = 1 + \\max_{p \\in \\mathrm{anc}(s)} \\mathrm{depth}(p)",
+        ],
+        items: ["计入的结构：if、for、for-in、for-of、while、do、switch、try"],
       },
       {
-        title: "Halstead",
-        body: "由函数中的运算符与操作数统计得出的一组软件科学度量。",
+        title: "Halstead 度量",
+        body: "从函数文本中的运算符（operators）与操作数（operands）统计出一组软件科学度量，用数量的规模与多样性估算程序的体量和理解成本。",
         formulas: [
           "n = n_1 + n_2",
           "N = N_1 + N_2",
           "V = N \\log_2 n",
-          "D = \\frac{n_1}{2}\\cdot\\frac{N_2}{n_2}",
-          "E = D\\cdot V",
+          "D = \\frac{n_1}{2} \\cdot \\frac{N_2}{n_2}",
+          "E = D \\cdot V",
         ],
         items: [
           "n₁ / N₁：不同 / 总运算符数",
           "n₂ / N₂：不同 / 总操作数数",
-          "V：体积",
-          "D：难度",
-          "E：工作量",
+          "n：词汇量，N：程序长度",
+          "V：体积（信息量），D：难度，E：工作量",
         ],
+        note: "体积与难度会参与可维护性指数的计算。",
       },
       {
-        title: "可维护性指数",
-        body: "综合体积、圈复杂度与代码行得到的 0–100 评分，越高越易维护。",
+        title: "可维护性指数（Maintainability Index）",
+        body: "由 Oman 与 Hagemeister 提出，综合 Halstead 体积、圈复杂度与代码行数，给出 0–100 的可维护性评分，越高越易维护。本工具沿用 Visual Studio 的系数并做归一化。",
         formulas: [
-          "MI = 171 - 3.42\\,\\ln V - 0.23\\,CC - 16.2\\,\\ln(LOC)",
-          "MI_{\\text{norm}} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{MI \\times 100}{171}\\right)\\right)",
+          "MI = 171 - 3.42\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
+          "MI^{*} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{100\\,MI}{171}\\right)\\right)",
+        ],
+        items: [
+          "V：Halstead 体积（函数级取该函数，文件级取文件内所有函数之和）",
+          "G：圈复杂度",
+          "L：物理代码行数",
+        ],
+        note: "颜色分级：< 40 红（难维护）、40–65 黄、≥ 65 绿。",
+      },
+      {
+        title: "代码行（Lines of Code）",
+        body: "以行为单位的口径。物理行是文件总行数；逻辑行来自 AST 中语句节点的数量，比物理行更接近“实际语句数”。",
+        formulas: [
+          "L_{\\mathrm{phys}} = L_{\\mathrm{code}} + L_{\\mathrm{comment}} + L_{\\mathrm{blank}}",
+          "L_{\\mathrm{logical}} = \\#\\{\\, n : n \\in \\mathrm{AST}_{\\mathrm{stmt}} \\,\\}",
+        ],
+        items: [
+          "代码行：至少含一个非注释 token 的行",
+          "注释行：仅含注释的行",
+          "空行：不含任何 token 的空白行",
+        ],
+        note: "代码 + 注释 + 空行 = 物理行，恒等成立。",
+      },
+      {
+        title: "注释密度（Comment Density）",
+        body: "非空行中注释所占的比例，用来粗略衡量文档化程度；并非越高越好。",
+        formulas: [
+          "\\rho = \\frac{L_{\\mathrm{comment}}}{L_{\\mathrm{code}} + L_{\\mathrm{comment}}} \\times 100\\%",
         ],
       },
       {
-        title: "代码行",
-        body: "按行拆分的口径，四类之和等于物理行数；逻辑行是 AST 中语句节点的数量。",
-        formulas: ["physical = code + comment + blank"],
+        title: "标记（Markers）",
+        body: "统计注释中出现的待办与告警标记，便于快速定位技术债。",
+        formulas: ["\\#\\{\\text{TODO}\\}, \\quad \\#\\{\\text{FIXME}\\}, \\quad \\#\\{\\text{HACK}\\}"],
+        items: ["仅统计出现在注释中的标记，字符串或标识符里的同名文字不计入"],
       },
       {
-        title: "注释密度",
-        body: "非空行中注释所占的比例。",
-        formulas: ["density = \\frac{comment}{code + comment} \\times 100\\%"],
-      },
-      {
-        title: "标记",
-        body: "注释中 TODO、FIXME、HACK 的出现次数。",
-      },
-      {
-        title: "分布聚合",
-        body: "每个指标都会在所有函数上汇总为分布，供图表与 CI 门禁使用。",
+        title: "分布与聚合（Distribution）",
+        body: "每个函数级指标都会在所有函数上汇总成一个分布，图表据此绘制，CI 门禁则读取 sum / max。",
         formulas: [
           "\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i",
-          "sum,\\quad \\min x_i,\\quad \\max x_i",
+          "\\sum_{i=1}^{n} x_i, \\quad \\min_{1 \\le i \\le n} x_i, \\quad \\max_{1 \\le i \\le n} x_i",
+        ],
+        items: ["count、sum、min、max、mean 五个聚合量"],
+      },
+      {
+        title: "阈值与违规（Thresholds）",
+        body: "复杂度类指标可与设定阈值比较，超过即记为违规（默认级别 warning）。阈值可在设置页调整，也可通过 meowanalyze.toml 配置。",
+        items: [
+          "圈复杂度 > cyclomatic",
+          "认知复杂度 > cognitive",
+          "嵌套深度 > nesting",
+          "函数参数个数 > params",
+          "函数行数 > function_loc",
+          "文件行数 > file_loc",
         ],
       },
     ],
@@ -420,17 +469,19 @@ const en: Strings = {
   },
   help: {
     title: "Help · metric reference",
-    intro: "Definitions and formulas for every metric. Formulas are rendered from LaTeX.",
     sections: [
       {
         title: "Language detection",
-        body: "The language is chosen from the file extension first. TypeScript / JavaScript is parsed into an AST with the official compiler, and all metrics are measured on that AST.",
+        body: "The language is chosen from the file extension first. TypeScript and JavaScript (.ts/.tsx/.mts/.cts/.js/.jsx/.mjs/.cjs) are parsed into an AST with the official TypeScript compiler; every metric is then computed over that AST and a lexical scan. Binary files and files over the size limit are skipped.",
+        note: "More languages are planned via tree-sitter.",
       },
       {
         title: "Cyclomatic complexity",
-        body: "Counts independent execution paths in a function. The base value is 1 and every decision point adds 1.",
-        formulas: ["CC = 1 + \\#\\{\\text{decision points}\\}"],
+        body: "Introduced by McCabe, it counts the number of linearly independent paths through a function — a lower bound on the test cases needed to cover every branch — and so reflects how tangled the control flow is. It can be computed from the control-flow graph or, equivalently, by counting decision points.",
+        formulas: ["M = E - N + 2P", "M(f) = 1 + \\left|D(f)\\right|"],
         items: [
+          "E: edges and N: nodes of the control-flow graph; P: connected components (P = 1 for a single function)",
+          "D(f): the set of decision points in the function",
           "if / else if",
           "for, for-in, for-of",
           "while, do-while",
@@ -439,63 +490,109 @@ const en: Strings = {
           "ternary ?:",
           "logical operators &&, ||, ??",
         ],
+        note: "The base value is 1; nested functions are measured separately and do not add to the enclosing one.",
       },
       {
         title: "Cognitive complexity",
-        body: "Sonar style, weighted by nesting depth: each construct scores 1 + current nesting; else-if chains stay flat; a run of like logical operators scores once.",
-        formulas: ["Cog = \\sum_{i}\\left(1 + \\text{nesting}_i\\right) + \\#\\{\\text{logical runs}\\}"],
+        body: "Beyond cyclomatic complexity, it tries to capture how hard the code is for a human to follow: deeply nested structures are harder to understand, so they are weighted by nesting depth, while equivalent simple forms (like else if) are not penalized.",
+        formulas: [
+          "\\mathrm{Cog}(f) = \\sum_{i \\in S(f)}\\left(1 + \\nu_i\\right) + \\left|R(f)\\right|",
+        ],
+        items: [
+          "S(f): the control structures in the function; νᵢ is the nesting depth of the i-th structure",
+          "each if / loop / switch / catch / ?: scores 1 + its nesting depth",
+          "else-if chains stay at the same level and add no nesting",
+          "R(f): runs of like logical operators; a && b && c scores 1, not 2",
+        ],
+        note: "The difference from cyclomatic complexity: nesting inflates the score sharply, while else if is barely penalized.",
       },
       {
         title: "Nesting depth",
-        body: "Maximum depth of nested control constructs (if, loops, switch, try) inside a function body.",
-        formulas: ["D = \\max_{n}\\,\\text{nesting}(n)"],
+        body: "The maximum number of mutually nested control structures inside a function body — how deeply the code is indented.",
+        formulas: [
+          "D(f) = \\max_{s \\in S(f)} \\mathrm{depth}(s)",
+          "\\mathrm{depth}(s) = 1 + \\max_{p \\in \\mathrm{anc}(s)} \\mathrm{depth}(p)",
+        ],
+        items: ["Counted constructs: if, for, for-in, for-of, while, do, switch, try"],
       },
       {
-        title: "Halstead",
-        body: "A set of software-science measures derived from the operators and operands in a function.",
+        title: "Halstead measures",
+        body: "A set of software-science measures derived from the operators and operands in the function text, using their count and variety to estimate the size of the program and the effort to understand it.",
         formulas: [
           "n = n_1 + n_2",
           "N = N_1 + N_2",
           "V = N \\log_2 n",
-          "D = \\frac{n_1}{2}\\cdot\\frac{N_2}{n_2}",
-          "E = D\\cdot V",
+          "D = \\frac{n_1}{2} \\cdot \\frac{N_2}{n_2}",
+          "E = D \\cdot V",
         ],
         items: [
           "n₁ / N₁: distinct / total operators",
           "n₂ / N₂: distinct / total operands",
-          "V: volume",
-          "D: difficulty",
-          "E: effort",
+          "n: vocabulary, N: program length",
+          "V: volume, D: difficulty, E: effort",
         ],
+        note: "Volume and difficulty also feed the maintainability index.",
       },
       {
         title: "Maintainability index",
-        body: "A 0–100 score combining volume, cyclomatic complexity and lines of code. Higher is easier to maintain.",
+        body: "Proposed by Oman and Hagemeister, it combines Halstead volume, cyclomatic complexity and lines of code into a 0–100 score, where higher is easier to maintain. This tool uses the Visual Studio coefficients and normalizes the result.",
         formulas: [
-          "MI = 171 - 3.42\\,\\ln V - 0.23\\,CC - 16.2\\,\\ln(LOC)",
-          "MI_{\\text{norm}} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{MI \\times 100}{171}\\right)\\right)",
+          "MI = 171 - 3.42\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
+          "MI^{*} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{100\\,MI}{171}\\right)\\right)",
         ],
+        items: [
+          "V: Halstead volume (per function, or the sum over the file's functions at file level)",
+          "G: cyclomatic complexity",
+          "L: physical lines of code",
+        ],
+        note: "Color grading: < 40 red (hard to maintain), 40–65 yellow, ≥ 65 green.",
       },
       {
         title: "Lines of code",
-        body: "Line split by kind; the four kinds sum to the physical line count. Logical lines are AST statement nodes.",
-        formulas: ["physical = code + comment + blank"],
+        body: "A line-based accounting. Physical lines are the total line count; logical lines come from the number of statement nodes in the AST, which is closer to the count of actual statements.",
+        formulas: [
+          "L_{\\mathrm{phys}} = L_{\\mathrm{code}} + L_{\\mathrm{comment}} + L_{\\mathrm{blank}}",
+          "L_{\\mathrm{logical}} = \\#\\{\\, n : n \\text{ is an AST statement node} \\,\\}",
+        ],
+        items: [
+          "code: lines with at least one non-comment token",
+          "comment: lines containing only comments",
+          "blank: lines with no tokens at all",
+        ],
+        note: "code + comment + blank = physical, as an identity.",
       },
       {
         title: "Comment density",
-        body: "Share of non-blank lines that are comments.",
-        formulas: ["density = \\frac{comment}{code + comment} \\times 100\\%"],
+        body: "The share of non-blank lines that are comments — a rough proxy for documentation; more is not always better.",
+        formulas: [
+          "\\rho = \\frac{L_{\\mathrm{comment}}}{L_{\\mathrm{code}} + L_{\\mathrm{comment}}} \\times 100\\%",
+        ],
       },
       {
         title: "Markers",
-        body: "Counts of TODO, FIXME and HACK found in comments.",
+        body: "Counts of the to-do and warning markers found in comments, to help locate technical debt quickly.",
+        formulas: ["\\#\\{\\text{TODO}\\}, \\quad \\#\\{\\text{FIXME}\\}, \\quad \\#\\{\\text{HACK}\\}"],
+        items: ["Only markers inside comments count; the same words in strings or identifiers do not"],
       },
       {
         title: "Distribution aggregate",
-        body: "Every metric is aggregated over all functions into a distribution, used by charts and CI gates.",
+        body: "Every function-level metric is aggregated over all functions into a distribution; charts are drawn from it and CI gates read sum / max.",
         formulas: [
           "\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i",
-          "sum,\\quad \\min x_i,\\quad \\max x_i",
+          "\\sum_{i=1}^{n} x_i, \\quad \\min_{1 \\le i \\le n} x_i, \\quad \\max_{1 \\le i \\le n} x_i",
+        ],
+        items: ["count, sum, min, max and mean"],
+      },
+      {
+        title: "Thresholds",
+        body: "Complexity metrics are compared against configured thresholds; exceeding one is recorded as a violation (level warning by default). Thresholds can be edited on the settings page or via meowanalyze.toml.",
+        items: [
+          "cyclomatic complexity > cyclomatic",
+          "cognitive complexity > cognitive",
+          "nesting depth > nesting",
+          "parameters > params",
+          "function lines > function_loc",
+          "file lines > file_loc",
         ],
       },
     ],

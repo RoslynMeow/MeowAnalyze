@@ -16,14 +16,7 @@ export function renderHelp(targets: ViewTargets): void {
   const pending: LatexNode[] = [];
   const sections = strings.help.sections.map((section) => sectionCard(section, pending));
 
-  targets.body.replaceChildren(
-    el(
-      "div",
-      { class: "help-page" },
-      el("p", { class: "card__hint", text: strings.help.intro }),
-      ...sections,
-    ),
-  );
+  targets.body.replaceChildren(el("div", { class: "help-page" }, ...sections));
 
   void renderLatex(pending);
 }
@@ -44,6 +37,10 @@ function sectionCard(section: HelpSection, pending: LatexNode[]): HTMLElement {
     const node = el("div", { class: "math", text: latex });
     pending.push({ node, latex });
     children.push(node);
+  }
+
+  if (section.note) {
+    children.push(el("p", { class: "help-note", text: section.note }));
   }
 
   return el("section", { class: "card" }, ...children);

@@ -1306,6 +1306,14 @@ th.sortable:hover {
   border-radius: 10px;
 }
 
+.help-note {
+  margin: 0;
+  padding-left: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  border-left: 2px solid var(--border);
+}
+
 /* ---------------------------------------------------------------- */
 /* Settings page                                                     */
 /* ---------------------------------------------------------------- */
