@@ -98,13 +98,38 @@ body {
 
 .topbar__inner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
   padding: 10px 24px;
+}
+
+.topbar__home {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.topbar__home:hover {
+  color: var(--accent);
+  border-color: var(--border);
+  background: var(--track);
+}
+
+.topbar__home[hidden] {
+  display: none;
 }
 
 .topbar__head {
@@ -120,7 +145,6 @@ body {
   flex: 0 0 auto;
   display: flex;
   gap: 8px;
-  padding-top: 4px;
 }
 
 .content {
@@ -222,27 +246,9 @@ body {
 
 .landing__inner {
   display: grid;
-  gap: 26px;
+  gap: 20px;
   justify-items: center;
   max-width: 760px;
-}
-
-.landing__banner {
-  width: min(680px, 90vw);
-  display: block;
-  border-radius: 16px;
-  animation: bannerIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-@keyframes bannerIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 .landing__actions {
@@ -1150,13 +1156,6 @@ th.sortable:hover {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 12px;
-}
-
-.page__pills {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
 }
 
 .page__actions {

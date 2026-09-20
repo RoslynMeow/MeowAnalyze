@@ -8,7 +8,7 @@ export interface Strings {
   common: {
     settings: string;
     exportJson: string;
-    newAnalysis: string;
+    home: string;
     cancel: string;
     apply: string;
     back: string;
@@ -45,12 +45,6 @@ export interface Strings {
   };
   dashboard: {
     title: string;
-    pills: {
-      files: (n: number) => string;
-      functions: (n: number) => string;
-      violations: (n: number) => string;
-      markers: (todo: number, fixme: number, hack: number) => string;
-    };
     maintainability: {
       low: string;
       moderate: string;
@@ -151,7 +145,7 @@ const zh: Strings = {
   common: {
     settings: "设置",
     exportJson: "导出 JSON",
-    newAnalysis: "重新分析",
+    home: "返回主页",
     cancel: "取消",
     apply: "应用",
     back: "← 返回",
@@ -188,12 +182,6 @@ const zh: Strings = {
   },
   dashboard: {
     title: "分析大屏",
-    pills: {
-      files: (n) => `${n} 个文件`,
-      functions: (n) => `${n} 个函数`,
-      violations: (n) => `${n} 处违规`,
-      markers: (todo, fixme, hack) => `TODO ${todo} · FIXME ${fixme} · HACK ${hack}`,
-    },
     maintainability: {
       low: "难以维护",
       moderate: "中等",
@@ -289,7 +277,7 @@ const en: Strings = {
   common: {
     settings: "Settings",
     exportJson: "Export JSON",
-    newAnalysis: "New analysis",
+    home: "Back to home",
     cancel: "Cancel",
     apply: "Apply",
     back: "← Back",
@@ -326,12 +314,6 @@ const en: Strings = {
   },
   dashboard: {
     title: "Analysis dashboard",
-    pills: {
-      files: (n) => `${n} files`,
-      functions: (n) => `${n} functions`,
-      violations: (n) => `${n} violations`,
-      markers: (todo, fixme, hack) => `TODO ${todo} · FIXME ${fixme} · HACK ${hack}`,
-    },
     maintainability: {
       low: "hard to maintain",
       moderate: "moderate",

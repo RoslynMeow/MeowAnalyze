@@ -22,8 +22,10 @@ describe("i18n", () => {
 
   it("interpolates parameters", () => {
     setLang("en");
-    expect(t().dashboard.pills.files(3)).toBe("3 files");
+    expect(t().detail.functionsTitle(3)).toBe(
+      "Functions (3) — click a name to locate it",
+    );
     setLang("zh");
-    expect(t().dashboard.pills.files(3)).toBe("3 个文件");
+    expect(t().detail.functionsTitle(3)).toBe("函数(3)—— 点击函数名定位");
   });
 });

@@ -13,7 +13,6 @@ import { t } from "../i18n.js";
 
 export interface DashboardHandlers {
   onOpenFile: (path: string) => void;
-  onNewAnalysis: () => void;
   onExport: () => void;
   onOpenSettings: () => void;
 }
@@ -93,8 +92,6 @@ export function renderDashboard(
 
 function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
   const s = t();
-  const { summary } = report;
-  const markers = summary.markers.todo + summary.markers.fixme + summary.markers.hack;
 
   return el(
     "header",
@@ -107,26 +104,12 @@ function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElemen
         class: "page__meta",
         text: `${report.root} · ${report.durationMs}ms · v${report.toolVersion}`,
       }),
-      el(
-        "div",
-        { class: "page__pills" },
-        el("span", { class: "pill", text: s.dashboard.pills.files(summary.files) }),
-        el("span", { class: "pill", text: s.dashboard.pills.functions(summary.metrics.cyclomatic.count) }),
-        el("span", { class: "pill", text: s.dashboard.pills.violations(summary.violations.total) }),
-        markers > 0
-          ? el("span", {
-              class: "pill warn",
-              text: s.dashboard.pills.markers(summary.markers.todo, summary.markers.fixme, summary.markers.hack),
-            })
-          : null,
-      ),
     ),
     el(
       "div",
       { class: "page__actions" },
       button(s.common.settings, handlers.onOpenSettings),
       button(s.common.exportJson, handlers.onExport),
-      button(s.common.newAnalysis, handlers.onNewAnalysis),
     ),
   );
 }

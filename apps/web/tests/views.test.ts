@@ -36,12 +36,12 @@ function targets(): { head: HTMLElement; body: HTMLElement } {
 }
 
 describe("landing view", () => {
-  it("shows the banner and only the open-folder option", () => {
+  it("shows only the open-folder action", () => {
     const root = document.createElement("div");
-    renderLanding(root, { bannerUrl: "banner.svg", onFolder: vi.fn() });
+    renderLanding(root, { onFolder: vi.fn() });
 
-    expect(root.querySelector("img.landing__banner")).not.toBeNull();
     expect(root.querySelectorAll("button.button")).toHaveLength(1);
+    expect(root.querySelector("img")).toBeNull();
     expect(root.querySelector("textarea")).toBeNull();
   });
 });
@@ -51,7 +51,6 @@ describe("dashboard view", () => {
     const view = targets();
     renderDashboard(view, sampleReport(), {
       onOpenFile: vi.fn(),
-      onNewAnalysis: vi.fn(),
       onExport: vi.fn(),
       onOpenSettings: vi.fn(),
     });

@@ -47,6 +47,30 @@ export function button(label: string, onClick: () => void, kind = ""): HTMLButto
   return node;
 }
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Small stroked line icon built from one or more path `d` strings. */
+export function icon(paths: readonly string[], size = 18): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", String(size));
+  svg.setAttribute("height", String(size));
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  for (const d of paths) {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    svg.append(path);
+  }
+  return svg;
+}
+
+export const HOME_ICON = ["M3 10.5 12 3l9 7.5", "M5 9.5V21h14V9.5"];
+
 /** Animated integer count-up. Falls back to the final value without rAF. */
 export function countUp(node: HTMLElement, to: number, duration = 800): void {
   if (typeof requestAnimationFrame !== "function") {

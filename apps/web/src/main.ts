@@ -1,5 +1,4 @@
 import "./styles.css";
-import bannerUrl from "../../../docs/assets/banner.svg";
 import {
   analyzeSources,
   DEFAULT_CONFIG,
@@ -8,7 +7,7 @@ import {
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
-import { button, downloadJson, el, type ViewTargets } from "./dom.js";
+import { button, downloadJson, el, icon, HOME_ICON, type ViewTargets } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { openSettings } from "./settings.js";
@@ -44,18 +43,37 @@ let notice: string | undefined;
 
 let headSlot: HTMLElement;
 let content: HTMLElement;
+let homeBtn: HTMLButtonElement;
 
 function mountShell(): void {
+  homeBtn = el("button", { class: "topbar__home", onClick: goHome });
+  homeBtn.type = "button";
+  homeBtn.append(icon(HOME_ICON));
+  homeBtn.hidden = true;
+
   headSlot = el("div", { class: "topbar__head" });
   const controls = el("div", { class: "controls" });
   const topbar = el(
     "header",
     { class: "topbar" },
-    el("div", { class: "topbar__inner" }, headSlot, controls),
+    el("div", { class: "topbar__inner" }, homeBtn, headSlot, controls),
   );
   content = el("div", { class: "content" });
   app.replaceChildren(topbar, content);
   mountControls(controls);
+  updateHomeLabel();
+}
+
+function updateHomeLabel(): void {
+  homeBtn.title = t().common.home;
+  homeBtn.setAttribute("aria-label", t().common.home);
+}
+
+function goHome(): void {
+  state.report = undefined;
+  state.sources = [];
+  state.selectedPath = undefined;
+  renderLandingView();
 }
 
 /* ------------------------------------------------------------------ */
@@ -64,9 +82,9 @@ function mountShell(): void {
 
 function renderLandingView(): void {
   teardownPager();
+  homeBtn.hidden = true;
   headSlot.replaceChildren();
   renderLanding(content, {
-    bannerUrl,
     onFolder: () => void handleFolder(),
     notice,
   });
@@ -118,6 +136,7 @@ function mountPager(): void {
 
   content.replaceChildren(pager);
   app.append(nav);
+  homeBtn.hidden = false;
   pager.addEventListener("scroll", onPagerScroll, { passive: true });
   document.addEventListener("keydown", onKeydown);
 
@@ -130,12 +149,6 @@ function renderPages(): void {
 
   renderDashboard({ head: heads[0]!, body: bodies[0]! }, report, {
     onOpenFile: selectFile,
-    onNewAnalysis: () => {
-      state.report = undefined;
-      state.sources = [];
-      state.selectedPath = undefined;
-      renderLandingView();
-    },
     onExport: () => downloadJson(report, "meowanalyze-report.json"),
     onOpenSettings: () =>
       openSettings(state.thresholds, (thresholds) => {
@@ -329,6 +342,7 @@ function mountControls(container: HTMLElement): void {
   onLangChange(() => {
     renderLang();
     renderTheme();
+    updateHomeLabel();
     if (state.report && pager) {
       renderPages();
       goToPage(currentPage);
