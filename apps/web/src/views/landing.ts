@@ -1,4 +1,5 @@
 import { button, el } from "../dom.js";
+import { t } from "../i18n.js";
 
 export interface LandingHandlers {
   bannerUrl: string;
@@ -23,7 +24,7 @@ export function renderLanding(root: HTMLElement, handlers: LandingHandlers): voi
       el(
         "div",
         { class: "landing__actions" },
-        button("Open folder", handlers.onFolder, "button--primary"),
+        button(t().landing.openFolder, handlers.onFolder, "button--primary"),
       ),
       handlers.notice
         ? el("p", { class: "landing__notice", text: handlers.notice })

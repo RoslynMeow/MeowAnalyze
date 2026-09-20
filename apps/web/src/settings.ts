@@ -1,13 +1,14 @@
 import type { Thresholds } from "@meowanalyze/core";
 import { button, el } from "./dom.js";
+import { t } from "./i18n.js";
 
-const FIELDS: Array<[keyof Thresholds, string, string]> = [
-  ["cyclomatic", "Cyclomatic", "Max cyclomatic complexity per function"],
-  ["cognitive", "Cognitive", "Max cognitive complexity per function"],
-  ["nesting", "Nesting", "Max nesting depth per function"],
-  ["params", "Parameters", "Max parameters per function"],
-  ["functionLoc", "Function length", "Max physical lines per function"],
-  ["fileLoc", "File length", "Max physical lines per file"],
+const FIELD_KEYS: Array<keyof Thresholds> = [
+  "cyclomatic",
+  "cognitive",
+  "nesting",
+  "params",
+  "functionLoc",
+  "fileLoc",
 ];
 
 /** Open a modal with the threshold settings. */
@@ -15,18 +16,24 @@ export function openSettings(
   current: Thresholds,
   onApply: (thresholds: Thresholds) => void,
 ): void {
+  const strings = t();
   const overlay = el("div", { class: "modal-overlay" });
   const inputs = new Map<keyof Thresholds, HTMLInputElement>();
 
   const grid = el("div", { class: "modal__grid" });
-  for (const [key, label, hint] of FIELDS) {
+  for (const key of FIELD_KEYS) {
     const input = document.createElement("input");
     input.type = "number";
     input.min = "0";
     input.value = String(current[key]);
     inputs.set(key, input);
     grid.append(
-      el("label", { class: "field", title: hint }, el("span", { text: label }), input),
+      el(
+        "label",
+        { class: "field", title: strings.settings.fieldHints[key] },
+        el("span", { text: strings.settings.fields[key] }),
+        input,
+      ),
     );
   }
 
@@ -53,14 +60,14 @@ export function openSettings(
   const modal = el(
     "div",
     { class: "modal" },
-    el("h2", { class: "modal__title", text: "Settings" }),
-    el("p", { class: "modal__hint", text: "Thresholds flag functions that exceed them." }),
+    el("h2", { class: "modal__title", text: strings.settings.title }),
+    el("p", { class: "modal__hint", text: strings.settings.hint }),
     grid,
     el(
       "div",
       { class: "modal__actions" },
-      button("Cancel", close),
-      button("Apply", apply, "button--primary"),
+      button(strings.common.cancel, close),
+      button(strings.common.apply, apply, "button--primary"),
     ),
   );
 

@@ -117,9 +117,7 @@ describe("settings modal", () => {
     expect(input).not.toBeNull();
     if (input) input.value = "42";
 
-    const apply = [...(overlay?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find(
-      (node) => node.textContent === "Apply",
-    );
+    const apply = overlay?.querySelector<HTMLButtonElement>("button.button--primary");
     apply?.click();
 
     expect(onApply).toHaveBeenCalledTimes(1);

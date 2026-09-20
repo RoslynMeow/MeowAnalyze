@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web: a settings modal for thresholds; a redesigned dashboard with a
   maintainability gauge, cognitive/cyclomatic histograms, a rule-violation chart,
   comment-density and marker KPIs; and more entrance/transition animations.
+- Web: bilingual UI — Chinese by default with an English/中文 switcher persisted
+  in `localStorage`.
 
 ### Planned
 

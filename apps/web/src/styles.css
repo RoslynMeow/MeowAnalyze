@@ -28,7 +28,40 @@ body {
 .app {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px 64px;
+  padding: 56px 16px 64px;
+}
+
+.lang-switch {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 60;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(13, 17, 23, 0.82);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+.lang-switch .button {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.lang-switch .button:hover {
+  transform: none;
+  color: var(--accent);
+}
+
+.lang-switch__active {
+  background: var(--accent) !important;
+  color: #1b1200 !important;
+  font-weight: 600;
 }
 
 .view {

@@ -1,6 +1,7 @@
 import type { FileReport, FunctionReport } from "@meowanalyze/core";
 import { complexityColor, gaugeChart } from "../charts.js";
 import { button, el } from "../dom.js";
+import { t } from "../i18n.js";
 import { dataTable, type Cell } from "../table.js";
 
 export interface DetailHandlers {
@@ -27,7 +28,7 @@ export function renderDetail(
 
   view.append(
     card(
-      `Functions (${file.functions.length}) — click a name to locate it`,
+      t().detail.functionsTitle(file.functions.length),
       sourcePanel
         ? functionsTable(file, (fn) => sourcePanel.highlight(fn))
         : functionsTable(file, () => undefined),
@@ -45,7 +46,7 @@ function header(file: FileReport, handlers: DetailHandlers): HTMLElement {
   return el(
     "header",
     { class: "detail__header" },
-    button("← Back", handlers.onBack),
+    button(t().common.back, handlers.onBack),
     el(
       "div",
       {},
@@ -56,7 +57,13 @@ function header(file: FileReport, handlers: DetailHandlers): HTMLElement {
         el("span", { class: "pill", text: file.language }),
         el("span", {
           class: "pill",
-          text: `${file.loc.physical} physical · ${file.loc.code} code · ${file.loc.comment} comment · ${file.loc.blank} blank · ${file.loc.logical} logical`,
+          text: t().detail.locPill(
+            file.loc.physical,
+            file.loc.code,
+            file.loc.comment,
+            file.loc.blank,
+            file.loc.logical,
+          ),
         }),
       ),
     ),
@@ -64,19 +71,20 @@ function header(file: FileReport, handlers: DetailHandlers): HTMLElement {
 }
 
 function kpis(file: FileReport): HTMLElement {
+  const s = t().detail.kpi;
   const maxCyclo = file.metrics.cyclomatic.max;
   const maxCognitive = file.metrics.cognitive.max;
   return el(
     "div",
     { class: "kpis" },
     el("div", { class: "kpi kpi--gauge" }, gaugeChart(file.maintainability, { size: 120, label: "MI" })),
-    kpi("Functions", file.functions.length),
-    kpi("Max cyclomatic", maxCyclo, complexityColor(maxCyclo)),
-    kpi("Max cognitive", maxCognitive, complexityColor(maxCognitive)),
-    kpi("Max nesting", file.metrics.nesting.max),
-    kpi("Code lines", file.loc.code),
+    kpi(s.functions, file.functions.length),
+    kpi(s.maxCyclomatic, maxCyclo, complexityColor(maxCyclo)),
+    kpi(s.maxCognitive, maxCognitive, complexityColor(maxCognitive)),
+    kpi(s.maxNesting, file.metrics.nesting.max),
+    kpi(s.codeLines, file.loc.code),
     kpi(
-      "Violations",
+      s.violations,
       file.violations.length,
       file.violations.length > 0 ? "#d29922" : undefined,
     ),
@@ -102,7 +110,7 @@ function buildSource(source: string): SourcePanel {
     pre.append(
       el("div", {
         class: "source__too-large",
-        text: `Source hidden: ${lines.length} lines is too large to display.`,
+        text: t().detail.sourceTooLarge(lines.length),
       }),
     );
     return { element: wrapSource(pre), highlight: () => undefined };
@@ -146,7 +154,7 @@ function wrapSource(pre: HTMLElement): HTMLElement {
   return el(
     "section",
     { class: "card source-card" },
-    el("h2", { text: "Source" }),
+    el("h2", { text: t().detail.source }),
     pre,
   );
 }
@@ -189,14 +197,14 @@ function functionsTable(
 
   return dataTable(
     [
-      { header: "cyclo", align: "right" },
-      { header: "cog", align: "right" },
-      { header: "nest", align: "right" },
-      { header: "loc", align: "right" },
-      { header: "params", align: "right" },
-      { header: "MI", align: "right" },
-      { header: "function" },
-      { header: "line", align: "right" },
+      { header: t().detail.table.cyclomatic, align: "right" },
+      { header: t().detail.table.cognitive, align: "right" },
+      { header: t().detail.table.nesting, align: "right" },
+      { header: t().detail.table.loc, align: "right" },
+      { header: t().detail.table.params, align: "right" },
+      { header: t().detail.table.maintainability, align: "right" },
+      { header: t().detail.table.function },
+      { header: t().detail.table.line, align: "right" },
     ],
     rows,
   );

@@ -11,6 +11,7 @@ import {
   type DonutSegment,
 } from "../charts.js";
 import { button, card, countUp, el } from "../dom.js";
+import { t } from "../i18n.js";
 
 export interface DashboardHandlers {
   onOpenFile: (path: string) => void;
@@ -41,6 +42,8 @@ export function renderDashboard(
 function hero(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
   const { summary } = report;
   const mi = summary.maintainability;
+  const s = t();
+  const markerCount = summary.markers.todo + summary.markers.fixme + summary.markers.hack;
 
   return el(
     "header",
@@ -48,7 +51,7 @@ function hero(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement 
     el(
       "div",
       { class: "hero-panel__main" },
-      el("h1", { class: "hero-panel__title", text: "Analysis dashboard" }),
+      el("h1", { class: "hero-panel__title", text: s.dashboard.title }),
       el("p", {
         class: "hero-panel__meta",
         text: `${report.root} · ${report.durationMs}ms · v${report.toolVersion}`,
@@ -56,69 +59,68 @@ function hero(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement 
       el(
         "div",
         { class: "hero-panel__badges" },
-        el("span", { class: "pill", text: `${summary.files} files` }),
-        el("span", { class: "pill", text: `${summary.metrics.cyclomatic.count} functions` }),
+        el("span", { class: "pill", text: s.dashboard.pills.files(summary.files) }),
         el("span", {
           class: "pill",
-          text: `${summary.violations.total} violations`,
+          text: s.dashboard.pills.functions(summary.metrics.cyclomatic.count),
         }),
-        summary.markers.todo + summary.markers.fixme + summary.markers.hack > 0
+        el("span", {
+          class: "pill",
+          text: s.dashboard.pills.violations(summary.violations.total),
+        }),
+        markerCount > 0
           ? el("span", {
               class: "pill warn",
-              text: `TODO ${summary.markers.todo} · FIXME ${summary.markers.fixme} · HACK ${summary.markers.hack}`,
+              text: s.dashboard.pills.markers(
+                summary.markers.todo,
+                summary.markers.fixme,
+                summary.markers.hack,
+              ),
             })
           : null,
       ),
       el(
         "div",
         { class: "hero-panel__actions" },
-        button("Settings", handlers.onOpenSettings),
-        button("Export JSON", handlers.onExport),
-        button("New analysis", handlers.onNewAnalysis),
+        button(s.common.settings, handlers.onOpenSettings),
+        button(s.common.exportJson, handlers.onExport),
+        button(s.common.newAnalysis, handlers.onNewAnalysis),
       ),
     ),
     el(
       "div",
       { class: "hero-panel__gauge" },
-      gaugeChart(mi, { label: "maintainability" }),
+      gaugeChart(mi, { label: "MI" }),
       el("p", { class: "hero-panel__gauge-caption", text: maintainabilityLabel(mi) }),
     ),
   );
 }
 
 function maintainabilityLabel(value: number): string {
-  if (value < 40) return "hard to maintain";
-  if (value < 65) return "moderate";
-  return "healthy";
+  const s = t().dashboard.maintainability;
+  if (value < 40) return s.low;
+  if (value < 65) return s.moderate;
+  return s.healthy;
 }
 
 function kpis(report: AnalysisReport): HTMLElement {
   const { summary } = report;
+  const s = t().dashboard.kpi;
   const commentTotal = summary.loc.code + summary.loc.comment;
-  const density =
-    commentTotal > 0 ? (summary.loc.comment / commentTotal) * 100 : 0;
+  const density = commentTotal > 0 ? (summary.loc.comment / commentTotal) * 100 : 0;
+  const markerCount = summary.markers.todo + summary.markers.fixme + summary.markers.hack;
 
   return el(
     "div",
     { class: "kpis" },
-    kpi("Files", summary.files),
-    kpi("Functions", summary.metrics.cyclomatic.count),
-    kpi("Code lines", summary.loc.code),
-    kpi("Comment %", Number(density.toFixed(1))),
-    kpi("Max cyclomatic", summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
-    kpi("Max cognitive", summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
-    kpi(
-      "Violations",
-      summary.violations.total,
-      summary.violations.total > 0 ? "#d29922" : undefined,
-    ),
-    kpi(
-      "Markers",
-      summary.markers.todo + summary.markers.fixme + summary.markers.hack,
-      summary.markers.todo + summary.markers.fixme + summary.markers.hack > 0
-        ? "#d29922"
-        : undefined,
-    ),
+    kpi(s.files, summary.files),
+    kpi(s.functions, summary.metrics.cyclomatic.count),
+    kpi(s.codeLines, summary.loc.code),
+    kpi(s.commentPct, Number(density.toFixed(1))),
+    kpi(s.maxCyclomatic, summary.metrics.cyclomatic.max, complexityColor(summary.metrics.cyclomatic.max)),
+    kpi(s.maxCognitive, summary.metrics.cognitive.max, complexityColor(summary.metrics.cognitive.max)),
+    kpi(s.violations, summary.violations.total, summary.violations.total > 0 ? "#d29922" : undefined),
+    kpi(s.markers, markerCount, markerCount > 0 ? "#d29922" : undefined),
   );
 }
 
@@ -156,9 +158,9 @@ function charts(report: AnalysisReport, handlers: DashboardHandlers): HTMLElemen
     }));
 
   const locDonut: DonutSegment[] = [
-    { label: "code", value: report.summary.loc.code, color: "#58a6ff" },
-    { label: "comment", value: report.summary.loc.comment, color: "#3fb950" },
-    { label: "blank", value: report.summary.loc.blank, color: "#8b949e" },
+    { label: t().dashboard.segment.code, value: report.summary.loc.code, color: "#58a6ff" },
+    { label: t().dashboard.segment.comment, value: report.summary.loc.comment, color: "#3fb950" },
+    { label: t().dashboard.segment.blank, value: report.summary.loc.blank, color: "#8b949e" },
   ];
 
   const languageSegments: DonutSegment[] = Object.entries(report.summary.filesByLanguage)
@@ -169,24 +171,27 @@ function charts(report: AnalysisReport, handlers: DashboardHandlers): HTMLElemen
       color: PALETTE[index % PALETTE.length] ?? "#58a6ff",
     }));
 
+  const s = t().dashboard.charts;
   const blocks: HTMLElement[] = [
-    chartBlock("Cyclomatic complexity distribution", histogramChart(cyclomatic), true),
-    chartBlock("Cognitive complexity distribution", histogramChart(cognitive), true),
-    chartBlock("Most complex functions — click to drill down", clickableBar(topFunctions, handlers)),
-    chartBlock("Lines of code", donutWithLegend(locDonut, String(report.summary.loc.physical), "physical")),
-    chartBlock("Languages", donutWithLegend(languageSegments, String(report.summary.files), "files")),
+    chartBlock(s.cyclomatic, histogramChart(cyclomatic), true),
+    chartBlock(s.cognitive, histogramChart(cognitive), true),
+    chartBlock(s.topFunctions, clickableBar(topFunctions, handlers)),
     chartBlock(
-      "Files by code lines — color = max cognitive, click to drill down",
-      clickableTreemap(filesTreemap, handlers),
-      true,
+      s.linesOfCode,
+      donutWithLegend(locDonut, String(report.summary.loc.physical), t().dashboard.donut.physical),
     ),
+    chartBlock(
+      s.languages,
+      donutWithLegend(languageSegments, String(report.summary.files), t().dashboard.donut.files),
+    ),
+    chartBlock(s.filesTreemap, clickableTreemap(filesTreemap, handlers), true),
   ];
 
   const ruleCounts = violationsByRule(report);
   if (ruleCounts.length > 0) {
     blocks.push(
       chartBlock(
-        "Rule violations",
+        s.ruleViolations,
         barList(
           ruleCounts.map(([rule, count], index) => ({
             label: rule,
@@ -243,6 +248,7 @@ function filesStrip(report: AnalysisReport, handlers: DashboardHandlers): HTMLEl
     (a, b) => b.metrics.cognitive.max - a.metrics.cognitive.max,
   );
   sorted.forEach((file, index) => {
+    const fc = t().dashboard.fileCard;
     const node = el(
       "button",
       { class: "file-card", onClick: () => handlers.onOpenFile(file.path) },
@@ -250,20 +256,17 @@ function filesStrip(report: AnalysisReport, handlers: DashboardHandlers): HTMLEl
       el(
         "div",
         { class: "file-card__stats" },
-        el("span", { class: "file-card__cyclo", text: `cyclo ${file.metrics.cyclomatic.max}` }),
-        el("span", { text: `cog ${file.metrics.cognitive.max}` }),
-        el("span", { text: `${file.loc.code} code` }),
-        el("span", { text: `${file.functions.length} fns` }),
-        el("span", {
-          class: "file-card__mi",
-          text: `MI ${file.maintainability.toFixed(0)}`,
-        }),
+        el("span", { class: "file-card__cyclo", text: fc.cyclo(file.metrics.cyclomatic.max) }),
+        el("span", { text: fc.cognitive(file.metrics.cognitive.max) }),
+        el("span", { text: fc.code(file.loc.code) }),
+        el("span", { text: fc.functions(file.functions.length) }),
+        el("span", { class: "file-card__mi", text: fc.maintainability(Number(file.maintainability.toFixed(0))) }),
       ),
     );
     node.style.setProperty("--delay", `${index * 18}ms`);
     list.append(node);
   });
-  return card(`Files (${report.files.length})`, list);
+  return card(t().dashboard.filesTitle(report.files.length), list);
 }
 
 function donutWithLegend(

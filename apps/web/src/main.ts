@@ -8,7 +8,9 @@ import {
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
-import { downloadJson } from "./dom.js";
+import { button, downloadJson, el } from "./dom.js";
+import { getLang, onLangChange, setLang, t, type Lang } from "./i18n.js";
+import { openSettings } from "./settings.js";
 import {
   decodeContent,
   fileListToSources,
@@ -18,18 +20,22 @@ import {
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail } from "./views/detail.js";
 import { renderLanding } from "./views/landing.js";
-import { openSettings } from "./settings.js";
 
 const appEl = document.getElementById("app");
 if (!appEl) throw new Error("missing #app");
 const app: HTMLElement = appEl;
 
+type View = "landing" | "dashboard" | "detail";
+
 const state: {
+  view: View;
   sources: SourceInput[];
   root: string;
   report?: AnalysisReport;
+  filePath?: string;
   thresholds: Thresholds;
 } = {
+  view: "landing",
   sources: [],
   root: "in-browser",
   thresholds: { ...DEFAULT_THRESHOLDS },
@@ -37,7 +43,21 @@ const state: {
 
 let notice: string | undefined;
 
-function showLanding(): void {
+function render(): void {
+  switch (state.view) {
+    case "dashboard":
+      renderDashboardView();
+      break;
+    case "detail":
+      renderDetailView();
+      break;
+    default:
+      renderLandingView();
+  }
+}
+
+function renderLandingView(): void {
+  state.view = "landing";
   renderLanding(app, {
     bannerUrl,
     onFolder: () => void handleFolder(),
@@ -46,18 +66,19 @@ function showLanding(): void {
   notice = undefined;
 }
 
-function showDashboard(): void {
+function renderDashboardView(): void {
   const report = state.report;
   if (!report) {
-    showLanding();
+    renderLandingView();
     return;
   }
+  state.view = "dashboard";
   renderDashboard(app, report, {
     onOpenFile: showDetail,
     onNewAnalysis: () => {
       state.report = undefined;
       state.sources = [];
-      showLanding();
+      renderLandingView();
     },
     onExport: () => downloadJson(report, "meowanalyze-report.json"),
     onOpenSettings: () =>
@@ -68,21 +89,31 @@ function showDashboard(): void {
   });
 }
 
-function showDetail(path: string): void {
+function renderDetailView(): void {
   const report = state.report;
-  if (!report) {
-    showLanding();
+  const path = state.filePath;
+  if (!report || !path) {
+    renderDashboardView();
     return;
   }
   const file = report.files.find((entry) => entry.path === path);
   if (!file) {
-    showDashboard();
+    renderDashboardView();
     return;
   }
+  state.view = "detail";
   const source = state.sources.find((entry) => entry.path === path);
   renderDetail(app, file, source ? decodeContent(source.content) : undefined, {
-    onBack: showDashboard,
+    onBack: () => {
+      state.filePath = undefined;
+      renderDashboardView();
+    },
   });
+}
+
+function showDetail(path: string): void {
+  state.filePath = path;
+  renderDetailView();
 }
 
 async function handleFolder(): Promise<void> {
@@ -104,7 +135,7 @@ async function handleFolder(): Promise<void> {
     input.click();
   } catch (error) {
     notice = error instanceof Error ? error.message : String(error);
-    showLanding();
+    renderLandingView();
   }
 }
 
@@ -116,23 +147,48 @@ function runAnalysis(sources: SourceInput[], root: string): void {
   });
 
   if (report.summary.files === 0) {
-    notice = "No TypeScript / JavaScript files found.";
-    showLanding();
+    notice = t().notices.noFiles;
+    renderLandingView();
     return;
   }
 
   state.sources = sources;
   state.root = root;
   state.report = report;
-  showDashboard();
+  state.filePath = undefined;
+  renderDashboardView();
 }
 
 function rerun(): void {
   if (state.sources.length === 0) {
-    showLanding();
+    renderLandingView();
     return;
   }
   runAnalysis(state.sources, state.root);
 }
 
-showLanding();
+function mountLanguageSwitch(): void {
+  const bar = el("div", { class: "lang-switch" });
+
+  const update = (): void => {
+    bar.replaceChildren(
+      languageButton("中文", "zh"),
+      languageButton("English", "en"),
+    );
+  };
+  const languageButton = (label: string, lang: Lang): HTMLButtonElement => {
+    const node = button(label, () => setLang(lang));
+    if (getLang() === lang) node.classList.add("lang-switch__active");
+    return node;
+  };
+
+  update();
+  onLangChange(() => {
+    update();
+    render();
+  });
+  document.body.append(bar);
+}
+
+mountLanguageSwitch();
+renderLandingView();
