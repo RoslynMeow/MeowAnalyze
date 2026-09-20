@@ -275,28 +275,39 @@ function donutCard(
   centerLabel: string,
 ): HTMLElement {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-  return el(
-    "div",
-    { class: "donut-card" },
-    el("h3", { text: title }),
-    donutChart(segments, { centerValue, centerLabel }),
-    el(
-      "ul",
-      { class: "legend" },
-      ...segments.map((segment) => {
-        const swatch = el("span", { class: "legend__swatch" });
-        swatch.style.background = segment.color;
-        return el(
-          "li",
-          {},
-          swatch,
-          `${segment.label} — ${segment.value}${
-            total > 0 ? ` (${Math.round((segment.value / total) * 100)}%)` : ""
-          }`,
-        );
-      }),
-    ),
+  const chart = donutChart(segments, { centerValue, centerLabel });
+
+  const arcs = new Map<number, SVGElement>();
+  chart.querySelectorAll<SVGElement>(".chart__arc").forEach((arc) => {
+    const index = Number(arc.getAttribute("data-index"));
+    if (Number.isFinite(index)) arcs.set(index, arc);
+  });
+
+  const legend = el(
+    "ul",
+    { class: "legend" },
+    ...segments.map((segment, index) => {
+      const swatch = el("span", { class: "legend__swatch" });
+      swatch.style.background = segment.color;
+      const item = el(
+        "li",
+        {},
+        swatch,
+        `${segment.label} — ${segment.value}${
+          total > 0 ? ` (${Math.round((segment.value / total) * 100)}%)` : ""
+        }`,
+      );
+      item.addEventListener("mouseenter", () =>
+        arcs.get(index)?.classList.add("is-popped"),
+      );
+      item.addEventListener("mouseleave", () =>
+        arcs.get(index)?.classList.remove("is-popped"),
+      );
+      return item;
+    }),
   );
+
+  return el("div", { class: "donut-card" }, el("h3", { text: title }), chart, legend);
 }
 
 function round1(value: number): number {

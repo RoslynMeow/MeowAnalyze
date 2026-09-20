@@ -615,7 +615,9 @@ body {
 }
 
 .chart__arc {
-  transition: opacity 0.12s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.18s ease, opacity 0.12s ease;
   animation: arcIn 0.5s ease both;
   animation-delay: var(--delay, 0ms);
 }
@@ -630,7 +632,13 @@ body {
 }
 
 .chart__arc:hover {
-  opacity: 0.82;
+  transform: translate(var(--tx, 0px), var(--ty, 0px));
+  opacity: 1;
+}
+
+.chart__arc.is-popped {
+  transform: translate(var(--tx, 0px), var(--ty, 0px));
+  opacity: 1;
 }
 
 .chart__center-value {

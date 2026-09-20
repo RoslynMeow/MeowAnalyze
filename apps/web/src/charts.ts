@@ -478,7 +478,15 @@ export function donutChart(
   let offset = 0;
   segments.forEach((segment, index) => {
     if (total === 0 || segment.value === 0) return;
-    const length = (segment.value / total) * circumference;
+    const fraction = segment.value / total;
+    const length = fraction * circumference;
+    // Direction to "pop out" the slice, expressed in the rotated group's space.
+    const mid = offset / circumference + fraction / 2;
+    const worldAngle = mid * Math.PI * 2 - Math.PI / 2;
+    const distance = thickness * 0.6 + 4;
+    const dx = Math.cos(worldAngle) * distance;
+    const dy = Math.sin(worldAngle) * distance;
+
     const arc = withTitle(
       svg("circle", {
         cx: size / 2,
@@ -489,13 +497,21 @@ export function donutChart(
         "stroke-width": thickness,
         "stroke-dasharray": `${length} ${circumference - length}`,
         "stroke-dashoffset": -offset,
-        transform: `rotate(-90 ${size / 2} ${size / 2})`,
         class: "chart__arc",
       }),
       `${segment.label}: ${segment.value} (${Math.round((segment.value / total) * 100)}%)`,
     );
-    withDelay(arc, index, 45);
-    root.append(arc);
+    arc.setAttribute("data-index", String(index));
+    arc.setAttribute(
+      "style",
+      `--delay:${index * 45}ms;--tx:${(-dy).toFixed(2)}px;--ty:${dx.toFixed(2)}px`,
+    );
+
+    const group = svg("g", {
+      transform: `rotate(-90 ${size / 2} ${size / 2})`,
+    });
+    group.append(arc);
+    root.append(group);
     offset += length;
   });
 
