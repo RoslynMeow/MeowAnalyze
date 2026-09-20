@@ -2,6 +2,7 @@
   --bg: #0d1117;
   --bg-soft: #161b22;
   --bg-card: #161b22;
+  --bg-glow: #161f2b;
   --border: #30363d;
   --text: #e6edf3;
   --muted: #8b949e;
@@ -10,7 +11,42 @@
   --green: #3fb950;
   --yellow: #d29922;
   --red: #f85149;
+  --grid: #21262d;
+  --track: #21262d;
+  --ring: #21262d;
+  --code-bg: #0b0f14;
+  --kpi-bg: #161b22;
+  --kpi-bg2: #0f141a;
+  --cell-label: #0d1117;
+  --source-num: #484f58;
+  --control-bg: rgba(13, 17, 23, 0.82);
+  --on-accent: #1b1200;
   font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+:root[data-theme="light"] {
+  --bg: #f6f8fa;
+  --bg-soft: #ffffff;
+  --bg-card: #ffffff;
+  --bg-glow: #eaeff5;
+  --border: #d0d7de;
+  --text: #1f2328;
+  --muted: #656d76;
+  --accent: #d97706;
+  --link: #0969da;
+  --green: #1a7f37;
+  --yellow: #9a6700;
+  --red: #cf222e;
+  --grid: #eaeef2;
+  --track: #eaeef2;
+  --ring: #eaeef2;
+  --code-bg: #f6f8fa;
+  --kpi-bg: #ffffff;
+  --kpi-bg2: #f6f8fa;
+  --cell-label: #1f2328;
+  --source-num: #8c959f;
+  --control-bg: rgba(255, 255, 255, 0.85);
+  --on-accent: #ffffff;
 }
 
 * {
@@ -20,9 +56,31 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(1200px 600px at 50% -10%, #161f2b 0%, var(--bg) 60%);
+  background: radial-gradient(1200px 600px at 50% -10%, var(--bg-glow) 0%, var(--bg) 60%);
   color: var(--text);
   line-height: 1.5;
+}
+
+/* Hide scrollbars while keeping scroll behaviour. */
+.pager,
+.page__body,
+.file-list,
+.preview-pane,
+.source-card,
+.source {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pager::-webkit-scrollbar,
+.page__body::-webkit-scrollbar,
+.file-list::-webkit-scrollbar,
+.preview-pane::-webkit-scrollbar,
+.source-card::-webkit-scrollbar,
+.source::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .app {
@@ -31,21 +89,26 @@ body {
   padding: 56px 16px 64px;
 }
 
-.lang-switch {
+.top-controls {
   position: fixed;
   top: 14px;
   right: 16px;
   z-index: 60;
   display: flex;
+  gap: 8px;
+}
+
+.control-group {
+  display: flex;
   gap: 4px;
   padding: 4px;
-  background: rgba(13, 17, 23, 0.82);
+  background: var(--control-bg);
   border: 1px solid var(--border);
   border-radius: 999px;
   backdrop-filter: blur(6px);
 }
 
-.lang-switch .button {
+.control-group .button {
   padding: 4px 12px;
   font-size: 12px;
   border-radius: 999px;
@@ -53,14 +116,14 @@ body {
   background: transparent;
 }
 
-.lang-switch .button:hover {
+.control-group .button:hover {
   transform: none;
   color: var(--accent);
 }
 
-.lang-switch__active {
+.control--active {
   background: var(--accent) !important;
-  color: #1b1200 !important;
+  color: var(--on-accent) !important;
   font-weight: 600;
 }
 
@@ -84,7 +147,7 @@ body {
 /* ---------------------------------------------------------------- */
 
 .button {
-  background: #21262d;
+  background: var(--track);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -103,12 +166,12 @@ body {
 .button--primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #1b1200;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
 .button--primary:hover {
-  color: #1b1200;
+  color: var(--on-accent);
   filter: brightness(1.06);
 }
 
@@ -228,7 +291,7 @@ body {
 }
 
 .kpi {
-  background: linear-gradient(180deg, #161b22, #0f141a);
+  background: linear-gradient(180deg, var(--kpi-bg), var(--kpi-bg2));
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 16px 18px;
@@ -257,7 +320,7 @@ body {
 
 .file-card {
   text-align: left;
-  background: #0b0f14;
+  background: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
@@ -365,7 +428,7 @@ body {
 }
 
 .source__num {
-  color: #484f58;
+  color: var(--source-num);
   text-align: right;
   min-width: 3.5em;
   user-select: none;
@@ -450,7 +513,7 @@ body {
 }
 
 .chart__grid {
-  stroke: #21262d;
+  stroke: var(--grid);
   stroke-width: 1;
 }
 
@@ -475,7 +538,11 @@ body {
 }
 
 .chart__track {
-  fill: #21262d;
+  fill: var(--track);
+}
+
+.chart__ring {
+  stroke: var(--ring);
 }
 
 .chart__bar {
@@ -502,7 +569,7 @@ body {
 }
 
 .chart__cell-label {
-  fill: #0d1117;
+  fill: var(--cell-label);
   font-size: 11px;
   font-weight: 600;
   pointer-events: none;
@@ -694,7 +761,7 @@ th.sortable:hover {
 }
 
 .pill {
-  background: #21262d;
+  background: var(--track);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 10px;
@@ -733,7 +800,7 @@ th.sortable:hover {
   gap: 12px;
   margin-top: 12px;
   padding: 12px;
-  background: #0b0f14;
+  background: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -748,7 +815,7 @@ th.sortable:hover {
 
 .threshold input {
   width: 88px;
-  background: #0b0f14;
+  background: var(--code-bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -978,7 +1045,7 @@ th.sortable:hover {
 }
 
 .field input {
-  background: #0b0f14;
+  background: var(--code-bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1083,7 +1150,7 @@ th.sortable:hover {
   padding: 0;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: #21262d;
+  background: var(--track);
   cursor: pointer;
   transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }

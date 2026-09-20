@@ -14,6 +14,10 @@ export interface Strings {
     apply: string;
     back: string;
   };
+  theme: {
+    dark: string;
+    light: string;
+  };
   landing: {
     openFolder: string;
   };
@@ -149,6 +153,10 @@ const zh: Strings = {
     apply: "应用",
     back: "← 返回",
   },
+  theme: {
+    dark: "暗色",
+    light: "亮色",
+  },
   landing: {
     openFolder: "打开文件夹",
   },
@@ -278,6 +286,10 @@ const en: Strings = {
     cancel: "Cancel",
     apply: "Apply",
     back: "← Back",
+  },
+  theme: {
+    dark: "Dark",
+    light: "Light",
   },
   landing: {
     openFolder: "Open folder",

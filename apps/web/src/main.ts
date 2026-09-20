@@ -9,7 +9,8 @@ import {
   type Thresholds,
 } from "@meowanalyze/core";
 import { button, downloadJson, el } from "./dom.js";
-import { getLang, onLangChange, setLang, t, type Lang } from "./i18n.js";
+import { getLang, onLangChange, setLang, t } from "./i18n.js";
+import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { openSettings } from "./settings.js";
 import {
   fileListToSources,
@@ -266,24 +267,40 @@ function rerun(): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Language switch                                                     */
+/* Top controls (theme + language)                                     */
 /* ------------------------------------------------------------------ */
 
-function mountLanguageSwitch(): void {
-  const bar = el("div", { class: "lang-switch" });
+function controlButton(label: string, active: boolean, onClick: () => void): HTMLButtonElement {
+  const node = button(label, onClick);
+  if (active) node.classList.add("control--active");
+  return node;
+}
 
-  const languageButton = (label: string, lang: Lang): HTMLButtonElement => {
-    const node = button(label, () => setLang(lang));
-    if (getLang() === lang) node.classList.add("lang-switch__active");
-    return node;
+function mountControls(): void {
+  const bar = el("div", { class: "top-controls" });
+  const themeGroup = el("div", { class: "control-group" });
+  const langGroup = el("div", { class: "control-group" });
+
+  const renderTheme = (): void => {
+    themeGroup.replaceChildren(
+      controlButton(t().theme.dark, getTheme() === "dark", () => setTheme("dark")),
+      controlButton(t().theme.light, getTheme() === "light", () => setTheme("light")),
+    );
   };
-  const update = (): void => {
-    bar.replaceChildren(languageButton("中文", "zh"), languageButton("English", "en"));
+  const renderLang = (): void => {
+    langGroup.replaceChildren(
+      controlButton("中文", getLang() === "zh", () => setLang("zh")),
+      controlButton("English", getLang() === "en", () => setLang("en")),
+    );
   };
 
-  update();
+  renderTheme();
+  renderLang();
+
+  onThemeChange(renderTheme);
   onLangChange(() => {
-    update();
+    renderLang();
+    renderTheme();
     if (state.report && pager) {
       renderPages();
       goToPage(currentPage);
@@ -291,8 +308,10 @@ function mountLanguageSwitch(): void {
       renderLandingView();
     }
   });
+
+  bar.append(themeGroup, langGroup);
   document.body.append(bar);
 }
 
-mountLanguageSwitch();
+mountControls();
 renderLandingView();

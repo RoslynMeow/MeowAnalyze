@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web: a three-page, full-screen scroll-snap experience — a concise pie-chart
   dashboard, a nested file treemap (SpaceSniffer-style) and a file list with
   source preview — with page dots, arrow-key navigation and a responsive layout.
+- Web: light/dark theme toggle (dark by default, persisted) and hidden
+  scrollbars for a cleaner look.
 
 ### Planned
 

@@ -231,7 +231,7 @@ export function gaugeChart(
       cy: size / 2,
       r: radius,
       fill: "none",
-      stroke: "#21262d",
+      class: "chart__ring",
       "stroke-width": thickness,
     }),
   );
@@ -539,7 +539,7 @@ export function donutChart(
       cy: size / 2,
       r: radius,
       fill: "none",
-      stroke: "#21262d",
+      class: "chart__ring",
       "stroke-width": thickness,
     }),
   );
