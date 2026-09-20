@@ -82,6 +82,7 @@ let pages: HTMLElement[] = [];
 let bodies: HTMLElement[] = [];
 let heads: HTMLElement[] = [];
 let dots: HTMLButtonElement[] = [];
+let dotLabels: HTMLElement[] = [];
 let nav: HTMLElement | undefined;
 let currentPage = 0;
 
@@ -102,11 +103,16 @@ function mountPager(): void {
   pager.append(...pages);
 
   nav = el("nav", { class: "page-dots" });
-  dots = PAGE_KEYS.map((_, index) => {
-    const dot = el("button", { class: "page-dot" });
+  dots = [];
+  dotLabels = [];
+  PAGE_KEYS.forEach((_, index) => {
+    const mark = el("span", { class: "page-dot__mark" });
+    const label = el("span", { class: "page-dot__label" });
+    const dot = el("button", { class: "page-dot" }, mark, label);
     dot.type = "button";
     dot.addEventListener("click", () => goToPage(index));
-    return dot;
+    dots.push(dot);
+    dotLabels.push(label);
   });
   nav.append(...dots);
 
@@ -185,9 +191,13 @@ function onPagerScroll(): void {
 
 function updateDots(): void {
   dots.forEach((dot, index) => {
-    dot.classList.toggle("page-dot--active", index === currentPage);
+    const active = index === currentPage;
+    dot.classList.toggle("page-dot--active", active);
     dot.title = t().pages[PAGE_KEYS[index] ?? "dashboard"];
     dot.setAttribute("aria-label", dot.title);
+    dot.setAttribute("aria-current", active ? "true" : "false");
+    const label = dotLabels[index];
+    if (label) label.textContent = dot.title;
   });
 }
 
@@ -229,6 +239,7 @@ function teardownPager(): void {
   bodies = [];
   heads = [];
   dots = [];
+  dotLabels = [];
   currentPage = 0;
 }
 

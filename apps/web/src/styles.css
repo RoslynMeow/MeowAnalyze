@@ -1159,34 +1159,72 @@ th.sortable:hover {
 
 .page-dots {
   position: fixed;
-  right: 14px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 55;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  z-index: 55;
+  gap: 2px;
+  padding: 6px;
+  background: var(--control-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
 }
 
 .page-dot {
-  width: 10px;
-  height: 10px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--track);
+  border: none;
+  background: transparent;
   cursor: pointer;
-  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
-.page-dot:hover {
-  border-color: var(--accent);
+.page-dot__mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--muted);
+  opacity: 0.55;
+  transition: height 0.22s ease, opacity 0.22s ease, background 0.22s ease;
 }
 
-.page-dot--active {
+.page-dot:hover .page-dot__mark {
+  opacity: 1;
   background: var(--accent);
-  border-color: var(--accent);
-  transform: scale(1.25);
+}
+
+.page-dot--active .page-dot__mark {
+  height: 22px;
+  opacity: 1;
+  background: var(--accent);
+}
+
+.page-dot__label {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  padding: 4px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.page-dot:hover .page-dot__label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 /* ---------------------------------------------------------------- */
