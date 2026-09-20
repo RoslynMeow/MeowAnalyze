@@ -2,12 +2,12 @@ import type { AnalysisReport, FunctionKind, FunctionReport } from "@meowanalyze/
 import {
   bucketize,
   complexityColor,
-  donutChart,
   maintainabilityColor,
   PALETTE,
   type BucketRange,
   type DonutSegment,
 } from "../charts.js";
+import { pieChart } from "../pie.js";
 import { button, countUp, el, type ViewTargets } from "../dom.js";
 import { t } from "../i18n.js";
 
@@ -87,7 +87,17 @@ export function renderDashboard(
   handlers: DashboardHandlers,
 ): void {
   targets.head.replaceChildren(header(report, handlers));
-  targets.body.replaceChildren(stats(report), donuts(report));
+
+  const pending: Array<() => void> = [];
+  const body = el("div", { class: "dashboard-body" }, stats(report), donuts(report, pending));
+  targets.body.replaceChildren(body);
+
+  // Charts need their containers to be laid out first.
+  const run = (): void => {
+    for (const init of pending) init();
+  };
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
+  else run();
 }
 
 function header(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
@@ -169,9 +179,23 @@ function kpi(label: string, value: number, color?: string): HTMLElement {
   return el("div", { class: "kpi" }, valueNode, el("div", { class: "kpi__label", text: label }));
 }
 
-function donuts(report: AnalysisReport): HTMLElement {
+function donuts(
+  report: AnalysisReport,
+  pending: Array<() => void>,
+): HTMLElement {
   const s = t().dashboard;
   const functions = allFunctions(report).map((entry) => entry.fn);
+
+  const card = (
+    title: string,
+    segments: DonutSegment[],
+    centerValue: string,
+    centerLabel: string,
+  ): HTMLElement => {
+    const host = el("div", { class: "chart-host" });
+    pending.push(() => pieChart(host, { segments, centerValue, centerLabel }));
+    return el("div", { class: "donut-card" }, el("h3", { text: title }), host);
+  };
 
   const loc: DonutSegment[] = [
     { label: s.segment.code, value: report.summary.loc.code, color: "#58a6ff" },
@@ -188,29 +212,29 @@ function donuts(report: AnalysisReport): HTMLElement {
     }));
 
   const cards: HTMLElement[] = [
-    donutCard(s.charts.linesOfCode, loc, String(report.summary.loc.physical), s.donut.physical),
-    donutCard(s.charts.languages, languages, String(report.summary.files), s.donut.files),
-    donutCard(s.charts.cyclomatic, bucketize(functions.map((f) => f.cyclomatic), CYCLOMATIC_BUCKETS), String(functions.length), s.donut.functions),
-    donutCard(s.charts.cognitive, bucketize(functions.map((f) => f.cognitive), COGNITIVE_BUCKETS), String(functions.length), s.donut.functions),
-    donutCard(s.charts.nesting, bucketize(functions.map((f) => f.maxNesting), NESTING_BUCKETS), String(functions.length), s.donut.functions),
-    donutCard(s.charts.functionLength, bucketize(functions.map((f) => f.loc), LENGTH_BUCKETS), String(functions.length), s.donut.functions),
-    donutCard(s.charts.functionKinds, functionKinds(functions), String(functions.length), s.donut.functions),
-    donutCard(s.charts.maintainability, bucketize(functions.map((f) => f.maintainability), MAINTAINABILITY_BUCKETS), String(functions.length), s.donut.functions),
-    donutCard(s.charts.parameters, bucketize(functions.map((f) => f.params), PARAM_BUCKETS), String(functions.length), s.donut.functions),
-    donutCard(s.charts.halsteadVolume, bucketize(functions.map((f) => f.halstead.volume), VOLUME_BUCKETS), String(functions.length), s.donut.functions),
-    donutCard(s.charts.fileSize, bucketize(report.files.map((f) => f.loc.code), FILE_SIZE_BUCKETS), String(report.files.length), s.donut.files),
+    card(s.charts.linesOfCode, loc, String(report.summary.loc.physical), s.donut.physical),
+    card(s.charts.languages, languages, String(report.summary.files), s.donut.files),
+    card(s.charts.cyclomatic, bucketize(functions.map((f) => f.cyclomatic), CYCLOMATIC_BUCKETS), String(functions.length), s.donut.functions),
+    card(s.charts.cognitive, bucketize(functions.map((f) => f.cognitive), COGNITIVE_BUCKETS), String(functions.length), s.donut.functions),
+    card(s.charts.nesting, bucketize(functions.map((f) => f.maxNesting), NESTING_BUCKETS), String(functions.length), s.donut.functions),
+    card(s.charts.functionLength, bucketize(functions.map((f) => f.loc), LENGTH_BUCKETS), String(functions.length), s.donut.functions),
+    card(s.charts.functionKinds, functionKinds(functions), String(functions.length), s.donut.functions),
+    card(s.charts.maintainability, bucketize(functions.map((f) => f.maintainability), MAINTAINABILITY_BUCKETS), String(functions.length), s.donut.functions),
+    card(s.charts.parameters, bucketize(functions.map((f) => f.params), PARAM_BUCKETS), String(functions.length), s.donut.functions),
+    card(s.charts.halsteadVolume, bucketize(functions.map((f) => f.halstead.volume), VOLUME_BUCKETS), String(functions.length), s.donut.functions),
+    card(s.charts.fileSize, bucketize(report.files.map((f) => f.loc.code), FILE_SIZE_BUCKETS), String(report.files.length), s.donut.files),
   ];
 
   const markers = markerSegments(report);
   if (markers.length > 0) {
     cards.push(
-      donutCard(s.charts.markers, markers, String(report.summary.markers.todo + report.summary.markers.fixme + report.summary.markers.hack), s.charts.markers),
+      card(s.charts.markers, markers, String(report.summary.markers.todo + report.summary.markers.fixme + report.summary.markers.hack), s.charts.markers),
     );
   }
 
   const rules = violationsByRule(report);
   if (rules.length > 0) {
-    cards.push(donutCard(s.charts.ruleViolations, rules, String(report.summary.violations.total), s.charts.ruleViolations));
+    cards.push(card(s.charts.ruleViolations, rules, String(report.summary.violations.total), s.charts.ruleViolations));
   }
 
   return el("div", { class: "donut-row" }, ...cards);
@@ -249,48 +273,6 @@ function violationsByRule(report: AnalysisReport): DonutSegment[] {
       value: count,
       color: PALETTE[index % PALETTE.length] ?? "#d29922",
     }));
-}
-
-function donutCard(
-  title: string,
-  segments: DonutSegment[],
-  centerValue: string,
-  centerLabel: string,
-): HTMLElement {
-  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-  const chart = donutChart(segments, { centerValue, centerLabel });
-
-  const arcs = new Map<number, SVGElement>();
-  chart.querySelectorAll<SVGElement>(".chart__arc").forEach((arc) => {
-    const index = Number(arc.getAttribute("data-index"));
-    if (Number.isFinite(index)) arcs.set(index, arc);
-  });
-
-  const legend = el(
-    "ul",
-    { class: "legend" },
-    ...segments.map((segment, index) => {
-      const swatch = el("span", { class: "legend__swatch" });
-      swatch.style.background = segment.color;
-      const item = el(
-        "li",
-        {},
-        swatch,
-        `${segment.label} — ${segment.value}${
-          total > 0 ? ` (${Math.round((segment.value / total) * 100)}%)` : ""
-        }`,
-      );
-      item.addEventListener("mouseenter", () =>
-        arcs.get(index)?.classList.add("is-popped"),
-      );
-      item.addEventListener("mouseleave", () =>
-        arcs.get(index)?.classList.remove("is-popped"),
-      );
-      return item;
-    }),
-  );
-
-  return el("div", { class: "donut-card" }, el("h3", { text: title }), chart, legend);
 }
 
 function round1(value: number): number {

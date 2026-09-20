@@ -12,6 +12,7 @@ import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { openSettings } from "./settings.js";
 import { chooseFolder } from "./platform.js";
+import { disposeCharts } from "./pie.js";
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail } from "./views/detail.js";
 import { renderLanding } from "./views/landing.js";
@@ -143,6 +144,7 @@ window.addEventListener("hashchange", () => {
 /* ------------------------------------------------------------------ */
 
 function renderLandingView(): void {
+  disposeCharts();
   sidenav.hidden = true;
   brand.hidden = false;
   homeBtn.hidden = true;
@@ -169,6 +171,7 @@ function renderContent(): void {
   sidenav.hidden = false;
   brand.hidden = true;
   homeBtn.hidden = false;
+  disposeCharts();
   content.replaceChildren();
 
   const body = el("div", { class: "page__body" });
@@ -277,7 +280,10 @@ function mountControls(container: HTMLElement): void {
   renderTheme();
   renderLang();
 
-  onThemeChange(renderTheme);
+  onThemeChange(() => {
+    renderTheme();
+    if (state.report) renderContent();
+  });
   onLangChange(() => {
     renderLang();
     renderTheme();
