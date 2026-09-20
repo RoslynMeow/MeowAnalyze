@@ -1,5 +1,5 @@
 import type { AnalysisReport, FileReport, FunctionReport } from "@meowanalyze/core";
-import { complexityColor, gaugeChart } from "../charts.js";
+import { complexityColor, maintainabilityColor } from "../charts.js";
 import { el } from "../dom.js";
 import { t } from "../i18n.js";
 import { decodeContent } from "../sources.js";
@@ -130,7 +130,7 @@ function kpis(file: FileReport): HTMLElement {
   return el(
     "div",
     { class: "kpis" },
-    el("div", { class: "kpi kpi--gauge" }, gaugeChart(file.maintainability, { size: 110, label: "MI" })),
+    miKpi(file.maintainability),
     kpi(s.functions, file.functions.length),
     kpi(s.maxCyclomatic, maxCyclo, complexityColor(maxCyclo)),
     kpi(s.maxCognitive, maxCognitive, complexityColor(maxCognitive)),
@@ -144,6 +144,12 @@ function kpi(label: string, value: number, color?: string): HTMLElement {
   const valueNode = el("div", { class: "kpi__value", text: String(value) });
   if (color) valueNode.style.color = color;
   return el("div", { class: "kpi" }, valueNode, el("div", { class: "kpi__label", text: label }));
+}
+
+function miKpi(value: number): HTMLElement {
+  const valueNode = el("div", { class: "kpi__value", text: String(Math.round(value)) });
+  valueNode.style.color = maintainabilityColor(value);
+  return el("div", { class: "kpi" }, valueNode, el("div", { class: "kpi__label", text: "MI" }));
 }
 
 function section(title: string, ...children: Array<Node | string | null>): HTMLElement {

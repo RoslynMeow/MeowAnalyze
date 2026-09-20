@@ -3,7 +3,7 @@ import {
   bucketize,
   complexityColor,
   donutChart,
-  gaugeChart,
+  maintainabilityColor,
   PALETTE,
   type BucketRange,
   type DonutSegment,
@@ -90,7 +90,7 @@ function stats(report: AnalysisReport): HTMLElement {
   return el(
     "div",
     { class: "stats-grid" },
-    gaugeCard(summary.maintainability),
+    miKpi(summary.maintainability),
     kpi(s.files, summary.files),
     kpi(s.functions, summary.metrics.cyclomatic.count),
     kpi(s.codeLines, summary.loc.code),
@@ -106,12 +106,14 @@ function stats(report: AnalysisReport): HTMLElement {
   );
 }
 
-function gaugeCard(value: number): HTMLElement {
+function miKpi(value: number): HTMLElement {
+  const valueNode = el("div", { class: "kpi__value", text: String(Math.round(value)) });
+  valueNode.style.color = maintainabilityColor(value);
   return el(
     "div",
-    { class: "kpi kpi--gauge" },
-    gaugeChart(value, { size: 96, label: "MI" }),
-    el("div", { class: "kpi__label", text: maintainabilityLabel(value) }),
+    { class: "kpi" },
+    valueNode,
+    el("div", { class: "kpi__label", text: `MI · ${maintainabilityLabel(value)}` }),
   );
 }
 
