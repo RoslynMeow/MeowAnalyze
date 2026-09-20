@@ -1,6 +1,4 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import { DEFAULT_CONFIG, type Config } from "../config.js";
+import { DEFAULT_CONFIG, type Config } from "../config/thresholds.js";
 import { defaultRegistry, type LanguageRegistry } from "../lang/registry.js";
 import { mergeDistributions } from "../metrics/distribution.js";
 import {
@@ -14,62 +12,60 @@ import {
 } from "../report/model.js";
 import { toolVersion } from "../version.js";
 import { applyThresholds } from "./thresholds.js";
-import { walkFiles, type WalkedFile } from "./walk.js";
 
-export interface AnalyzeOptions {
-  /** Directory or single file to analyze. */
+/** One in-memory file to analyze. Bytes are preferred so binary detection works. */
+export interface SourceInput {
+  /** Path relative to the analyzed root (forward slashes). */
+  path: string;
+  content: Uint8Array | string;
+}
+
+export interface AnalyzeSourcesOptions {
+  /** Logical root name shown in the report (a real path on Node, a label in the browser). */
   root: string;
+  sources: readonly SourceInput[];
   config?: Config;
   registry?: LanguageRegistry;
+  /** Diagnostics collected before analysis (e.g. read failures by the host). */
+  diagnostics?: readonly Diagnostic[];
+  /** Overridable clock, mainly for deterministic tests. */
+  now?: () => number;
+  toolVersion?: string;
 }
 
 /**
- * Orchestrates the pipeline: walk -> detect language -> analyze -> apply
- * thresholds -> aggregate. A failing file never aborts the run; it becomes a
- * diagnostic instead.
+ * Platform-agnostic analysis core.
+ *
+ * It performs no I/O: the host (Node fs, browser File System Access API, zip
+ * extraction, ...) is responsible for producing `SourceInput`s. This is the
+ * single entry point shared by the CLI and any future web/desktop UI.
  */
-export async function analyze(
-  options: AnalyzeOptions,
-): Promise<AnalysisReport> {
-  const root = path.resolve(options.root);
+export function analyzeSources(options: AnalyzeSourcesOptions): AnalysisReport {
   const config = options.config ?? DEFAULT_CONFIG;
   const registry = options.registry ?? defaultRegistry();
-  const startedAt = Date.now();
-
-  const walked = await collectTargets(root, config);
+  const now = options.now ?? Date.now;
+  const startedAt = now();
 
   const files: FileReport[] = [];
-  const diagnostics: Diagnostic[] = [];
+  const diagnostics: Diagnostic[] = [...(options.diagnostics ?? [])];
 
-  for (const entry of walked) {
-    let buffer: Buffer;
-    try {
-      buffer = await fs.readFile(entry.absPath);
-    } catch (error) {
+  for (const input of options.sources) {
+    if (isProbablyBinary(input.content)) {
       diagnostics.push({
-        path: entry.relPath,
-        level: "error",
-        message: `could not read file: ${describe(error)}`,
-      });
-      continue;
-    }
-
-    if (isBinary(buffer)) {
-      diagnostics.push({
-        path: entry.relPath,
+        path: input.path,
         level: "info",
         message: "skipped: binary file",
       });
       continue;
     }
 
-    const source = stripBom(buffer.toString("utf8"));
-    const analyzer = registry.resolve(entry.relPath, source.slice(0, 1024));
+    const source = decode(input.content);
+    const analyzer = registry.resolve(input.path, source.slice(0, 1024));
     if (!analyzer) continue;
 
     try {
       const report = analyzer.analyze({
-        path: entry.relPath,
+        path: input.path,
         source,
         language: analyzer.id,
       });
@@ -77,7 +73,7 @@ export async function analyze(
       files.push(report);
     } catch (error) {
       diagnostics.push({
-        path: entry.relPath,
+        path: input.path,
         level: "error",
         message: `analysis failed: ${describe(error)}`,
       });
@@ -86,37 +82,33 @@ export async function analyze(
 
   return {
     schemaVersion: SCHEMA_VERSION,
-    toolVersion: toolVersion(),
-    root,
-    generatedAt: new Date().toISOString(),
-    durationMs: Date.now() - startedAt,
+    toolVersion: options.toolVersion ?? toolVersion(),
+    root: options.root,
+    generatedAt: new Date(now()).toISOString(),
+    durationMs: now() - startedAt,
     summary: summarize(files),
     files,
     diagnostics,
   };
 }
 
-/** Accept either a directory (walked + filtered) or a single file. */
-async function collectTargets(
-  root: string,
-  config: Config,
-): Promise<WalkedFile[]> {
-  try {
-    const stat = await fs.stat(root);
-    if (stat.isFile()) {
-      return [
-        { absPath: root, relPath: path.basename(root), size: stat.size },
-      ];
-    }
-  } catch {
-    return [];
+const BINARY_SNIFF_BYTES = 8000;
+const utf8Decoder = new TextDecoder("utf-8");
+
+/** Heuristic: a NUL byte within the first few KB means "not source code". */
+export function isProbablyBinary(content: Uint8Array | string): boolean {
+  if (typeof content === "string") return false;
+  const length = Math.min(content.length, BINARY_SNIFF_BYTES);
+  for (let i = 0; i < length; i++) {
+    if (content[i] === 0) return true;
   }
-  return walkFiles({
-    root,
-    respectGitignore: config.respectGitignore,
-    exclude: config.exclude,
-    maxFileSize: config.maxFileSize,
-  });
+  return false;
+}
+
+function decode(content: Uint8Array | string): string {
+  const text =
+    typeof content === "string" ? content : utf8Decoder.decode(content);
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
 function summarize(files: FileReport[]): Summary {
@@ -160,18 +152,6 @@ function summarize(files: FileReport[]): Summary {
     },
     violations,
   };
-}
-
-function isBinary(buffer: Buffer): boolean {
-  const length = Math.min(buffer.length, 8000);
-  for (let i = 0; i < length; i++) {
-    if (buffer[i] === 0) return true;
-  }
-  return false;
-}
-
-function stripBom(text: string): string {
-  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
 function describe(error: unknown): string {

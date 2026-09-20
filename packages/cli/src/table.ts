@@ -5,7 +5,7 @@ import type {
   FunctionReport,
   LocStats,
   Violation,
-} from "./model.js";
+} from "@meowanalyze/core";
 
 export interface TableOptions {
   /** How many items in the "top" / violations lists. */

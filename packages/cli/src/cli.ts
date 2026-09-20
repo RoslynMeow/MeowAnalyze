@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { Command } from "commander";
-import { loadConfig, type Config } from "./config.js";
-import { analyze } from "./core/engine.js";
-import type { AnalysisReport } from "./report/model.js";
-import { toJson } from "./report/serialize.js";
-import { renderReport } from "./report/table.js";
-import { toolVersion } from "./version.js";
+import {
+  toJson,
+  toolVersion,
+  type AnalysisReport,
+  type Config,
+} from "@meowanalyze/core";
+import { loadConfig } from "./config-load.js";
+import { analyze } from "./engine.js";
+import { renderReport } from "./table.js";
 
 interface CliOptions {
   format: string;
@@ -55,7 +58,11 @@ program
     }
   });
 
-await program.parseAsync(process.argv);
+void main();
+
+async function main(): Promise<void> {
+  await program.parseAsync(process.argv);
+}
 
 function applyOverrides(config: Config, options: CliOptions): void {
   if (options.gitignore === false) config.respectGitignore = false;

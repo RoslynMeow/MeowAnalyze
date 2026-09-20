@@ -1,4 +1,4 @@
-import type { Thresholds } from "../config.js";
+import type { Thresholds } from "../config/thresholds.js";
 import type { FileReport, Range, Violation } from "../report/model.js";
 
 /**
