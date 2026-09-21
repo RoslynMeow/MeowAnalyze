@@ -4,10 +4,13 @@ import { mergeDistributions } from "../metrics/distribution.js";
 import {
   SCHEMA_VERSION,
   type AnalysisReport,
+  type CallEdge,
   type Diagnostic,
   type FileReport,
   type LocStats,
   type Markers,
+  type ModuleEdge,
+  type StructureModel,
   type Summary,
   type ViolationSummary,
 } from "../report/model.js";
@@ -89,8 +92,118 @@ export function analyzeSources(options: AnalyzeSourcesOptions): AnalysisReport {
     durationMs: now() - startedAt,
     summary: summarize(files),
     files,
+    structure: buildStructure(files),
     diagnostics,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* OOP structure                                                       */
+/* ------------------------------------------------------------------ */
+
+const MODULE_EXTENSIONS = [
+  ".ts",
+  ".tsx",
+  ".mts",
+  ".cts",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+];
+
+function buildStructure(files: readonly FileReport[]): StructureModel {
+  const paths = new Set(files.map((file) => file.path));
+  const dependencies: ModuleEdge[] = [];
+
+  for (const file of files) {
+    for (const imported of file.imports) {
+      const target = resolveModule(file.path, imported.module, paths);
+      if (target && target !== file.path) {
+        dependencies.push({ from: file.path, to: target });
+      }
+    }
+  }
+
+  return {
+    declarations: files.flatMap((file) => file.declarations),
+    dependencies: dedupe(dependencies),
+    calls: buildCalls(files),
+  };
+}
+
+/** Resolve a relative module specifier to an analyzed file, if possible. */
+function resolveModule(
+  fromPath: string,
+  specifier: string,
+  paths: ReadonlySet<string>,
+): string | undefined {
+  if (!specifier.startsWith(".")) return undefined;
+  const base = joinPosix(dirnamePosix(fromPath), specifier);
+  const candidates = [
+    base,
+    ...MODULE_EXTENSIONS.map((extension) => `${base}${extension}`),
+    ...MODULE_EXTENSIONS.map((extension) => `${base}/index${extension}`),
+  ];
+  return candidates.find((candidate) => paths.has(candidate));
+}
+
+/**
+ * Static call graph. Names are resolved only when unambiguous across the
+ * project, so the result is a best-effort approximation.
+ */
+function buildCalls(files: readonly FileReport[]): CallEdge[] {
+  const byName = new Map<string, string[]>();
+  for (const file of files) {
+    for (const fn of file.functions) {
+      const list = byName.get(fn.name) ?? [];
+      list.push(fn.id);
+      byName.set(fn.name, list);
+    }
+  }
+
+  const edges: CallEdge[] = [];
+  for (const file of files) {
+    for (const fn of file.functions) {
+      for (const call of fn.calls) {
+        const last = call.split(".").pop()?.replace(/[^A-Za-z0-9_$#]/g, "") ?? "";
+        const ids = byName.get(last);
+        const target = ids && ids.length === 1 ? ids[0] : undefined;
+        if (target && target !== fn.id) {
+          edges.push({ from: fn.id, to: target });
+        }
+      }
+    }
+  }
+  return dedupe(edges);
+}
+
+function dedupe<T extends { from: string; to: string }>(edges: readonly T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const edge of edges) {
+    const key = `${edge.from}->${edge.to}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(edge);
+  }
+  return out;
+}
+
+function dirnamePosix(value: string): string {
+  const index = value.lastIndexOf("/");
+  return index === -1 ? "" : value.slice(0, index);
+}
+
+function joinPosix(base: string, specifier: string): string {
+  const segments = `${base}/${specifier}`.split("/");
+  const stack: string[] = [];
+  for (const segment of segments) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === "..") stack.pop();
+    else stack.push(segment);
+  }
+  return stack.join("/");
 }
 
 const BINARY_SNIFF_BYTES = 8000;

@@ -71,6 +71,8 @@ export function icon(paths: readonly string[], size = 18): SVGSVGElement {
 
 export const HOME_ICON = ["M3 10.5 12 3l9 7.5", "M5 9.5V21h14V9.5"];
 
+export const MENU_ICON = ["M4 7h16", "M4 12h16", "M4 17h16"];
+
 /** Animated integer count-up. Falls back to the final value without rAF. */
 export function countUp(node: HTMLElement, to: number, duration = 800): void {
   if (typeof requestAnimationFrame !== "function") {

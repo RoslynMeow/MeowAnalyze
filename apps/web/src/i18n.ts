@@ -14,8 +14,10 @@ export interface Strings {
   pages: {
     dashboard: string;
     detail: string;
+    diagrams: string;
   };
   common: {
+    menu: string;
     settings: string;
     help: string;
     exportJson: string;
@@ -27,6 +29,27 @@ export interface Strings {
   help: {
     title: string;
     sections: readonly HelpSection[];
+  };
+  diagrams: {
+    title: string;
+    kinds: {
+      class: string;
+      package: string;
+      activity: string;
+      er: string;
+      communication: string;
+    };
+    pickFunction: string;
+    empty: {
+      class: string;
+      package: string;
+      activity: string;
+      er: string;
+      communication: string;
+    };
+    reload: string;
+    download: string;
+    exportSvg: string;
   };
   theme: {
     dark: string;
@@ -170,8 +193,10 @@ const zh: Strings = {
   pages: {
     dashboard: "数据大屏",
     detail: "文件详情",
+    diagrams: "图表",
   },
   common: {
+    menu: "菜单",
     settings: "设置",
     help: "帮助",
     exportJson: "导出 JSON",
@@ -189,6 +214,27 @@ const zh: Strings = {
   },
   notices: {
     noFiles: "没有找到可分析的 TypeScript / JavaScript 文件。",
+  },
+  diagrams: {
+    title: "图表 · UML",
+    kinds: {
+      class: "类图",
+      package: "包依赖图",
+      activity: "活动图",
+      er: "ER 图",
+      communication: "通信图",
+    },
+    pickFunction: "选择函数",
+    empty: {
+      class: "没有找到类 / 接口 / 枚举声明。",
+      package: "没有可解析的模块依赖。",
+      activity: "该函数没有可绘制的控制流。",
+      er: "没有找到带字段的类 / 接口。",
+      communication: "没有解析到项目内的函数调用。",
+    },
+    reload: "重新载入",
+    download: "下载 .drawio",
+    exportSvg: "导出 SVG",
   },
   help: {
     title: "帮助 · 指标说明",
@@ -447,8 +493,10 @@ const en: Strings = {
   pages: {
     dashboard: "Dashboard",
     detail: "File detail",
+    diagrams: "Diagrams",
   },
   common: {
+    menu: "Menu",
     settings: "Settings",
     help: "Help",
     exportJson: "Export JSON",
@@ -466,6 +514,27 @@ const en: Strings = {
   },
   notices: {
     noFiles: "No TypeScript / JavaScript files found.",
+  },
+  diagrams: {
+    title: "Diagrams · UML",
+    kinds: {
+      class: "Class",
+      package: "Packages",
+      activity: "Activity",
+      er: "ER",
+      communication: "Communication",
+    },
+    pickFunction: "Function",
+    empty: {
+      class: "No class / interface / enum declarations found.",
+      package: "No resolvable module dependencies.",
+      activity: "This function has no control flow to draw.",
+      er: "No classes / interfaces with fields found.",
+      communication: "No in-project function calls were resolved.",
+    },
+    reload: "Reload",
+    download: "Download .drawio",
+    exportSvg: "Export SVG",
   },
   help: {
     title: "Help · metric reference",

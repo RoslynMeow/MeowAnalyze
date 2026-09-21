@@ -5,6 +5,7 @@ import { renderSettings } from "../src/settings.js";
 import { defaultPrefs } from "../src/prefs.js";
 import { renderDashboard } from "../src/views/dashboard.js";
 import { renderDetail } from "../src/views/detail.js";
+import { disposeDiagrams, renderDiagrams } from "../src/views/diagrams.js";
 import { renderHelp } from "../src/views/help.js";
 import { renderLanding } from "../src/views/landing.js";
 
@@ -82,6 +83,17 @@ describe("help view", () => {
     expect(view.body.querySelector(".help-page")).not.toBeNull();
     expect(view.body.querySelectorAll(".card").length).toBeGreaterThanOrEqual(8);
     expect(view.body.querySelectorAll(".math").length).toBeGreaterThanOrEqual(8);
+  });
+});
+
+describe("diagrams view", () => {
+  it("renders the toolbar and the draw.io stage", () => {
+    const view = targets();
+    renderDiagrams(view, sampleReport());
+    expect(view.head.querySelector(".page__head")).not.toBeNull();
+    expect(view.body.querySelectorAll(".diagram-kind").length).toBe(5);
+    expect(view.body.querySelector(".diagram-stage")).not.toBeNull();
+    disposeDiagrams();
   });
 });
 

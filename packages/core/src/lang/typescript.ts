@@ -12,6 +12,12 @@ import type {
 } from "../report/model.js";
 import { distributionOf } from "../metrics/distribution.js";
 import type { FileContext, LanguageAnalyzer } from "./analyzer.js";
+import {
+  buildFlow,
+  collectCalls,
+  collectDeclarations,
+  collectImports,
+} from "./ts-structure.js";
 
 const EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
 
@@ -87,6 +93,8 @@ export class TypeScriptAnalyzer implements LanguageAnalyzer {
       metrics,
       markers,
       functions,
+      declarations: collectDeclarations(sf, ctx.path),
+      imports: collectImports(sf),
       violations: [],
     };
   }
@@ -307,6 +315,8 @@ function analyzeFunction(
     maxNesting,
     halstead,
     maintainability: maintainabilityIndex(halstead.volume, cyclomatic, loc),
+    calls: collectCalls(body, sf),
+    flow: buildFlow(body, sf),
   };
 }
 

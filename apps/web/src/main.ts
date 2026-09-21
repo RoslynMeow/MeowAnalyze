@@ -7,7 +7,7 @@ import {
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
-import { button, downloadJson, el, icon, HOME_ICON, type ViewTargets } from "./dom.js";
+import { button, downloadJson, el, icon, HOME_ICON, MENU_ICON, type ViewTargets } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { renderSettings, type SettingsValues } from "./settings.js";
@@ -17,6 +17,7 @@ import { disposeCharts } from "./echarts.js";
 import { closeDrilldown, type DrillItem } from "./drilldown.js";
 import { renderDashboard } from "./views/dashboard.js";
 import { renderDetail, type Highlight } from "./views/detail.js";
+import { disposeDiagrams, renderDiagrams } from "./views/diagrams.js";
 import { renderHelp } from "./views/help.js";
 import { renderLanding } from "./views/landing.js";
 
@@ -24,7 +25,7 @@ const appEl = document.getElementById("app");
 if (!appEl) throw new Error("missing #app");
 const app: HTMLElement = appEl;
 
-const TABS = ["dashboard", "detail", "help", "settings"] as const;
+const TABS = ["dashboard", "detail", "diagrams", "help", "settings"] as const;
 type Tab = (typeof TABS)[number];
 
 const state: {
@@ -53,9 +54,12 @@ let notice: string | undefined;
 let headSlot: HTMLElement;
 let content: HTMLElement;
 let sidenav: HTMLElement;
+let navBackdrop: HTMLElement;
+let menuBtn: HTMLButtonElement;
 let homeBtn: HTMLButtonElement;
 let brand: HTMLElement;
 let exportBtn: HTMLButtonElement;
+let navOpen = false;
 const navButtons: Array<{ tab: Tab; node: HTMLButtonElement }> = [];
 
 function mountShell(): void {
@@ -65,6 +69,11 @@ function mountShell(): void {
     el("span", { class: "topbar__brand-accent", text: "Meow" }),
     el("span", { text: "Analyze" }),
   );
+
+  menuBtn = el("button", { class: "topbar__home", onClick: () => setNavOpen(!navOpen) });
+  menuBtn.type = "button";
+  menuBtn.append(icon(MENU_ICON));
+  menuBtn.hidden = true;
 
   homeBtn = el("button", { class: "topbar__home", onClick: goHome });
   homeBtn.type = "button";
@@ -76,12 +85,13 @@ function mountShell(): void {
   const topbar = el(
     "header",
     { class: "topbar" },
-    el("div", { class: "topbar__inner" }, brand, homeBtn, headSlot, controls),
+    el("div", { class: "topbar__inner" }, menuBtn, brand, homeBtn, headSlot, controls),
   );
 
   sidenav = el("nav", { class: "sidenav" });
+  navBackdrop = el("div", { class: "nav-backdrop", onClick: () => setNavOpen(false) });
   content = el("div", { class: "content" });
-  const main = el("div", { class: "main" }, sidenav, content);
+  const main = el("div", { class: "main" }, sidenav, navBackdrop, content);
 
   app.replaceChildren(topbar, main);
   mountControls(controls);
@@ -89,9 +99,17 @@ function mountShell(): void {
   updateHomeLabel();
 }
 
+function setNavOpen(open: boolean): void {
+  navOpen = open && !sidenav.hidden;
+  sidenav.classList.toggle("sidenav--open", navOpen);
+  navBackdrop.classList.toggle("nav-backdrop--open", navOpen);
+}
+
 function updateHomeLabel(): void {
   homeBtn.title = t().common.home;
   homeBtn.setAttribute("aria-label", t().common.home);
+  menuBtn.title = t().common.menu;
+  menuBtn.setAttribute("aria-label", t().common.menu);
 }
 
 function goHome(): void {
@@ -112,7 +130,7 @@ function tabLabel(tab: Tab): string {
   return t().pages[tab];
 }
 
-const TOP_TABS: readonly Tab[] = ["dashboard", "detail"];
+const TOP_TABS: readonly Tab[] = ["dashboard", "detail", "diagrams"];
 
 function makeTabButton(tab: Tab, className: string): HTMLButtonElement {
   const node = el("button", { class: className, text: tabLabel(tab) });
@@ -169,6 +187,7 @@ function tabFromHash(): Tab {
 
 function goTab(tab: Tab): void {
   state.tab = tab;
+  setNavOpen(false);
   const hash = `#/${tab}`;
   if (location.hash !== hash) {
     location.hash = hash; // triggers hashchange -> render
@@ -190,9 +209,12 @@ window.addEventListener("hashchange", () => {
 function renderLandingView(): void {
   closeDrilldown();
   disposeCharts();
+  disposeDiagrams();
   sidenav.hidden = true;
+  setNavOpen(false);
   brand.hidden = false;
   homeBtn.hidden = true;
+  menuBtn.hidden = true;
   headSlot.replaceChildren();
   content.replaceChildren();
   renderLanding(content, {
@@ -216,8 +238,10 @@ function renderContent(): void {
   sidenav.hidden = false;
   brand.hidden = true;
   homeBtn.hidden = false;
+  menuBtn.hidden = false;
   closeDrilldown();
   disposeCharts();
+  disposeDiagrams();
   content.replaceChildren();
 
   const body = el("div", { class: "page__body" });
@@ -228,6 +252,8 @@ function renderContent(): void {
     renderDetail(targets, report, state.sources, state.selectedPath, {
       onSelect: selectFile,
     }, state.highlight);
+  } else if (state.tab === "diagrams") {
+    renderDiagrams(targets, report);
   } else if (state.tab === "help") {
     renderHelp(targets);
   } else if (state.tab === "settings") {

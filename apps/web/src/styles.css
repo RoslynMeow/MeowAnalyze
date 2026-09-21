@@ -161,24 +161,52 @@ body {
 }
 
 .main {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
 }
 
 .sidenav {
-  flex: 0 0 auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 190px;
+  width: 230px;
   padding: 16px 12px;
+  overflow-y: auto;
   border-right: 1px solid var(--border);
   background: var(--bg-soft);
+  transform: translateX(-100%);
+  transition: transform 0.2s ease;
+}
+
+.sidenav--open {
+  transform: none;
+  box-shadow: 12px 0 30px rgba(0, 0, 0, 0.35);
 }
 
 .sidenav[hidden] {
   display: none;
+}
+
+.nav-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.nav-backdrop--open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .sidenav__spacer {
@@ -1312,6 +1340,121 @@ th.sortable:hover {
   color: var(--muted);
   font-size: 12px;
   border-left: 2px solid var(--border);
+}
+
+/* ---------------------------------------------------------------- */
+/* Diagrams page                                                     */
+/* ---------------------------------------------------------------- */
+
+.diagram-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.diagram-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.diagram-kinds {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--control-bg);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+
+.diagram-kind {
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.diagram-kind:hover {
+  color: var(--text);
+}
+
+.diagram-kind--active {
+  color: var(--text);
+  background: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.diagram-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.diagram-picker {
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.diagram-stage {
+  position: relative;
+  display: flex;
+  height: calc(100vh - 168px);
+  min-height: 680px;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.drawio-frame {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
+}
+
+.diagram-notice {
+  margin: auto;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.button--ghost {
+  color: var(--text);
+  background: transparent;
+  border-color: var(--border);
+}
+
+.button--ghost:hover {
+  border-color: var(--accent);
+}
+
+.button--ghost:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* ---------------------------------------------------------------- */
