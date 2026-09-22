@@ -29,6 +29,15 @@ export {
   mergeDistributions,
 } from "./metrics/distribution.js";
 export type { FileContext, LanguageAnalyzer } from "./lang/analyzer.js";
-export { defaultRegistry, LanguageRegistry } from "./lang/registry.js";
+export {
+  defaultRegistry,
+  defaultRegistryWithLanguages,
+  LanguageRegistry,
+} from "./lang/registry.js";
 export { TypeScriptAnalyzer } from "./lang/typescript.js";
+export {
+  loadAllGrammars,
+  loadGrammar,
+  type TreeSitterGrammar,
+} from "./lang/tree-sitter/runtime.js";
 export { TOOL_VERSION, toolVersion } from "./version.js";

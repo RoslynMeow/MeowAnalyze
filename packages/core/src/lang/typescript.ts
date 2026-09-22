@@ -11,6 +11,7 @@ import type {
   Range,
 } from "../report/model.js";
 import { distributionOf } from "../metrics/distribution.js";
+import { maintainabilityIndex } from "../metrics/maintainability.js";
 import type { FileContext, LanguageAnalyzer } from "./analyzer.js";
 import {
   buildFlow,
@@ -507,21 +508,6 @@ function sumValues(map: Map<string, number>): number {
   let total = 0;
   for (const value of map.values()) total += value;
   return total;
-}
-
-/** Normalized maintainability index (0–100, higher is better). */
-function maintainabilityIndex(
-  volume: number,
-  cyclomatic: number,
-  loc: number,
-): number {
-  if (loc <= 0) return 100;
-  const raw =
-    171 -
-    3.42 * Math.log(Math.max(volume, 1)) -
-    0.23 * cyclomatic -
-    16.2 * Math.log(loc);
-  return Math.max(0, Math.min(100, (raw * 100) / 171));
 }
 
 /* ------------------------------------------------------------------ */

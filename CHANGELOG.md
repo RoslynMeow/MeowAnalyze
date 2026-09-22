@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- C and C++ support via `web-tree-sitter` (WASM). The runtime and grammars are
+  embedded as `base64(gzip)` so the parsers bundle into every target — web,
+  desktop, the CLI single-file bundle and the standalone binaries — with no
+  external files. C/C++ files get the same metrics as TypeScript (complexity,
+  nesting, Halstead, maintainability, LOC, markers, imports, calls, control flow
+  and declarations), so the dashboard, thresholds, CLI and diagrams all work.
+  `defaultRegistryWithLanguages()` loads the grammars; the engine stays
+  synchronous.
+
 ### Planned
 
 - File map tab (nested treemap) — temporarily removed, to be re-added.
-- More languages via tree-sitter.
+- More languages via tree-sitter (Go, Rust, Python, ...).
 
 ## [1.0.0] - 2026-09-22
 

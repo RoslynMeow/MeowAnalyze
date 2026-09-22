@@ -24,7 +24,8 @@
     "dev": "tsx packages/cli/src/cli.ts",
     "dev:web": "npm run dev --workspace @meowanalyze/web",
     "bundle": "node scripts/bundle.mjs",
-    "compile": "bun build packages/cli/src/cli.ts --compile --outfile dist/meowanalyze"
+    "compile": "bun build packages/cli/src/cli.ts --compile --outfile dist/meowanalyze",
+    "grammars": "node scripts/embed-grammars.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",

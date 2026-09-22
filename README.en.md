@@ -23,11 +23,11 @@
 
 ---
 
-MeowAnalyze reads a TypeScript / JavaScript project and reports the numbers that
-predict maintenance pain: complexity, nesting, Halstead volume, a maintainability
-index, comment density and technical-debt markers. The same analysis core powers a
-**CLI**, a **web app** that runs entirely in your browser, and an **Electron desktop
-app** — nothing is uploaded anywhere.
+MeowAnalyze reads a **TypeScript / JavaScript / C / C++** project and reports the
+numbers that predict maintenance pain: complexity, nesting, Halstead volume, a
+maintainability index, comment density and technical-debt markers. The same
+analysis core powers a **CLI**, a **web app** that runs entirely in your browser,
+and an **Electron desktop app** — nothing is uploaded anywhere.
 
 ## Table of contents
 
@@ -306,7 +306,8 @@ supply sources and render the report.
 - [x] Cognitive complexity, Halstead metrics and a maintainability index
 - [x] UML diagrams (draw.io) and an OOP structure model
 - [x] One-click GitHub Pages deployment
-- [ ] More languages via tree-sitter
+- [x] C / C++ support (tree-sitter WASM, bundled into every target)
+- [ ] More languages via tree-sitter (Go, Rust, Python, ...)
 
 ## Development
 

@@ -25,6 +25,10 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "web-tree-sitter": "0.22.6"
+  },
+  "devDependencies": {
+    "tree-sitter-wasms": "0.1.13"
   }
 }

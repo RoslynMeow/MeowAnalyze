@@ -3,7 +3,9 @@ import {
   analyzeSources,
   DEFAULT_CONFIG,
   DEFAULT_THRESHOLDS,
+  defaultRegistryWithLanguages,
   type AnalysisReport,
+  type LanguageRegistry,
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
@@ -162,7 +164,7 @@ function applySettings(values: SettingsValues): void {
   state.thresholds = values.thresholds;
   state.prefs = values.prefs;
   savePrefs(values.prefs);
-  rerun();
+  void rerun();
 }
 
 function exportReport(): void {
@@ -283,21 +285,30 @@ function jumpToItem(item: DrillItem): void {
 /* Analysis                                                            */
 /* ------------------------------------------------------------------ */
 
+/** The language registry (TS/JS + C/C++) is loaded once and reused. */
+let registryPromise: Promise<LanguageRegistry> | undefined;
+function languageRegistry(): Promise<LanguageRegistry> {
+  registryPromise ??= defaultRegistryWithLanguages();
+  return registryPromise;
+}
+
 async function handleFolder(): Promise<void> {
   try {
     const { root, sources } = await chooseFolder();
-    runAnalysis(sources, root);
+    await runAnalysis(sources, root);
   } catch (error) {
     notice = error instanceof Error ? error.message : String(error);
     renderLandingView();
   }
 }
 
-function runAnalysis(sources: SourceInput[], root: string): void {
+async function runAnalysis(sources: SourceInput[], root: string): Promise<void> {
+  const registry = await languageRegistry();
   const report = analyzeSources({
     root,
     sources,
     config: { ...DEFAULT_CONFIG, thresholds: state.thresholds },
+    registry,
   });
 
   if (report.summary.files === 0) {
@@ -316,15 +327,17 @@ function runAnalysis(sources: SourceInput[], root: string): void {
   renderContent();
 }
 
-function rerun(): void {
+async function rerun(): Promise<void> {
   if (state.sources.length === 0) {
     renderLandingView();
     return;
   }
+  const registry = await languageRegistry();
   state.report = analyzeSources({
     root: state.root,
     sources: state.sources,
     config: { ...DEFAULT_CONFIG, thresholds: state.thresholds },
+    registry,
   });
   renderContent();
 }
