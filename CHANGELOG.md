@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Core: the tree-sitter analyzers are now driven by a reusable `AnalyzerProfile`,
-  and **Python** (`.py` / `.pyi`) is supported alongside C/C++ with the same
-  metrics, thresholds, dashboard and diagrams.
+  and **Python** (`.py` / `.pyi`), **Java** (`.java`) and **C#** (`.cs`) are
+  supported alongside C/C++ with the same metrics, thresholds, dashboard and
+  diagrams.
 
 - Web: the Diagrams tab embeds a **self-hosted draw.io** instead of
   `embed.diagrams.net`, so it no longer depends on a third party. The editor is

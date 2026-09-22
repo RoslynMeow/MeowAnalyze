@@ -12,16 +12,20 @@ import Parser from "web-tree-sitter";
 import {
   C_WASM_GZIP_BASE64,
   CPP_WASM_GZIP_BASE64,
+  CSHARP_WASM_GZIP_BASE64,
+  JAVA_WASM_GZIP_BASE64,
   PYTHON_WASM_GZIP_BASE64,
   RUNTIME_WASM_GZIP_BASE64,
 } from "./grammars.generated.js";
 
-export type TreeSitterGrammar = "c" | "cpp" | "python";
+export type TreeSitterGrammar = "c" | "cpp" | "python" | "java" | "csharp";
 
 const GRAMMAR_BASE64: Record<TreeSitterGrammar, string> = {
   c: C_WASM_GZIP_BASE64,
   cpp: CPP_WASM_GZIP_BASE64,
   python: PYTHON_WASM_GZIP_BASE64,
+  java: JAVA_WASM_GZIP_BASE64,
+  csharp: CSHARP_WASM_GZIP_BASE64,
 };
 
 const loaded = new Map<TreeSitterGrammar, Parser.Language>();

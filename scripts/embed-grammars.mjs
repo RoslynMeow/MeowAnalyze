@@ -18,6 +18,8 @@ const WASM = {
   C: "tree-sitter-wasms/out/tree-sitter-c.wasm",
   CPP: "tree-sitter-wasms/out/tree-sitter-cpp.wasm",
   PYTHON: "tree-sitter-wasms/out/tree-sitter-python.wasm",
+  JAVA: "tree-sitter-wasms/out/tree-sitter-java.wasm",
+  CSHARP: "tree-sitter-wasms/out/tree-sitter-c_sharp.wasm",
 };
 
 let out =

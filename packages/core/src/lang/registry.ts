@@ -1,6 +1,8 @@
 import type { LanguageAnalyzer } from "./analyzer.js";
 import { TreeSitterAnalyzer } from "./tree-sitter/analyzer.js";
 import { C_CPP_PROFILE } from "./tree-sitter/c-profile.js";
+import { CSHARP_PROFILE } from "./tree-sitter/csharp-profile.js";
+import { JAVA_PROFILE } from "./tree-sitter/java-profile.js";
 import { PYTHON_PROFILE } from "./tree-sitter/python-profile.js";
 import { loadAllGrammars } from "./tree-sitter/runtime.js";
 import { TypeScriptAnalyzer } from "./typescript.js";
@@ -42,6 +44,13 @@ const PYTHON_ANALYZER = new TreeSitterAnalyzer(
   [".py", ".pyi"],
   PYTHON_PROFILE,
 );
+const JAVA_ANALYZER = new TreeSitterAnalyzer("java", "java", [".java"], JAVA_PROFILE);
+const CSHARP_ANALYZER = new TreeSitterAnalyzer(
+  "csharp",
+  "csharp",
+  [".cs"],
+  CSHARP_PROFILE,
+);
 
 /**
  * TypeScript / JavaScript only. Synchronous, so `analyzeSources` keeps working
@@ -61,5 +70,7 @@ export async function defaultRegistryWithLanguages(): Promise<LanguageRegistry> 
     .register(new TypeScriptAnalyzer())
     .register(C_ANALYZER)
     .register(CPP_ANALYZER)
-    .register(PYTHON_ANALYZER);
+    .register(PYTHON_ANALYZER)
+    .register(JAVA_ANALYZER)
+    .register(CSHARP_ANALYZER);
 }

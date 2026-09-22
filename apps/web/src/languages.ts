@@ -1,7 +1,9 @@
 import {
   siC,
   siCplusplus,
+  siDotnet,
   siJavascript,
+  siOpenjdk,
   siPython,
   siTypescript,
   type SimpleIcon,
@@ -20,6 +22,8 @@ export const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = [
   { id: "c", name: "C", icon: siC },
   { id: "cpp", name: "C++", icon: siCplusplus },
   { id: "python", name: "Python", icon: siPython },
+  { id: "java", name: "Java", icon: siOpenjdk },
+  { id: "csharp", name: "C#", icon: siDotnet },
 ];
 
 const SVG_NS = "http://www.w3.org/2000/svg";

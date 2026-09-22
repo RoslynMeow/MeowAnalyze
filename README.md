@@ -23,10 +23,11 @@
 
 ---
 
-MeowAnalyze 读取一个 **TypeScript / JavaScript / C / C++ / Python** 项目,给出最影响
-维护成本的各项数字:复杂度、嵌套深度、Halstead 体积、可维护性指数、注释密度,以及技术债
-标记。同一套分析核心同时驱动 **CLI**、**完全在浏览器内运行的 Web 应用** 和
-**Electron 桌面应用** —— 任何代码都不会上传。
+MeowAnalyze 读取一个
+**TypeScript / JavaScript / C / C++ / Python / Java / C#** 项目,给出最影响维护成本的
+各项数字:复杂度、嵌套深度、Halstead 体积、可维护性指数、注释密度,以及技术债标记。同一
+套分析核心同时驱动 **CLI**、**完全在浏览器内运行的 Web 应用** 和 **Electron 桌面应用**
+—— 任何代码都不会上传。
 
 ## 目录
 
@@ -291,8 +292,8 @@ docs/assets/banner.svg
 - [x] 认知复杂度、Halstead 指标与可维护性指数
 - [x] UML 图表(draw.io)与 OOP 结构模型
 - [x] 一键部署到 GitHub Pages
-- [x] C / C++ 与 Python 支持(tree-sitter WASM,内联打包进所有目标)
-- [ ] 通过 tree-sitter 支持更多语言(Go / Rust / Java …)
+- [x] C / C++、Python、Java 与 C# 支持(tree-sitter WASM,内联打包进所有目标)
+- [ ] 通过 tree-sitter 支持更多语言(Go / Rust / Ruby / PHP …)
 
 ## 开发
 
