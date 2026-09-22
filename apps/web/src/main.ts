@@ -7,7 +7,7 @@ import {
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
-import { button, downloadJson, el, icon, HOME_ICON, MENU_ICON, type ViewTargets } from "./dom.js";
+import { button, downloadJson, el, icon, MENU_ICON, type ViewTargets } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { renderSettings, type SettingsValues } from "./settings.js";
@@ -75,17 +75,12 @@ function mountShell(): void {
   menuBtn.append(icon(MENU_ICON));
   menuBtn.hidden = true;
 
-  homeBtn = el("button", { class: "topbar__home", onClick: goHome });
-  homeBtn.type = "button";
-  homeBtn.append(icon(HOME_ICON));
-  homeBtn.hidden = true;
-
   headSlot = el("div", { class: "topbar__head" });
   const controls = el("div", { class: "controls" });
   const topbar = el(
     "header",
     { class: "topbar" },
-    el("div", { class: "topbar__inner" }, menuBtn, brand, homeBtn, headSlot, controls),
+    el("div", { class: "topbar__inner" }, menuBtn, brand, headSlot, controls),
   );
 
   sidenav = el("nav", { class: "sidenav" });
@@ -150,12 +145,16 @@ function mountSidenav(): void {
   exportBtn = el("button", { class: "sidenav__item sidenav__action", onClick: exportReport });
   exportBtn.type = "button";
 
+  homeBtn = el("button", { class: "sidenav__item sidenav__action", onClick: goHome });
+  homeBtn.type = "button";
+
   sidenav.replaceChildren(
     ...topButtons,
     el("div", { class: "sidenav__spacer" }),
     helpBtn,
     settingsBtn,
     exportBtn,
+    homeBtn,
   );
 }
 
@@ -178,6 +177,7 @@ function updateTabs(): void {
     node.setAttribute("aria-selected", active ? "true" : "false");
   }
   exportBtn.textContent = t().common.exportJson;
+  homeBtn.textContent = t().common.home;
 }
 
 function tabFromHash(): Tab {
@@ -213,7 +213,6 @@ function renderLandingView(): void {
   sidenav.hidden = true;
   setNavOpen(false);
   brand.hidden = false;
-  homeBtn.hidden = true;
   menuBtn.hidden = true;
   headSlot.replaceChildren();
   content.replaceChildren();
@@ -237,7 +236,6 @@ function renderContent(): void {
 
   sidenav.hidden = false;
   brand.hidden = true;
-  homeBtn.hidden = false;
   menuBtn.hidden = false;
   closeDrilldown();
   disposeCharts();

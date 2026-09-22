@@ -103,6 +103,9 @@ describe("draw.io XML generators", () => {
     parse(xml);
     expect(xml).toContain("shape=umlLifeline");
     expect(xml).toContain("compute");
+    // The participant header needs an explicit height, otherwise draw.io uses
+    // its tiny default and the name box looks too small.
+    expect(xml).toContain("size=40");
   });
 
   it("builds a state machine when a class assigns two states", () => {

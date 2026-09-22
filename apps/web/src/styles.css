@@ -176,7 +176,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 230px;
+  width: max-content;
   padding: 16px 12px;
   overflow-y: auto;
   border-right: 1px solid var(--border);
@@ -224,6 +224,7 @@ body {
   gap: 10px;
   padding: 10px 12px;
   text-align: left;
+  white-space: nowrap;
   font-size: 14px;
   color: var(--muted);
   background: transparent;
@@ -1141,10 +1142,6 @@ th.sortable:hover {
     border-right: none;
     border-bottom: 1px solid var(--border);
     overflow-x: auto;
-  }
-
-  .sidenav__item {
-    white-space: nowrap;
   }
 
   .page__body {

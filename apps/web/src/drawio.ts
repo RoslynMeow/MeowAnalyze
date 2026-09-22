@@ -631,10 +631,15 @@ export function communicationDiagramXml(
 /* Sequence diagram (static approximation of one function's calls)     */
 /* ------------------------------------------------------------------ */
 
-const STYLE_LIFELINE =
-  "shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;" +
-  "collapsible=0;recursiveResize=0;outlineConnect=0;fontFamily=Helvetica;fontSize=12;" +
-  "fillColor=#ffffff;strokeColor=#3b4552;";
+/** draw.io draws the lifeline header at `size`/`startSize`; without it the
+ * participant box collapses to the shape default, too small for long names. */
+function lifelineStyle(headerHeight: number): string {
+  return (
+    "shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;" +
+    `collapsible=0;recursiveResize=0;outlineConnect=0;fontFamily=Helvetica;fontSize=12;` +
+    `fillColor=#ffffff;strokeColor=#3b4552;size=${headerHeight};startSize=${headerHeight};`
+  );
+}
 const STYLE_MESSAGE = "html=1;endArrow=block;endFill=1;rounded=0;strokeColor=#3b4552;fontSize=11;";
 
 /**
@@ -647,17 +652,21 @@ export function sequenceDiagramXml(fn: FunctionReport): string {
 
   const participants = [fn.name, ...calls];
   const top = 24;
-  const colWidth = 170;
   const gap = 60;
-  const headerHeight = 40;
+  // Fit the widest participant name; keep columns uniform so lifelines align.
+  const measured = Math.ceil(textWidth(participants)) + 24;
+  const colWidth = Math.min(360, Math.max(170, measured));
+  const wraps = measured > colWidth;
+  const headerHeight = wraps ? 56 : 40;
   const step = 36;
   const height = headerHeight + calls.length * step + 70;
+  const participantStyle = lifelineStyle(headerHeight);
 
   const cells: string[] = [];
   participants.forEach((label, index) => {
     const x = 30 + index * (colWidth + gap);
     cells.push(
-      vertexAt(`p${index}`, escapeAttrHtml(label), STYLE_LIFELINE, x, top, colWidth, height),
+      vertexAt(`p${index}`, escapeAttrHtml(label), participantStyle, x, top, colWidth, height),
     );
   });
 
