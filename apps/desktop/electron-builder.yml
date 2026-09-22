@@ -21,4 +21,7 @@ linux:
     - deb
   category: Development
   maintainer: MeowAnalyze contributors <RoslynMeow@users.noreply.github.com>
+  # The package is scoped (@meowanalyze/desktop); electron-builder would derive
+  # an invalid executable name from it ("@" and "/" are not allowed in paths).
+  executableName: meowanalyze
   artifactName: meowanalyze-desktop-linux-${version}.${ext}

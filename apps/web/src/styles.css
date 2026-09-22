@@ -1858,6 +1858,9 @@ th.sortable:hover {
 }
 
 .diagram-picker {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
   padding: 6px 8px;
   font: inherit;
   font-size: 12px;
@@ -1865,6 +1868,9 @@ th.sortable:hover {
   background: var(--code-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .diagram-stage {
