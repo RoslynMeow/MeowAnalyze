@@ -50,7 +50,7 @@ describe("landing view", () => {
 });
 
 describe("dashboard view", () => {
-  it("renders one card per enabled module", () => {
+  it("renders the hero and one card per remaining module", () => {
     const view = targets();
     renderDashboard(view, sampleReport(), { onJump: vi.fn() });
 
@@ -58,8 +58,10 @@ describe("dashboard view", () => {
     const count = Object.values(defaults.modules).filter(Boolean).length;
 
     expect(view.head.querySelector(".page__head")).not.toBeNull();
+    expect(view.body.querySelector(".dashboard-hero")).not.toBeNull();
     expect(view.body.querySelector(".stats-grid")).not.toBeNull();
-    expect(view.body.querySelectorAll(".kpi")).toHaveLength(count);
+    // Maintainability becomes the hero score, so the grid has one card fewer.
+    expect(view.body.querySelectorAll(".kpi")).toHaveLength(count - 1);
   });
 
   it("honors dashboard preferences", () => {
@@ -67,11 +69,13 @@ describe("dashboard view", () => {
     const prefs = defaultPrefs();
     for (const id of Object.keys(prefs.modules)) prefs.modules[id] = false;
     renderDashboard(view, sampleReport(), { onJump: vi.fn() }, prefs);
+    expect(view.body.querySelector(".dashboard-hero")).toBeNull();
     expect(view.body.querySelectorAll(".kpi")).toHaveLength(0);
 
     for (const id of Object.keys(prefs.modules)) prefs.modules[id] = true;
     renderDashboard(view, sampleReport(), { onJump: vi.fn() }, prefs);
-    expect(view.body.querySelectorAll(".kpi").length).toBeGreaterThan(6);
+    expect(view.body.querySelector(".dashboard-hero")).not.toBeNull();
+    expect(view.body.querySelectorAll(".kpi").length).toBeGreaterThan(3);
   });
 });
 

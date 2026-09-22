@@ -1,9 +1,14 @@
-import type { SourceInput } from "@meowanalyze/core";
-import { fileListToSources, pickDirectory, supportsDirectoryPicker } from "./sources.js";
+import {
+  fileListToSources,
+  pickDirectory,
+  rootNameOf,
+  supportsDirectoryPicker,
+  type ProjectSelection,
+} from "./sources.js";
 
 /** Bridge exposed by the Electron preload script. */
 export interface DesktopBridge {
-  openFolder(): Promise<SourceInput[]>;
+  openFolder(): Promise<ProjectSelection>;
 }
 
 declare global {
@@ -24,7 +29,7 @@ export function isDesktop(): boolean {
  * desktop app, then the File System Access API, then a `<input webkitdirectory>`
  * fallback.
  */
-export async function chooseFolder(): Promise<SourceInput[]> {
+export async function chooseFolder(): Promise<ProjectSelection> {
   if (isDesktop()) {
     return (window.meow as DesktopBridge).openFolder();
   }
@@ -34,14 +39,16 @@ export async function chooseFolder(): Promise<SourceInput[]> {
   return chooseFolderWithInput();
 }
 
-function chooseFolderWithInput(): Promise<SourceInput[]> {
+function chooseFolderWithInput(): Promise<ProjectSelection> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
     (input as HTMLInputElement & { webkitdirectory: boolean }).webkitdirectory =
       true;
     input.addEventListener("change", () => {
-      void fileListToSources(Array.from(input.files ?? [])).then(resolve);
+      void fileListToSources(Array.from(input.files ?? [])).then((sources) =>
+        resolve({ root: rootNameOf(sources), sources }),
+      );
     });
     input.click();
   });

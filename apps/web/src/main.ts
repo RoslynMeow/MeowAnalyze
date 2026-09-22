@@ -261,7 +261,7 @@ function renderContent(): void {
       { onApply: applySettings },
     );
   } else {
-    renderDashboard(targets, report, { onJump: jumpToItem }, state.prefs);
+    renderDashboard(targets, report, { onJump: jumpToItem }, state.prefs, state.thresholds);
   }
 
   updateTabs();
@@ -285,7 +285,8 @@ function jumpToItem(item: DrillItem): void {
 
 async function handleFolder(): Promise<void> {
   try {
-    runAnalysis(await chooseFolder(), "folder");
+    const { root, sources } = await chooseFolder();
+    runAnalysis(sources, root);
   } catch (error) {
     notice = error instanceof Error ? error.message : String(error);
     renderLandingView();

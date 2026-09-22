@@ -118,39 +118,18 @@ export function renderSettings(
 
 function moduleLabel(id: ModuleId): string {
   const k = t().dashboard.kpi;
-  const c = t().dashboard.charts;
   switch (id) {
     case "maintainability":
       return k.maintainability;
-    case "scale":
-      return k.scale;
     case "cyclomatic":
       return k.maxCyclomatic;
     case "cognitive":
       return k.maxCognitive;
     case "nesting":
       return k.maxNesting;
-    case "functionLength":
-      return k.avgFunctionLength;
-    case "params":
-      return k.params;
     case "halsteadVolume":
       return k.halsteadVolume;
     case "halsteadDifficulty":
       return k.halsteadDifficulty;
-    case "loc":
-      return c.linesOfCode;
-    case "logicalLines":
-      return k.logicalLines;
-    case "commentPct":
-      return k.commentPct;
-    case "languages":
-      return c.languages;
-    case "functionKinds":
-      return c.functionKinds;
-    case "markers":
-      return k.markers;
-    case "violations":
-      return k.violations;
   }
 }

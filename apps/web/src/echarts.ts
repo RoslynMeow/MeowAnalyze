@@ -31,6 +31,7 @@ async function loadEcharts(): Promise<EChartsModule | undefined> {
       core.use([
         charts.PieChart,
         charts.BarChart,
+        charts.GaugeChart,
         components.TooltipComponent,
         components.LegendComponent,
         components.GridComponent,
@@ -163,6 +164,7 @@ export async function renderDonut(
 }
 
 /** Render a horizontal bar chart (ordered distributions). */
+
 export async function renderBar(
   container: HTMLElement,
   segments: readonly DonutSegment[],
@@ -206,6 +208,56 @@ export async function renderBar(
   });
 
   if (onSelect) chart.on("click", (params) => onSelect(String(params.name)));
+  track(container, chart);
+  return chart;
+}
+
+/* ------------------------------------------------------------------ */
+/* Score gauge                                                         */
+/* ------------------------------------------------------------------ */
+
+/** Render a single score as an arc gauge with the value in the middle. */
+export async function renderGauge(
+  container: HTMLElement,
+  value: number,
+  color: string,
+): Promise<EChartsType | undefined> {
+  const core = await loadEcharts();
+  if (!core || !container.isConnected) return undefined;
+  const { text, grid } = baseTextOptions();
+
+  const chart = core.init(container, undefined, { renderer: "canvas" });
+  chart.setOption({
+    animationDuration: 800,
+    animationEasing: "cubicOut",
+    series: [
+      {
+        type: "gauge",
+        startAngle: 210,
+        endAngle: -30,
+        min: 0,
+        max: 100,
+        radius: "96%",
+        center: ["50%", "56%"],
+        progress: { show: true, width: 12, roundCap: true, itemStyle: { color } },
+        axisLine: { roundCap: true, lineStyle: { width: 12, color: [[1, grid]] } },
+        pointer: { show: false },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { show: false },
+        anchor: { show: false },
+        detail: {
+          valueAnimation: true,
+          offsetCenter: [0, 0],
+          fontSize: 40,
+          fontWeight: 700,
+          color: text,
+          formatter: "{value}",
+        },
+        data: [{ value }],
+      },
+    ],
+  });
   track(container, chart);
   return chart;
 }

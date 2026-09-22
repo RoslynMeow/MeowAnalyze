@@ -1,7 +1,13 @@
-import type { AnalysisReport, FileReport, FunctionKind, FunctionReport } from "@meowanalyze/core";
+import {
+  DEFAULT_THRESHOLDS,
+  type AnalysisReport,
+  type FileReport,
+  type FunctionKind,
+  type FunctionReport,
+  type Thresholds,
+} from "@meowanalyze/core";
 import {
   bucketize,
-  complexityColor,
   maintainabilityColor,
   PALETTE,
   severityColor,
@@ -11,7 +17,9 @@ import {
 import { MODULES, type ModuleId } from "../dashboard-modules.js";
 import { countUp, el, type ViewTargets } from "../dom.js";
 import { openDrilldown, type DrillItem } from "../drilldown.js";
+import { renderGauge } from "../echarts.js";
 import { t } from "../i18n.js";
+import { brandIcon, SUPPORTED_LANGUAGES } from "../languages.js";
 import { defaultPrefs, type DashboardPrefs } from "../prefs.js";
 
 export interface DashboardHandlers {
@@ -41,6 +49,17 @@ interface KpiEntry {
   spec: DrillSpec;
 }
 
+/** Green under the limit, amber within 1.5×, red beyond — lower is better. */
+function thresholdColor(value: number, limit: number): string {
+  if (value <= limit) return severityColor("good");
+  if (value <= limit * 1.5) return severityColor("warn");
+  return severityColor("critical");
+}
+
+function languageOf(id: string) {
+  return SUPPORTED_LANGUAGES.find((language) => language.id === id);
+}
+
 const CYCLOMATIC_BUCKETS: readonly BucketRange[] = [
   { upTo: 5, label: "1–5", severity: "good" },
   { upTo: 10, label: "6–10", severity: "warn" },
@@ -62,24 +81,10 @@ const NESTING_BUCKETS: readonly BucketRange[] = [
   { upTo: Number.POSITIVE_INFINITY, label: "5+", severity: "critical" },
 ];
 
-const LENGTH_BUCKETS: readonly BucketRange[] = [
-  { upTo: 10, label: "1–10", severity: "good" },
-  { upTo: 30, label: "11–30", severity: "warn" },
-  { upTo: 80, label: "31–80", severity: "bad" },
-  { upTo: Number.POSITIVE_INFINITY, label: "80+", severity: "critical" },
-];
-
 const MAINTAINABILITY_BUCKETS: readonly BucketRange[] = [
   { upTo: 40, label: "<40", severity: "critical" },
   { upTo: 65, label: "40–65", severity: "warn" },
   { upTo: Number.POSITIVE_INFINITY, label: "65+", severity: "good" },
-];
-
-const PARAM_BUCKETS: readonly BucketRange[] = [
-  { upTo: 0, label: "0", severity: "good" },
-  { upTo: 2, label: "1–2", severity: "good" },
-  { upTo: 4, label: "3–4", severity: "warn" },
-  { upTo: Number.POSITIVE_INFINITY, label: "5+", severity: "critical" },
 ];
 
 const VOLUME_BUCKETS: readonly BucketRange[] = [
@@ -117,6 +122,7 @@ export function renderDashboard(
   report: AnalysisReport,
   handlers: DashboardHandlers,
   prefs: DashboardPrefs = defaultPrefs(),
+  thresholds: Thresholds = DEFAULT_THRESHOLDS,
 ): void {
   targets.head.replaceChildren(header());
 
@@ -129,8 +135,6 @@ export function renderDashboard(
     cyclomatic: (fn: FunctionReport) => fn.cyclomatic,
     cognitive: (fn: FunctionReport) => fn.cognitive,
     nesting: (fn: FunctionReport) => fn.maxNesting,
-    loc: (fn: FunctionReport) => fn.loc,
-    params: (fn: FunctionReport) => fn.params,
     maintainability: (fn: FunctionReport) => fn.maintainability,
     volume: (fn: FunctionReport) => fn.halstead.volume,
     difficulty: (fn: FunctionReport) => fn.halstead.difficulty,
@@ -197,22 +201,6 @@ export function renderDashboard(
     String(functions.length),
     s.donut.functions,
   );
-  const lengthSpec = bucketSpec(
-    s.charts.functionLength,
-    functions.map(valueOf.loc),
-    LENGTH_BUCKETS,
-    functionItems(valueOf.loc),
-    String(functions.length),
-    s.donut.functions,
-  );
-  const paramsSpec = bucketSpec(
-    s.charts.parameters,
-    functions.map(valueOf.params),
-    PARAM_BUCKETS,
-    functionItems(valueOf.params),
-    String(functions.length),
-    s.donut.functions,
-  );
   const maintainabilitySpec = bucketSpec(
     s.charts.maintainability,
     functions.map(valueOf.maintainability),
@@ -245,15 +233,6 @@ export function renderDashboard(
     String(files.length),
     s.donut.files,
   );
-  const logicalSpec = bucketSpec(
-    s.kpi.logicalLines,
-    files.map((file) => file.loc.logical),
-    FILE_SIZE_BUCKETS,
-    fileItems((file) => file.loc.logical),
-    String(files.length),
-    s.donut.files,
-  );
-
   const locSpec: DrillSpec = {
     title: s.charts.linesOfCode,
     chart: "donut",
@@ -313,44 +292,37 @@ export function renderDashboard(
 
   const commentTotal = report.summary.loc.code + report.summary.loc.comment;
   const density = commentTotal > 0 ? (report.summary.loc.comment / commentTotal) * 100 : 0;
-  const markerTotal = report.summary.markers.todo + report.summary.markers.fixme + report.summary.markers.hack;
   const metrics = report.summary.metrics;
-  const violations = report.summary.violations;
 
   const cardBuilders: Record<ModuleId, () => KpiEntry> = {
     maintainability: () => ({
       label: s.kpi.maintainability,
       value: Math.round(report.summary.maintainability),
       color: maintainabilityColor(report.summary.maintainability),
+      detail: maintainabilityGrade(report.summary.maintainability),
       spec: maintainabilitySpec,
-    }),
-    scale: () => ({
-      label: s.kpi.scale,
-      value: report.summary.loc.code,
-      detail: s.kpiDetail.scale(files.length, functions.length),
-      spec: fileSizeSpec,
     }),
     cyclomatic: () => ({
       label: s.kpi.maxCyclomatic,
       value: metrics.cyclomatic.max,
-      color: complexityColor(metrics.cyclomatic.max),
+      color: thresholdColor(metrics.cyclomatic.max, thresholds.cyclomatic),
       detail: s.kpiDetail.avg(round1(metrics.cyclomatic.mean)),
       spec: cyclomaticSpec,
     }),
     cognitive: () => ({
       label: s.kpi.maxCognitive,
       value: metrics.cognitive.max,
-      color: complexityColor(metrics.cognitive.max),
+      color: thresholdColor(metrics.cognitive.max, thresholds.cognitive),
       detail: s.kpiDetail.avg(round1(metrics.cognitive.mean)),
       spec: cognitiveSpec,
     }),
-    nesting: () => ({ label: s.kpi.maxNesting, value: metrics.nesting.max, spec: nestingSpec }),
-    functionLength: () => ({
-      label: s.kpi.avgFunctionLength,
-      value: round1(metrics.functionLoc.mean),
-      spec: lengthSpec,
+    nesting: () => ({
+      label: s.kpi.maxNesting,
+      value: metrics.nesting.max,
+      color: thresholdColor(metrics.nesting.max, thresholds.nesting),
+      detail: s.kpiDetail.avg(round1(metrics.nesting.mean)),
+      spec: nestingSpec,
     }),
-    params: () => ({ label: s.kpi.params, value: metrics.params.max, spec: paramsSpec }),
     halsteadVolume: () => ({
       label: s.kpi.halsteadVolume,
       value: round1(metrics.halsteadVolume.mean),
@@ -361,31 +333,354 @@ export function renderDashboard(
       value: round1(metrics.halsteadDifficulty.mean),
       spec: difficultySpec,
     }),
-    loc: () => ({ label: s.charts.linesOfCode, value: report.summary.loc.physical, spec: locSpec }),
-    logicalLines: () => ({ label: s.kpi.logicalLines, value: report.summary.loc.logical, spec: logicalSpec }),
-    commentPct: () => ({ label: s.kpi.commentPct, value: round1(density), spec: locSpec }),
-    languages: () => ({ label: s.charts.languages, value: files.length, spec: languageSpec }),
-    functionKinds: () => ({ label: s.charts.functionKinds, value: functions.length, spec: kindsSpec }),
-    markers: () => ({
-      label: s.kpi.markers,
-      value: markerTotal,
-      color: markerTotal > 0 ? severityColor("warn") : undefined,
-      spec: markerSpec,
-    }),
-    violations: () => ({
-      label: s.kpi.violations,
-      value: violations.total,
-      color: violations.total > 0 ? severityColor("critical") : undefined,
-      detail: markerTotal > 0 ? s.alerts.markers(markerTotal) : undefined,
-      spec: ruleSpec,
-    }),
   };
 
-  const cards = MODULES.filter((module) => prefs.modules[module.id]).map((module) =>
-    kpiCard(cardBuilders[module.id](), handlers),
+  const enabled = MODULES.filter((module) => prefs.modules[module.id]);
+  const heroOn = prefs.modules.maintainability ?? false;
+
+  const restCards = enabled
+    .filter((module) => !(heroOn && module.id === "maintainability"))
+    .map((module) => kpiCard(cardBuilders[module.id](), handlers));
+
+  const blocks: HTMLElement[] = [];
+  if (heroOn) {
+    blocks.push(
+      hero(report, maintainabilitySpec, markerSpec, ruleSpec, fileSizeSpec, languageSpec, handlers),
+    );
+  }
+  blocks.push(
+    el(
+      "div",
+      { class: "dashboard-insights" },
+      attentionCard(report, handlers),
+      locCard(report, locSpec, kindsSpec, density, handlers),
+    ),
   );
-  targets.body.replaceChildren(
-    el("div", { class: "dashboard-body" }, el("div", { class: "stats-grid stats-grid--core" }, ...cards)),
+  blocks.push(el("div", { class: "stats-grid stats-grid--core" }, ...restCards));
+
+  targets.body.replaceChildren(el("div", { class: "dashboard-body" }, ...blocks));
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero: maintainability gauge + file distribution grid                */
+/* ------------------------------------------------------------------ */
+
+function hero(
+  report: AnalysisReport,
+  maintainabilitySpec: DrillSpec,
+  markerSpec: DrillSpec,
+  ruleSpec: DrillSpec,
+  fileSizeSpec: DrillSpec,
+  languageSpec: DrillSpec,
+  handlers: DashboardHandlers,
+): HTMLElement {
+  const s = t().dashboard;
+  const score = Math.round(report.summary.maintainability);
+  const color = maintainabilityColor(report.summary.maintainability);
+
+  const gauge = el("div", { class: "hero-score__gauge" });
+  const main = el(
+    "button",
+    {
+      class: "hero-score__main",
+      onClick: () => openDrilldown(maintainabilitySpec, { onJump: handlers.onJump }),
+    },
+    el("span", { class: "hero-score__label", text: s.kpi.maintainability }),
+    gauge,
+    el("span", {
+      class: "hero-score__grade",
+      text: maintainabilityGrade(report.summary.maintainability),
+    }),
+  );
+  main.type = "button";
+  void renderGauge(gauge, score, color);
+
+  const markers = report.summary.markers;
+  const markerTotal = markers.todo + markers.fixme + markers.hack;
+  const violationTotal = report.summary.violations.total;
+
+  const alerts = el(
+    "div",
+    { class: "hero-score__alerts" },
+    heroAlert(
+      markerTotal,
+      s.kpi.markers,
+      markerTotal > 0 ? severityColor("warn") : severityColor("good"),
+      markerSpec,
+      handlers,
+    ),
+    heroAlert(
+      violationTotal,
+      s.kpi.violations,
+      violationTotal > 0 ? severityColor("critical") : severityColor("good"),
+      ruleSpec,
+      handlers,
+    ),
+  );
+
+  return el(
+    "section",
+    { class: "dashboard-hero" },
+    el("section", { class: "hero-score" }, main, alerts),
+    fileDistribution(report, fileSizeSpec, languageSpec, handlers),
+  );
+}
+
+/** A small clickable counter shown inside the maintainability hero. */
+function heroAlert(
+  value: number,
+  label: string,
+  color: string,
+  spec: DrillSpec,
+  handlers: DashboardHandlers,
+): HTMLElement {
+  const valueNode = el("span", { class: "hero-alert__value", text: String(value) });
+  valueNode.style.color = color;
+  const node = el(
+    "button",
+    {
+      class: "hero-alert",
+      onClick: () => openDrilldown(spec, { onJump: handlers.onJump }),
+    },
+    valueNode,
+    el("span", { class: "hero-alert__label", text: label }),
+  );
+  node.type = "button";
+  return node;
+}
+
+function folderName(root: string): string {
+  const parts = root.split(/[\\/]+/).filter(Boolean);
+  return parts[parts.length - 1] ?? root;
+}
+
+/** Per-file grid plus the project heading and scale summary. */
+function fileDistribution(
+  report: AnalysisReport,
+  fileSizeSpec: DrillSpec,
+  languageSpec: DrillSpec,
+  handlers: DashboardHandlers,
+): HTMLElement {
+  const s = t().dashboard;
+  const files = report.files;
+  const root = report.root || "—";
+
+  const cells = files.map((file) => {
+    const cell = el("button", {
+      class: "file-cell",
+      title: `${file.path} · ${s.kpi.maintainability} ${Math.round(file.maintainability)}`,
+      onClick: () =>
+        handlers.onJump({ label: file.path, file: file.path, value: file.maintainability }),
+    });
+    cell.type = "button";
+    cell.style.background = maintainabilityColor(file.maintainability);
+    return cell;
+  });
+
+  const stats = el("button", {
+    class: "file-views__stats",
+    text: `${files.length} ${s.donut.files}`,
+    onClick: () => openDrilldown(fileSizeSpec, { onJump: handlers.onJump }),
+  });
+  stats.type = "button";
+
+  const languages = Object.entries(report.summary.filesByLanguage).sort(
+    (a, b) => b[1] - a[1],
+  );
+  const chips = el(
+    "div",
+    { class: "lang-chips" },
+    ...languages.map(([id, count]) => {
+      const language = languageOf(id);
+      const chip = el("button", {
+        class: "lang-chip",
+        onClick: () => openDrilldown(languageSpec, { onJump: handlers.onJump }),
+      });
+      chip.type = "button";
+      if (language) chip.append(brandIcon(language.icon, 14));
+      chip.append(
+        el("span", { class: "lang-chip__name", text: language?.name ?? id }),
+        el("span", { class: "lang-chip__count", text: String(count) }),
+      );
+      return chip;
+    }),
+  );
+  chips.hidden = languages.length === 0;
+
+  return el(
+    "div",
+    { class: "file-views" },
+    el(
+      "div",
+      { class: "file-views__head" },
+      el(
+        "div",
+        { class: "file-views__project" },
+        el("span", { class: "file-views__title", text: s.fileMap }),
+        el("span", { class: "file-views__folder", text: folderName(root), title: root }),
+      ),
+      stats,
+    ),
+    chips,
+    el("div", { class: "file-grid" }, ...cells),
+  );
+}
+
+/** Ranked list of files worth a look: large and hard to maintain first. */
+function attentionCard(report: AnalysisReport, handlers: DashboardHandlers): HTMLElement {
+  const s = t().dashboard;
+  const ranked = [...report.files]
+    .filter((file) => file.loc.code > 0)
+    .sort(
+      (a, b) =>
+        b.loc.code * (100 - b.maintainability) - a.loc.code * (100 - a.maintainability),
+    )
+    .slice(0, 8);
+
+  const rows = ranked.map((file, index) => {
+    const row = el(
+      "button",
+      {
+        class: "attention__row",
+        onClick: () =>
+          handlers.onJump({ label: file.path, file: file.path, value: file.maintainability }),
+      },
+      el("span", { class: "attention__rank", text: String(index + 1) }),
+      el("span", { class: "attention__path", text: file.path }),
+      el("span", { class: "attention__loc", text: `${file.loc.code}` }),
+      el("span", {
+        class: "attention__mi",
+        text: `MI ${Math.round(file.maintainability)}`,
+      }),
+    );
+    row.type = "button";
+    row.style.setProperty("--row-color", maintainabilityColor(file.maintainability));
+    return row;
+  });
+
+  const list = el("div", { class: "attention__list" }, ...rows);
+  list.hidden = rows.length === 0;
+
+  return el(
+    "section",
+    { class: "attention" },
+    el(
+      "div",
+      { class: "attention__head" },
+      el("span", { class: "attention__title", text: s.attention }),
+      el("span", { class: "attention__hint", text: s.attentionHint }),
+    ),
+    list,
+  );
+}
+
+const LOC_COLORS = { code: "#58a6ff", comment: "#3fb950", blank: "#8b949e" } as const;
+
+/**
+ * Two composition slots stacked in one card: code-line make-up (with logical
+ * lines and comment ratio) and the function-kind split. Each opens its drawer.
+ */
+function locCard(
+  report: AnalysisReport,
+  locSpec: DrillSpec,
+  kindsSpec: DrillSpec,
+  density: number,
+  handlers: DashboardHandlers,
+): HTMLElement {
+  const s = t().dashboard;
+  const loc = report.summary.loc;
+
+  const bar = (segments: readonly DonutSegment[]): HTMLElement => {
+    const total = Math.max(1, segments.reduce((sum, item) => sum + item.value, 0));
+    return el(
+      "div",
+      { class: "loc-card__bar" },
+      ...segments.map((item) => {
+        const piece = el("span", { class: "loc-card__seg" });
+        piece.style.width = `${(item.value / total) * 100}%`;
+        piece.style.background = item.color;
+        return piece;
+      }),
+    );
+  };
+
+  const legend = (segments: readonly DonutSegment[]): HTMLElement =>
+    el(
+      "div",
+      { class: "loc-card__legend" },
+      ...segments.map((item) => {
+        const dot = el("i", { class: "loc-card__dot" });
+        dot.style.background = item.color;
+        return el(
+          "span",
+          { class: "loc-card__legend-item" },
+          dot,
+          el("span", { class: "loc-card__legend-label", text: item.label }),
+          el("span", { class: "loc-card__legend-value", text: String(item.value) }),
+        );
+      }),
+    );
+
+  const slot = (
+    title: string,
+    totalText: string,
+    segments: readonly DonutSegment[],
+    footer: HTMLElement | undefined,
+    spec: DrillSpec,
+  ): HTMLElement => {
+    const node = el(
+      "button",
+      {
+        class: "loc-card__slot",
+        onClick: () => openDrilldown(spec, { onJump: handlers.onJump }),
+      },
+      el(
+        "div",
+        { class: "loc-card__head" },
+        el("span", { class: "loc-card__title", text: title }),
+        el("span", { class: "loc-card__total", text: totalText }),
+      ),
+      bar(segments),
+      legend(segments),
+      footer,
+    );
+    node.type = "button";
+    return node;
+  };
+
+  const locSegments: DonutSegment[] = [
+    { label: s.segment.code, value: loc.code, color: LOC_COLORS.code },
+    { label: s.segment.comment, value: loc.comment, color: LOC_COLORS.comment },
+    { label: s.segment.blank, value: loc.blank, color: LOC_COLORS.blank },
+  ];
+  const kindTotal = kindsSpec.segments.reduce((sum, item) => sum + item.value, 0);
+
+  return el(
+    "section",
+    { class: "loc-card" },
+    slot(
+      s.charts.linesOfCode,
+      `${loc.physical} ${s.donut.physical} / ${s.kpiDetail.functionLength(
+        round1(report.summary.metrics.functionLoc.mean),
+      )}`,
+      locSegments,
+      el(
+        "div",
+        { class: "loc-card__stats" },
+        el("span", { text: `${s.kpi.logicalLines} ${loc.logical}` }),
+        el("span", { text: `${s.kpi.commentPct} ${round1(density)}%` }),
+      ),
+      locSpec,
+    ),
+    slot(
+      s.charts.functionKinds,
+      `${kindTotal} ${s.donut.functions} / ${s.kpiDetail.params(
+        round1(report.summary.metrics.params.mean),
+      )}`,
+      kindsSpec.segments,
+      undefined,
+      kindsSpec,
+    ),
   );
 }
 
@@ -477,6 +772,13 @@ function markerCount(file: FileReport): number {
 
 function round1(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+function maintainabilityGrade(value: number): string {
+  const labels = t().dashboard.maintainability;
+  if (value < 40) return labels.low;
+  if (value < 65) return labels.moderate;
+  return labels.healthy;
 }
 
 function allFunctions(report: AnalysisReport): Entry[] {

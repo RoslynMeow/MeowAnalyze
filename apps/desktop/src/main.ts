@@ -24,6 +24,11 @@ interface SourceInput {
   content: string;
 }
 
+interface ProjectSelection {
+  root: string;
+  sources: SourceInput[];
+}
+
 function isBinary(buffer: Buffer): boolean {
   const length = Math.min(buffer.length, 8000);
   for (let i = 0; i < length; i++) {
@@ -105,13 +110,16 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle("meow:openFolder", async (): Promise<SourceInput[]> => {
+  ipcMain.handle("meow:openFolder", async (): Promise<ProjectSelection> => {
     const window = BrowserWindow.getFocusedWindow() ?? undefined;
     const result = window
       ? await dialog.showOpenDialog(window, { properties: ["openDirectory"] })
       : await dialog.showOpenDialog({ properties: ["openDirectory"] });
-    if (result.canceled || result.filePaths.length === 0) return [];
-    return readProject(result.filePaths[0] as string);
+    if (result.canceled || result.filePaths.length === 0) {
+      return { root: "", sources: [] };
+    }
+    const root = result.filePaths[0] as string;
+    return { root, sources: await readProject(root) };
   });
 
   createWindow();

@@ -90,6 +90,9 @@ export interface Strings {
   };
   dashboard: {
     title: string;
+    fileMap: string;
+    attention: string;
+    attentionHint: string;
     alerts: {
       violations: (n: number) => string;
       markers: (n: number) => string;
@@ -97,6 +100,8 @@ export interface Strings {
     kpiDetail: {
       avg: (n: number) => string;
       scale: (files: number, functions: number) => string;
+      functionLength: (n: number) => string;
+      params: (n: number) => string;
     };
     maintainability: {
       low: string;
@@ -320,7 +325,7 @@ const zh: Strings = {
         items: [
           "V：Halstead 体积（函数级取该函数，文件级取文件内所有函数之和）",
           "G：圈复杂度",
-          "L：物理代码行数",
+          "L：代码行数（含源码 token 的行）",
         ],
         note: "颜色分级：< 40 红（难维护）、40–65 黄、≥ 65 绿。",
       },
@@ -368,8 +373,8 @@ const zh: Strings = {
           "认知复杂度 > cognitive",
           "嵌套深度 > nesting",
           "函数参数个数 > params",
-          "函数行数 > function_loc",
-          "文件行数 > file_loc",
+          "函数代码行数 > function_loc",
+          "文件代码行数 > file_loc",
         ],
       },
     ],
@@ -393,12 +398,15 @@ const zh: Strings = {
       cognitive: "每个函数的认知复杂度上限",
       nesting: "每个函数的嵌套深度上限",
       params: "每个函数的参数个数上限",
-      functionLoc: "每个函数的物理行数上限",
-      fileLoc: "每个文件的物理行数上限",
+      functionLoc: "每个函数的代码行数上限",
+      fileLoc: "每个文件的代码行数上限",
     },
   },
   dashboard: {
     title: "分析大屏",
+    fileMap: "文件分布",
+    attention: "最该关注的文件",
+    attentionHint: "代码量大且维护指数低的文件排在最前",
     alerts: {
       violations: (n) => `${n} 处违规`,
       markers: (n) => `${n} 个标记`,
@@ -406,6 +414,8 @@ const zh: Strings = {
     kpiDetail: {
       avg: (n) => `平均 ${n}`,
       scale: (files, functions) => `${files} 文件 · ${functions} 函数`,
+      functionLength: (n) => `函数平均 ${n} 行`,
+      params: (n) => `参数平均 ${n} 个`,
     },
     maintainability: {
       low: "难以维护",
@@ -624,7 +634,7 @@ const en: Strings = {
         items: [
           "V: Halstead volume (per function, or the sum over the file's functions at file level)",
           "G: cyclomatic complexity",
-          "L: physical lines of code",
+          "L: code lines (lines that contain source tokens)",
         ],
         note: "Color grading: < 40 red (hard to maintain), 40–65 yellow, ≥ 65 green.",
       },
@@ -672,8 +682,8 @@ const en: Strings = {
           "cognitive complexity > cognitive",
           "nesting depth > nesting",
           "parameters > params",
-          "function lines > function_loc",
-          "file lines > file_loc",
+          "function code lines > function_loc",
+          "file code lines > file_loc",
         ],
       },
     ],
@@ -697,12 +707,15 @@ const en: Strings = {
       cognitive: "Max cognitive complexity per function",
       nesting: "Max nesting depth per function",
       params: "Max parameters per function",
-      functionLoc: "Max physical lines per function",
-      fileLoc: "Max physical lines per file",
+      functionLoc: "Max code lines per function",
+      fileLoc: "Max code lines per file",
     },
   },
   dashboard: {
     title: "Analysis dashboard",
+    fileMap: "File distribution",
+    attention: "Needs attention",
+    attentionHint: "Large files with low maintainability rank first",
     alerts: {
       violations: (n) => `${n} violation${n === 1 ? "" : "s"}`,
       markers: (n) => `${n} marker${n === 1 ? "" : "s"}`,
@@ -710,6 +723,8 @@ const en: Strings = {
     kpiDetail: {
       avg: (n) => `avg ${n}`,
       scale: (files, functions) => `${files} files · ${functions} functions`,
+      functionLength: (n) => `avg ${n} lines/function`,
+      params: (n) => `avg ${n} params`,
     },
     maintainability: {
       low: "hard to maintain",

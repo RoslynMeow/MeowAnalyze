@@ -22,6 +22,19 @@ export function isIgnoredPath(path: string): boolean {
   return path.split("/").some((segment) => IGNORED_SEGMENTS.has(segment));
 }
 
+/** A picked project: the best-available root plus its in-memory files. */
+export interface ProjectSelection {
+  /** Full path on the desktop, the folder name in the browser. */
+  root: string;
+  sources: SourceInput[];
+}
+
+/** Project name inferred from the first path segment of the selected files. */
+export function rootNameOf(sources: readonly SourceInput[]): string {
+  const segment = sources[0]?.path.split("/").filter(Boolean)[0];
+  return segment ?? "folder";
+}
+
 export async function fileListToSources(
   files: readonly File[],
 ): Promise<SourceInput[]> {
@@ -72,14 +85,14 @@ export function supportsDirectoryPicker(): boolean {
 }
 
 /** Let the user pick a project folder and read every analyzable file in it. */
-export async function pickDirectory(): Promise<SourceInput[]> {
+export async function pickDirectory(): Promise<ProjectSelection> {
   const picker = (window as unknown as PickerWindow).showDirectoryPicker;
   if (!picker) throw new Error("Directory picker is not supported by this browser.");
   const handle = await picker();
   const sources: SourceInput[] = [];
   await collectDirectory(handle, "", sources);
   sources.sort((a, b) => a.path.localeCompare(b.path));
-  return sources;
+  return { root: handle.name, sources };
 }
 
 async function collectDirectory(
