@@ -264,13 +264,20 @@ function collectFunctions(
   path: string,
 ): FunctionReport[] {
   const out: FunctionReport[] = [];
-  const visit = (node: ts.Node): void => {
-    if (isFunctionLike(node) && hasBody(node)) {
-      out.push(analyzeFunction(node, sf, source, path));
+  const visit = (node: ts.Node, owner: string | undefined): void => {
+    let nextOwner = owner;
+    if (
+      (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) &&
+      node.name
+    ) {
+      nextOwner = node.name.text;
     }
-    node.forEachChild(visit);
+    if (isFunctionLike(node) && hasBody(node)) {
+      out.push(analyzeFunction(node, sf, source, path, nextOwner));
+    }
+    node.forEachChild((child) => visit(child, nextOwner));
   };
-  visit(sf);
+  visit(sf, undefined);
   return out;
 }
 
@@ -279,6 +286,7 @@ function analyzeFunction(
   sf: ts.SourceFile,
   source: string,
   path: string,
+  owner: string | undefined,
 ): FunctionReport {
   const name = functionName(node);
   const range = rangeOf(node, sf);
@@ -306,6 +314,7 @@ function analyzeFunction(
   return {
     id: `${path}:${range.start.line}:${name}`,
     name,
+    owner,
     kind: functionKind(node),
     range,
     loc,

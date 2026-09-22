@@ -51,6 +51,11 @@ describe("declarations and imports", () => {
     ]);
   });
 
+  it("records the owning class of a method", () => {
+    expect(report.functions.find((f) => f.name === "area")?.owner).toBe("Circle");
+    expect(report.functions.find((f) => f.name === "compute")?.owner).toBeUndefined();
+  });
+
   it("extracts a control-flow tree and call sites", () => {
     const area = report.functions.find((f) => f.name === "area");
     expect(area?.flow.some((node) => node.kind === "decision")).toBe(true);

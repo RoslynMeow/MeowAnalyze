@@ -166,6 +166,8 @@ export interface FunctionReport {
   /** Stable id: `path:startLine:name`. */
   id: string;
   name: string;
+  /** Enclosing class / interface name, when the function is a member. */
+  owner?: string;
   kind: FunctionKind;
   range: Range;
   /** Physical lines spanned by the function. */

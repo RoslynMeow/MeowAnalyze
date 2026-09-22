@@ -303,7 +303,15 @@ function flowOfStatement(statement: ts.Statement, sf: ts.SourceFile): FlowNode[]
   }
 
   if (ts.isReturnStatement(statement)) {
-    return [{ kind: "terminator", text: statement.expression ? clip(statement.expression.getText(sf)) : "return" }];
+    let text = "return";
+    if (statement.expression) {
+      const raw = statement.expression.getText(sf).replace(/\s+/g, " ").trim();
+      // Only show short, plain expressions; skip JSX / parentheses fragments.
+      if (raw.length <= 40 && /[A-Za-z0-9_$"'`]/.test(raw) && !/[<(]/.test(raw)) {
+        text = `return ${raw}`;
+      }
+    }
+    return [{ kind: "terminator", text }];
   }
   if (ts.isThrowStatement(statement)) return [{ kind: "terminator", text: "throw" }];
   if (ts.isBreakStatement(statement)) return [{ kind: "terminator", text: "break" }];
@@ -323,7 +331,8 @@ function flowOfStatement(statement: ts.Statement, sf: ts.SourceFile): FlowNode[]
     return out;
   }
 
-  return [{ kind: "action", text: clip(statement.getText(sf)) }];
+  const text = clip(statement.getText(sf));
+  return text ? [{ kind: "action", text }] : [];
 }
 
 function loopLabel(statement: ts.Node): string {
@@ -337,6 +346,8 @@ function loopLabel(statement: ts.Node): string {
 
 function clip(text: string, max = 60): string {
   const flat = text.replace(/\s+/g, " ").trim();
+  // Drop punctuation-only fragments that a parse error can leave behind.
+  if (!/[A-Za-z0-9_$"'`]/.test(flat)) return "";
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
