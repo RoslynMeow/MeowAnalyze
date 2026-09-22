@@ -32,7 +32,6 @@ export type { FileContext, LanguageAnalyzer } from "./lang/analyzer.js";
 export {
   defaultRegistry,
   defaultRegistryWithLanguages,
-  registryForPaths,
   LanguageRegistry,
 } from "./lang/registry.js";
 export { TypeScriptAnalyzer } from "./lang/typescript.js";
