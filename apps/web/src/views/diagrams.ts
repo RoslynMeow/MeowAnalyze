@@ -144,6 +144,8 @@ export function renderDiagrams(targets: ViewTargets, report: AnalysisReport): vo
       );
       if (!options.some((option) => option.value === selected)) selected = options[0]?.value;
       picker.value = selected ?? "";
+      // The select clips long labels; expose the full text on hover.
+      picker.title = picker.selectedOptions[0]?.textContent ?? "";
     }
 
     const hasDiagram = xml.length > 0;
