@@ -12,7 +12,14 @@ import type {
   StructureModel,
 } from "@meowanalyze/core";
 
-export type DiagramKind = "class" | "package" | "activity" | "er" | "communication";
+export type DiagramKind =
+  | "class"
+  | "package"
+  | "activity"
+  | "sequence"
+  | "state"
+  | "er"
+  | "communication";
 
 export interface LayoutSpec {
   layout: string;
@@ -58,6 +65,19 @@ export const LAYOUT: Record<DiagramKind, readonly LayoutSpec[]> = {
       },
     },
   ],
+  // Sequence is positioned by hand (lifelines + messages), no auto layout.
+  sequence: [],
+  state: [
+    {
+      layout: "elkLayered",
+      config: {
+        "elk.direction": "RIGHT",
+        "elk.spacing.nodeNode": "70",
+        "elk.layered.spacing.nodeNodeBetweenLayers": "110",
+        "elk.edgeRouting": "ORTHOGONAL",
+      },
+    },
+  ],
   er: [{ layout: "elkOrganic", config: { "elk.spacing.nodeNode": "90" } }],
   communication: [
     {
@@ -94,9 +114,21 @@ function wrap(cells: string[]): string {
 }
 
 function vertex(id: string, value: string, style: string, width: number, height: number): string {
+  return vertexAt(id, value, style, 0, 0, width, height);
+}
+
+function vertexAt(
+  id: string,
+  value: string,
+  style: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): string {
   return (
     `<mxCell id="${id}" value="${escapeXml(value)}" style="${style}" vertex="1" parent="1">` +
-    `<mxGeometry x="0" y="0" width="${width}" height="${height}" as="geometry"/></mxCell>`
+    `<mxGeometry x="${x}" y="${y}" width="${width}" height="${height}" as="geometry"/></mxCell>`
   );
 }
 
@@ -376,49 +408,76 @@ function activityCells(flow: readonly FlowNode[]): string[] {
     cells.push(edge(`e${edgeId++}`, from, to, STYLE_EDGE, label ?? ""));
   };
 
-  const build = (nodes: readonly FlowNode[], from: string, label?: string): string => {
+  const terminators: string[] = [];
+
+  interface Built {
+    exit: string;
+    /** Whether control can continue past this node (false after return/throw). */
+    fallsThrough: boolean;
+  }
+
+  const build = (nodes: readonly FlowNode[], from: string, label?: string): Built => {
     let current = from;
     let currentLabel = label;
+    let falls = true;
     for (const item of nodes) {
       if (item.kind === "action" || item.kind === "terminator") {
+        if (!item.text.trim()) continue;
         const id = nextId();
         cells.push(vertex(id, item.text, STYLE_ACTION, 180, 40));
         connect(current, id, currentLabel);
         current = id;
         currentLabel = undefined;
+        falls = item.kind !== "terminator";
+        if (item.kind === "terminator") terminators.push(id);
       } else if (item.kind === "loop") {
         const id = nextId();
         cells.push(vertex(id, item.label, STYLE_LOOP, 140, 50));
         connect(current, id, currentLabel);
-        const exit = build(item.body, id);
-        connect(exit, id);
+        const body = build(item.body, id);
+        connect(body.exit, id);
         current = id;
         currentLabel = undefined;
+        falls = true;
       } else {
+        const condition = item.branches[0]?.label ?? "";
         const id = nextId();
-        cells.push(vertex(id, "?", STYLE_DECISION, 120, 70));
+        cells.push(vertex(id, condition, STYLE_DECISION, 120, 70));
         connect(current, id, currentLabel);
-        const exits: string[] = [];
+
+        const candidates: string[] = [];
         for (const branch of item.branches) {
-          const exit = build(branch.body, id, branch.label);
-          if (exit !== id) exits.push(exit);
+          const built = build(branch.body, id, branch.label);
+          if (built.fallsThrough) candidates.push(built.exit);
         }
-        if (exits.length === 0) current = id;
-        else if (exits.length === 1) current = exits[0] as string;
-        else {
+        // An if without else (or a switch without default) has an implicit
+        // path that skips straight past the decision.
+        if (item.branches.length <= 1) candidates.push(id);
+
+        const unique = [...new Set(candidates)];
+        if (unique.length === 0) {
+          current = id;
+          falls = false;
+        } else if (unique.length === 1) {
+          current = unique[0] as string;
+          falls = true;
+        } else {
           const merge = nextId();
           cells.push(vertex(merge, "", STYLE_ACTION, 20, 20));
-          for (const exit of exits) connect(exit, merge);
+          for (const candidate of unique) connect(candidate, merge);
           current = merge;
+          falls = true;
         }
         currentLabel = undefined;
       }
     }
-    return current;
+    return { exit: current, fallsThrough: falls };
   };
 
-  const last = build(flow, "mm_start");
-  connect(last, "mm_end");
+  const built = build(flow, "mm_start");
+  // Every return / throw flows into the final node, as does the fall-through exit.
+  for (const terminator of terminators) connect(terminator, "mm_end");
+  if (built.fallsThrough) connect(built.exit, "mm_end");
   return cells;
 }
 
@@ -565,5 +624,212 @@ export function communicationDiagramXml(
       edge(`e${counter++}`, ids.get(call.from) as string, ids.get(call.to) as string, STYLE_EDGE),
     );
   }
+  return wrap(cells);
+}
+
+/* ------------------------------------------------------------------ */
+/* Sequence diagram (static approximation of one function's calls)     */
+/* ------------------------------------------------------------------ */
+
+const STYLE_LIFELINE =
+  "shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;" +
+  "collapsible=0;recursiveResize=0;outlineConnect=0;fontFamily=Helvetica;fontSize=12;" +
+  "fillColor=#ffffff;strokeColor=#3b4552;";
+const STYLE_MESSAGE = "html=1;endArrow=block;endFill=1;rounded=0;strokeColor=#3b4552;fontSize=11;";
+
+/**
+ * A sequence-like view of the calls a function makes, in source order. Not a
+ * real runtime sequence: messages all originate from the selected function.
+ */
+export function sequenceDiagramXml(fn: FunctionReport): string {
+  const calls = [...new Set(fn.calls)].slice(0, 8);
+  if (calls.length === 0) return "";
+
+  const participants = [fn.name, ...calls];
+  const top = 24;
+  const colWidth = 170;
+  const gap = 60;
+  const headerHeight = 40;
+  const step = 36;
+  const height = headerHeight + calls.length * step + 70;
+
+  const cells: string[] = [];
+  participants.forEach((label, index) => {
+    const x = 30 + index * (colWidth + gap);
+    cells.push(
+      vertexAt(`p${index}`, escapeAttrHtml(label), STYLE_LIFELINE, x, top, colWidth, height),
+    );
+  });
+
+  calls.forEach((call, index) => {
+    const y = top + headerHeight + 30 + index * step;
+    const fraction = ((y - top) / height).toFixed(3);
+    const style =
+      `${STYLE_MESSAGE}exitX=1;exitY=${fraction};exitDx=0;exitDy=0;` +
+      `entryX=0;entryY=${fraction};entryDx=0;entryDy=0;`;
+    cells.push(edge(`e${index}`, "p0", `p${index + 1}`, style, call));
+  });
+
+  return wrap(cells);
+}
+
+/* ------------------------------------------------------------------ */
+/* State machine diagram (heuristic, aggregated over a class)          */
+/* ------------------------------------------------------------------ */
+
+interface StateTransition {
+  from: string;
+  to: string;
+  event: string;
+}
+
+interface StateMachine {
+  states: string[];
+  transitions: StateTransition[];
+}
+
+function parseAssignment(text: string): { name: string; value: string } | undefined {
+  const match = /^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*=(?!=)\s*(.+?);?$/.exec(
+    text.trim(),
+  );
+  if (!match) return undefined;
+  const name = match[1] as string;
+  const rhs = (match[2] ?? "").trim();
+  const quoted = /^["'`]([^"'`]+)["'`]$/.exec(rhs);
+  if (quoted) return { name, value: quoted[1] as string };
+  if (/^-?\d+(?:\.\d+)?$/.test(rhs)) return { name, value: rhs };
+  const member = /^[A-Za-z_$][\w$]*\.([A-Za-z_$][\w$]*)$/.exec(rhs);
+  if (member) return { name, value: member[1] as string };
+  return undefined;
+}
+
+function valueInLabel(label: string, states: readonly string[]): string | undefined {
+  const quoted = /["'`]([^"'`]+)["'`]/.exec(label);
+  if (quoted && states.includes(quoted[1] as string)) return quoted[1] as string;
+  for (const state of states) {
+    if (new RegExp(`\\b${state.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(label)) {
+      return state;
+    }
+  }
+  return undefined;
+}
+
+function extractStateMachine(functions: readonly FunctionReport[]): StateMachine | undefined {
+  const assignments: Array<{ name: string; value: string }> = [];
+  const collect = (nodes: readonly FlowNode[]): void => {
+    for (const node of nodes) {
+      if (node.kind === "action" || node.kind === "terminator") {
+        const assignment = parseAssignment(node.text);
+        if (assignment) assignments.push(assignment);
+      } else if (node.kind === "loop") {
+        collect(node.body);
+      } else {
+        for (const branch of node.branches) collect(branch.body);
+      }
+    }
+  };
+  for (const fn of functions) collect(fn.flow);
+
+  const counts = new Map<string, number>();
+  for (const assignment of assignments) {
+    counts.set(assignment.name, (counts.get(assignment.name) ?? 0) + 1);
+  }
+  let variable: string | undefined;
+  let best = 0;
+  for (const [name, count] of counts) {
+    if (count > best) {
+      best = count;
+      variable = name;
+    }
+  }
+  if (!variable) return undefined;
+
+  const own = assignments.filter((assignment) => assignment.name === variable);
+  const states = [...new Set(own.map((assignment) => assignment.value))];
+  if (states.length < 2) return undefined;
+
+  const transitions: StateTransition[] = [];
+  const seen = new Set<string>();
+  const push = (from: string, to: string, event: string): void => {
+    const key = `${from}->${to}|${event}`;
+    if (from === to || seen.has(key)) return;
+    seen.add(key);
+    transitions.push({ from, to, event });
+  };
+  const walk = (nodes: readonly FlowNode[], state: string, event: string): void => {
+    let current = state;
+    for (const node of nodes) {
+      if (node.kind === "action" || node.kind === "terminator") {
+        const assignment = parseAssignment(node.text);
+        if (assignment && assignment.name === variable) {
+          push(current, assignment.value, event);
+          current = assignment.value;
+        }
+      } else if (node.kind === "loop") {
+        walk(node.body, current, event);
+      } else {
+        for (const branch of node.branches) {
+          const branchState = valueInLabel(branch.label, states);
+          walk(branch.body, branchState ?? current, branchState ? branch.label : event);
+        }
+      }
+    }
+  };
+
+  for (const fn of functions) {
+    let start: string | undefined;
+    const scanBranches = (nodes: readonly FlowNode[]): void => {
+      for (const node of nodes) {
+        if (start) return;
+        if (node.kind === "loop") scanBranches(node.body);
+        else if (node.kind === "decision") {
+          for (const branch of node.branches) {
+            const found = valueInLabel(branch.label, states);
+            if (found) start = found;
+            scanBranches(branch.body);
+          }
+        }
+      }
+    };
+    scanBranches(fn.flow);
+    walk(fn.flow, start ?? (own[0]?.value as string), "");
+  }
+
+  return { states, transitions };
+}
+
+export function stateMachineXml(
+  owner: string,
+  functions: readonly FunctionReport[],
+): string {
+  const machine = extractStateMachine(functions);
+  if (!machine) return "";
+
+  const ids = new Map(machine.states.map((state, index) => [state, `s${index}`]));
+  const cells: string[] = ["mm_start"];
+  cells.push(vertex("mm_start", "", "ellipse;html=1;fillColor=#3b4552;strokeColor=#3b4552;", 24, 24));
+
+  for (const state of machine.states) {
+    const id = ids.get(state) as string;
+    const width = Math.min(240, Math.max(90, Math.ceil(textWidth([state])) + 30));
+    cells.push(vertex(id, escapeAttrHtml(state), STYLE_NODE, width, 44));
+  }
+  cells.push(
+    edge("e_start", "mm_start", ids.get(machine.states[0] as string) as string, STYLE_EDGE, owner),
+  );
+
+  let counter = 0;
+  for (const transition of machine.transitions) {
+    cells.push(
+      edge(
+        `t${counter++}`,
+        ids.get(transition.from) as string,
+        ids.get(transition.to) as string,
+        "html=1;rounded=1;strokeColor=#3b4552;fontSize=11;",
+        transition.event,
+      ),
+    );
+  }
+
   return wrap(cells);
 }

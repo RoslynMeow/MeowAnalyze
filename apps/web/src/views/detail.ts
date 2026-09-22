@@ -39,6 +39,7 @@ export function renderDetail(
     ),
   );
 
+  targets.body.classList.add("page__body--fill");
   targets.body.replaceChildren(
     el(
       "div",

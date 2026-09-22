@@ -350,6 +350,34 @@ body {
   max-width: 760px;
 }
 
+.landing__langs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.lang-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.lang-chip svg {
+  display: block;
+}
+
+.lang-chip__name {
+  font-weight: 600;
+  color: var(--text);
+}
+
 .landing__actions {
   display: flex;
   gap: 14px;
@@ -1006,12 +1034,19 @@ th.sortable:hover {
 /* Detail page                                                       */
 /* ---------------------------------------------------------------- */
 
+.page__body--fill {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 20px;
+}
+
 .detail-layout {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 16px;
+  overflow: hidden;
 }
 
 .file-list-pane {
@@ -1033,10 +1068,11 @@ th.sortable:hover {
 }
 
 .file-list {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 60vh;
   overflow: auto;
 }
 
@@ -1433,6 +1469,10 @@ th.sortable:hover {
   background: #ffffff;
 }
 
+.diagram-stage--empty .drawio-frame {
+  display: none;
+}
+
 .diagram-notice {
   margin: auto;
   padding: 24px;
@@ -1445,6 +1485,13 @@ th.sortable:hover {
   color: var(--text);
   background: transparent;
   border-color: var(--border);
+}
+
+.button--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 9px;
 }
 
 .button--ghost:hover {

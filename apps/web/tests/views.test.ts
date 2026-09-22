@@ -91,7 +91,7 @@ describe("diagrams view", () => {
     const view = targets();
     renderDiagrams(view, sampleReport());
     expect(view.head.querySelector(".page__head")).not.toBeNull();
-    expect(view.body.querySelectorAll(".diagram-kind").length).toBe(5);
+    expect(view.body.querySelectorAll(".diagram-kind").length).toBe(7);
     expect(view.body.querySelector(".diagram-stage")).not.toBeNull();
     disposeDiagrams();
   });

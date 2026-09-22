@@ -7,6 +7,8 @@ import {
   communicationDiagramXml,
   entityRelationshipXml,
   packageDiagramXml,
+  sequenceDiagramXml,
+  stateMachineXml,
 } from "../src/drawio.js";
 
 const SOURCE = `import { Base } from "./base";
@@ -91,6 +93,61 @@ describe("draw.io XML generators", () => {
     expect(xml).toContain("shape=table");
     expect(xml).toContain("ERzeroToMany");
     expect(xml).toContain("ERzeroToOne");
+  });
+
+  it("builds a sequence diagram from a function's calls", () => {
+    const fn = report()
+      .files.flatMap((file) => file.functions)
+      .find((f) => f.name === "area");
+    const xml = sequenceDiagramXml(fn!);
+    parse(xml);
+    expect(xml).toContain("shape=umlLifeline");
+    expect(xml).toContain("compute");
+  });
+
+  it("builds a state machine when a class assigns two states", () => {
+    const r = analyzeSources({
+      root: "mem",
+      sources: [
+        {
+          path: "door.ts",
+          content:
+            'export class Door {\n  state: string = "closed";\n' +
+            '  open() { if (this.state === "closed") { this.state = "open"; } }\n' +
+            '  close() { if (this.state === "open") { this.state = "closed"; } }\n}\n',
+        },
+      ],
+    });
+    const owned = r.files.flatMap((f) => f.functions).filter((f) => f.owner === "Door");
+    const xml = stateMachineXml("Door", owned);
+    parse(xml);
+    expect(xml).toContain("open");
+    expect(xml).toContain("closed");
+  });
+
+  it("continues past an if without else instead of chaining from the return", () => {
+    const r = analyzeSources({
+      root: "mem",
+      sources: [
+        {
+          path: "p.ts",
+          content:
+            "export function parse(h: string) {\n" +
+            "  if (h[0] !== '#') { return { kind: 'graph' }; }\n" +
+            "  const m = h.match(/x/);\n" +
+            "  if (m) { return { kind: 'module' }; }\n}\n",
+        },
+      ],
+    });
+    const fn = r.files.flatMap((f) => f.functions).find((f) => f.name === "parse");
+    const doc = parse(activityDiagramXml(fn!));
+    const cells = [...doc.querySelectorAll("mxCell")];
+    const terminator = cells.find((c) => (c.getAttribute("value") ?? "").includes("graph"));
+    expect(terminator).toBeDefined();
+    const outgoing = cells.filter((c) => c.getAttribute("source") === terminator?.getAttribute("id"));
+    // A return only flows into the final node, never into the next statement.
+    expect(outgoing.every((c) => c.getAttribute("target") === "mm_end")).toBe(true);
+    expect(outgoing.length).toBeGreaterThan(0);
   });
 
   it("returns an empty string when there is nothing to draw", () => {

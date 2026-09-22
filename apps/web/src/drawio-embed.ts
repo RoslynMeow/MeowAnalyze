@@ -85,6 +85,9 @@ export function createDrawioEmbed(
     if (message.event === "init") {
       ready = true;
       loadNow();
+    } else if (message.event === "load") {
+      // The layout runs after loading, so fit again to bring it all into view.
+      send({ action: "fit", border: 24, maxScale: 1.5 });
     } else if (message.event === "export" && message.format && message.data) {
       handlers.onExport?.(message.format, message.data);
     }

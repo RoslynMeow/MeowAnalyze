@@ -13,8 +13,10 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "@meowanalyze/core": "*",
     "echarts": "^6.1.0",
+    "simple-icons": "^16.32.0",
     "temml": "^0.13.5"
   },
   "devDependencies": {

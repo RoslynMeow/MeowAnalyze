@@ -36,6 +36,8 @@ export interface Strings {
       class: string;
       package: string;
       activity: string;
+      sequence: string;
+      state: string;
       er: string;
       communication: string;
     };
@@ -44,6 +46,8 @@ export interface Strings {
       class: string;
       package: string;
       activity: string;
+      sequence: string;
+      state: string;
       er: string;
       communication: string;
     };
@@ -221,6 +225,8 @@ const zh: Strings = {
       class: "类图",
       package: "包依赖图",
       activity: "活动图",
+      sequence: "时序图",
+      state: "状态机",
       er: "ER 图",
       communication: "通信图",
     },
@@ -229,6 +235,8 @@ const zh: Strings = {
       class: "没有找到类 / 接口 / 枚举声明。",
       package: "没有可解析的模块依赖。",
       activity: "该函数没有可绘制的控制流。",
+      sequence: "该函数没有解析到调用。",
+      state: "未识别到状态机（需要同一类中对同一变量赋值 ≥2 个不同字面量）。",
       er: "没有找到带字段的类 / 接口。",
       communication: "没有解析到项目内的函数调用。",
     },
@@ -521,6 +529,8 @@ const en: Strings = {
       class: "Class",
       package: "Packages",
       activity: "Activity",
+      sequence: "Sequence",
+      state: "State",
       er: "ER",
       communication: "Communication",
     },
@@ -529,6 +539,8 @@ const en: Strings = {
       class: "No class / interface / enum declarations found.",
       package: "No resolvable module dependencies.",
       activity: "This function has no control flow to draw.",
+      sequence: "This function has no resolved calls.",
+      state: "No state machine detected (needs ≥2 distinct literals assigned to one variable in a class).",
       er: "No classes / interfaces with fields found.",
       communication: "No in-project function calls were resolved.",
     },
