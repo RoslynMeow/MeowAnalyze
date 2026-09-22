@@ -29,23 +29,23 @@ index, comment density and technical-debt markers. The same analysis core powers
 **CLI**, a **web app** that runs entirely in your browser, and an **Electron desktop
 app** — nothing is uploaded anywhere.
 
-## 📑 Table of contents
+## Table of contents
 
-- [✨ Highlights](#-highlights)
-- [🚀 Try it online](#-try-it-online)
-- [📦 Install](#-install)
-- [🌐 Web app](#-web-app)
-- [🖥 Desktop app](#-desktop-app)
-- [🛠 CLI reference](#-cli-reference)
-- [⚙️ Configuration](#️-configuration)
-- [🧩 JavaScript API](#-javascript-api)
-- [📐 Metrics](#-metrics)
-- [🗂 Project layout](#-project-layout)
-- [🗺 Roadmap](#-roadmap)
-- [💻 Development](#-development)
-- [📄 License](#-license)
+- [Highlights](#highlights)
+- [Try it online](#try-it-online)
+- [Install](#install)
+- [Web app](#web-app)
+- [Desktop app](#desktop-app)
+- [CLI reference](#cli-reference)
+- [Configuration](#configuration)
+- [JavaScript API](#javascript-api)
+- [Metrics](#metrics)
+- [Project layout](#project-layout)
+- [Roadmap](#roadmap)
+- [Development](#development)
+- [License](#license)
 
-## ✨ Highlights
+## Highlights
 
 - **Complexity** — cyclomatic and Sonar-style cognitive complexity, plus nesting
   depth, computed per function from the TypeScript compiler's AST.
@@ -61,7 +61,7 @@ app** — nothing is uploaded anywhere.
 - **Browser-safe core** — no filesystem or process I/O in the engine, so the same
   code runs in Node, the browser and (soon) WASM.
 
-## 🚀 Try it online
+## Try it online
 
 No install, no upload — the analysis runs locally in your browser:
 
@@ -70,7 +70,7 @@ No install, no upload — the analysis runs locally in your browser:
 Pick a project folder and explore the dashboard, per-file details, UML diagrams and
 threshold settings.
 
-## 📦 Install
+## Install
 
 ### Prebuilt binaries
 
@@ -107,7 +107,7 @@ npm run bundle            # -> dist/meowanalyze.cjs (single self-contained file)
 npm run compile           # -> dist/meowanalyze(.exe) (standalone binary, needs Bun)
 ```
 
-## 🌐 Web app
+## Web app
 
 The web app is a **plain static site** with no backend — the analysis core runs
 entirely in the browser and nothing is uploaded.
@@ -149,7 +149,7 @@ every push to `main` / `master`. Every release also attaches
 banner into one file, so it works with no server at all — open it from disk, share
 a single file, or drop it into an `<iframe>`.
 
-## 🖥 Desktop app
+## Desktop app
 
 The desktop app is **Electron** and reuses the web UI unchanged: it loads the built
 web app in the renderer and, in the main process, opens a native folder dialog and
@@ -164,7 +164,7 @@ npm run dist:desktop    # package installers into apps/desktop/release
 Installers (NSIS / dmg / AppImage + deb) are built per-OS in CI and attached to
 every release.
 
-## 🛠 CLI reference
+## CLI reference
 
 ```
 meowanalyze [path] [options]
@@ -191,7 +191,7 @@ meowanalyze [path] [options]
 | `1` | Violations at or above `--fail-on`. |
 | `2` | Tool error (bad arguments, unreadable config, ...). |
 
-## ⚙️ Configuration
+## Configuration
 
 Create `meowanalyze.toml` in the analyzed root (or pass `--config`):
 
@@ -214,7 +214,7 @@ Defaults follow the common conventions (Sonar: cyclomatic 15, cognitive 15,
 params 7; ESLint `max-depth`: 4). Unset fields fall back to the per-language
 profile, so a new language can ship its own defaults without changing callers.
 
-## 🧩 JavaScript API
+## JavaScript API
 
 ### `analyzeSources` — browser-safe core
 
@@ -264,7 +264,7 @@ class MyLang implements LanguageAnalyzer {
 const registry = new LanguageRegistry().register(new MyLang());
 ```
 
-## 📐 Metrics
+## Metrics
 
 | Metric | Definition |
 | --- | --- |
@@ -281,7 +281,7 @@ const registry = new LanguageRegistry().register(new MyLang());
 | **Blank LOC** | Empty lines. `code + comment + blank === physical`. |
 | **Logical LOC** | Number of statement nodes in the AST. |
 
-## 🗂 Project layout
+## Project layout
 
 ```
 packages/
@@ -296,7 +296,7 @@ docs/assets/banner.svg
 The **core** is pure and platform-agnostic; hosts (CLI, web app, desktop app) only
 supply sources and render the report.
 
-## 🗺 Roadmap
+## Roadmap
 
 - [x] CLI with terminal + JSON output, thresholds and CI gating
 - [x] Browser-safe core decoupled from the filesystem
@@ -308,7 +308,7 @@ supply sources and render the report.
 - [x] One-click GitHub Pages deployment
 - [ ] More languages via tree-sitter
 
-## 💻 Development
+## Development
 
 ```bash
 npm install
@@ -323,10 +323,10 @@ npm run bundle            # single-file CJS bundle
 npm run compile           # standalone binary (requires Bun)
 ```
 
-## 📝 Changelog
+## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-## 📄 License
+## License
 
 [MIT](./LICENSE) © MeowAnalyze contributors

@@ -28,23 +28,23 @@ MeowAnalyze 读取一个 TypeScript / JavaScript 项目,给出最影响维护成
 核心同时驱动 **CLI**、**完全在浏览器内运行的 Web 应用** 和 **Electron 桌面应用** ——
 任何代码都不会上传。
 
-## 📑 目录
+## 目录
 
-- [✨ 特性亮点](#-特性亮点)
-- [🚀 在线体验](#-在线体验)
-- [📦 安装](#-安装)
-- [🌐 Web 应用](#-web-应用)
-- [🖥 桌面应用](#-桌面应用)
-- [🛠 CLI 参考](#-cli-参考)
-- [⚙️ 配置](#️-配置)
-- [🧩 JavaScript API](#-javascript-api)
-- [📐 指标](#-指标)
-- [🗂 项目结构](#-项目结构)
-- [🗺 路线图](#-路线图)
-- [💻 开发](#-开发)
-- [📄 许可证](#-许可证)
+- [特性亮点](#特性亮点)
+- [在线体验](#在线体验)
+- [安装](#安装)
+- [Web 应用](#web-应用)
+- [桌面应用](#桌面应用)
+- [CLI 参考](#cli-参考)
+- [配置](#配置)
+- [JavaScript API](#javascript-api)
+- [指标](#指标)
+- [项目结构](#项目结构)
+- [路线图](#路线图)
+- [开发](#开发)
+- [许可证](#许可证)
 
-## ✨ 特性亮点
+## 特性亮点
 
 - **复杂度** —— 函数级圈复杂度与 Sonar 风格认知复杂度,以及嵌套深度,全部基于
   TypeScript 编译器的 AST 计算。
@@ -60,7 +60,7 @@ MeowAnalyze 读取一个 TypeScript / JavaScript 项目,给出最影响维护成
 - **浏览器安全的分析核心** —— 引擎不做任何文件系统或进程 I/O,同一份代码可运行在
   Node、浏览器(以及未来的 WASM)中。
 
-## 🚀 在线体验
+## 在线体验
 
 无需安装、无需上传 —— 分析完全在浏览器本地运行:
 
@@ -68,7 +68,7 @@ MeowAnalyze 读取一个 TypeScript / JavaScript 项目,给出最影响维护成
 
 选择一个项目文件夹,即可浏览数据大屏、文件详情、UML 图表与阈值设置。
 
-## 📦 安装
+## 安装
 
 ### 预编译二进制
 
@@ -104,7 +104,7 @@ npm run bundle            # -> dist/meowanalyze.cjs(单文件、自包含)
 npm run compile           # -> dist/meowanalyze(.exe)(独立二进制,需要 Bun)
 ```
 
-## 🌐 Web 应用
+## Web 应用
 
 Web 应用是一个**纯静态站点,没有后端** —— 分析核心完全在浏览器内运行,代码不会上传。
 
@@ -139,7 +139,7 @@ Netlify、Vercel 或任意 Web 服务器即可。本仓库自带一个
 **内嵌 / 离线**:`meowanalyze-web.html` 把全部 JS、CSS 和 banner 内联成一个文件,
 无需服务器 —— 可直接从本地打开、单文件分享,或放进 `<iframe>`。
 
-## 🖥 桌面应用
+## 桌面应用
 
 桌面应用基于 **Electron**,原样复用 Web UI:渲染进程加载构建好的 Web 应用,主进程弹出
 原生文件夹对话框并直接读取文件(不走 CLI 子进程)。
@@ -152,7 +152,7 @@ npm run dist:desktop    # 打包安装包到 apps/desktop/release
 
 安装包(NSIS / dmg / AppImage + deb)由 CI 按平台构建,并附带在每次发版中。
 
-## 🛠 CLI 参考
+## CLI 参考
 
 ```
 meowanalyze [path] [options]
@@ -179,7 +179,7 @@ meowanalyze [path] [options]
 | `1` | 存在达到或超过 `--fail-on` 级别的违规。 |
 | `2` | 工具错误(参数错误、配置不可读等)。 |
 
-## ⚙️ 配置
+## 配置
 
 在被分析的根目录创建 `meowanalyze.toml`(或用 `--config` 指定):
 
@@ -201,7 +201,7 @@ max_file_size = 2097152
 默认值沿用业界惯例(Sonar:圈复杂度 15、认知复杂度 15、参数 7;ESLint `max-depth`:4)。
 未设置的字段会回退到**按语言**的默认配置,新语言可以自带一套默认值而不影响调用方。
 
-## 🧩 JavaScript API
+## JavaScript API
 
 ### `analyzeSources` —— 浏览器安全核心
 
@@ -249,7 +249,7 @@ class MyLang implements LanguageAnalyzer {
 const registry = new LanguageRegistry().register(new MyLang());
 ```
 
-## 📐 指标
+## 指标
 
 | 指标 | 定义 |
 | --- | --- |
@@ -266,7 +266,7 @@ const registry = new LanguageRegistry().register(new MyLang());
 | **空行** | 不含任何 token 的空白行。`代码 + 注释 + 空行 === 物理`。 |
 | **逻辑行** | AST 中语句节点的数量。 |
 
-## 🗂 项目结构
+## 项目结构
 
 ```
 packages/
@@ -280,7 +280,7 @@ docs/assets/banner.svg
 
 **核心**是纯的、与平台无关;宿主(CLI、Web、桌面)只负责提供源码并渲染报告。
 
-## 🗺 路线图
+## 路线图
 
 - [x] CLI:终端 + JSON 输出、阈值与 CI 门禁
 - [x] 与文件系统解耦的浏览器安全核心
@@ -292,7 +292,7 @@ docs/assets/banner.svg
 - [x] 一键部署到 GitHub Pages
 - [ ] 通过 tree-sitter 支持更多语言
 
-## 💻 开发
+## 开发
 
 ```bash
 npm install
@@ -307,10 +307,10 @@ npm run bundle            # 单文件 CJS 打包
 npm run compile           # 独立二进制(需要 Bun)
 ```
 
-## 📝 更新日志
+## 更新日志
 
 见 [CHANGELOG.md](./CHANGELOG.md)。
 
-## 📄 许可证
+## 许可证
 
 [MIT](./LICENSE) © MeowAnalyze contributors
