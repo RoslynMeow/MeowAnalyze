@@ -68,6 +68,12 @@ describe("functions and complexity", () => {
     expect(fn(report, "classify").cognitive).toBe(6);
   });
 
+  it("counts code lines per function", () => {
+    expect(fn(report, "abs").loc).toBe(1); // one-line arrow
+    expect(fn(report, "add").loc).toBe(3); // signature, body, closing brace
+    expect(fn(report, "abs").maintainability).toBeGreaterThan(0);
+  });
+
   it("computes Halstead metrics and a maintainability index", () => {
     const add = fn(report, "add");
     expect(add.halstead.volume).toBeGreaterThan(0);
@@ -134,6 +140,7 @@ describe("lines of code", () => {  it("splits code / comment / blank / logical",
       "  return a;",
       "}",
     ].join("\n");
-    expect(fn(analyzeSource(source), "f").loc).toBe(3);
+    // Lines 1 (declaration), 4 (const), 6 (return) and 7 (`}`) are code.
+    expect(fn(analyzeSource(source), "f").loc).toBe(4);
   });
 });

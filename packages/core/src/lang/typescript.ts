@@ -196,8 +196,9 @@ function markLines(
   end: number,
   sf: ts.SourceFile,
 ): void {
-  const first = sf.getLineAndCharacterOfPosition(start).line;
-  const last = sf.getLineAndCharacterOfPosition(Math.max(start, end - 1)).line;
+  // Store 1-based lines so the set lines up with `Range` (also 1-based).
+  const first = sf.getLineAndCharacterOfPosition(start).line + 1;
+  const last = sf.getLineAndCharacterOfPosition(Math.max(start, end - 1)).line + 1;
   for (let line = first; line <= last; line++) target.add(line);
 }
 
