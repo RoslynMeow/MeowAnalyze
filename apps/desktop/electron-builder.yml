@@ -1,0 +1,23 @@
+appId: com.meowanalyze.app
+productName: MeowAnalyze
+directories:
+  output: release
+files:
+  - dist-electron/**
+  - dist-web/**
+  - package.json
+win:
+  target:
+    - nsis
+  artifactName: meowanalyze-desktop-windows-${version}.${ext}
+mac:
+  target:
+    - dmg
+  category: public.app-category.developer-tools
+  artifactName: meowanalyze-desktop-macos-${version}.${ext}
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+  artifactName: meowanalyze-desktop-linux-${version}.${ext}

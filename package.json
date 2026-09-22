@@ -1,50 +1,37 @@
 {
   "name": "meowanalyze",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A full-featured static code analyzer: language detection, cyclomatic complexity, nesting depth and more.",
+  "private": true,
   "type": "module",
-  "bin": {
-    "meowanalyze": "dist/cli.js"
-  },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist"
+  "workspaces": [
+    "packages/*",
+    "apps/*"
   ],
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsx src/cli.ts",
-    "start": "node dist/cli.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json && npm run typecheck --workspace @meowanalyze/web && npm run typecheck --workspace @meowanalyze/desktop",
     "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "keywords": [
-    "static-analysis",
-    "cyclomatic-complexity",
-    "code-metrics",
-    "cli"
-  ],
-  "license": "MIT",
-  "dependencies": {
-    "commander": "^12.1.0",
-    "ignore": "^7.0.9",
-    "picocolors": "^1.1.1",
-    "smol-toml": "^1.8.0",
-    "typescript": "^5.7.2"
+    "test:watch": "vitest",
+    "build": "npm run build --workspace @meowanalyze/core",
+    "build:web": "npm run build --workspace @meowanalyze/web",
+    "build:web:single": "npm run build:single --workspace @meowanalyze/web",
+    "build:desktop": "npm run build:web && npm run build --workspace @meowanalyze/desktop",
+    "dist:desktop": "npm run build:desktop && npm run dist --workspace @meowanalyze/desktop",
+    "start:desktop": "npm run start --workspace @meowanalyze/desktop",
+    "dev": "tsx packages/cli/src/cli.ts",
+    "dev:web": "npm run dev --workspace @meowanalyze/web",
+    "bundle": "node scripts/bundle.mjs",
+    "compile": "bun build packages/cli/src/cli.ts --compile --outfile dist/meowanalyze"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
+    "bun": "^1.4.2",
+    "esbuild": "^0.28.2",
     "tsx": "^4.23.13",
+    "typescript": "^5.7.2",
     "vitest": "^5.0.1"
   }
 }

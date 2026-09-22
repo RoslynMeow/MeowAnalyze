@@ -1,0 +1,158 @@
+name: Release
+
+# Releases are driven by the version in package.json, not by manual tags:
+# pushing to main only publishes when that version has no GitHub Release yet.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      publish: ${{ steps.check.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: read
+        name: Read package.json version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: check
+        name: Check whether this version was already released
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.read.outputs.version }}" >/dev/null 2>&1; then
+            echo "Release v${{ steps.read.outputs.version }} already exists; skipping."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New version v${{ steps.read.outputs.version }}; will publish."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  test:
+    needs: version
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  cli:
+    needs: [version, test]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: npm ci
+      - name: Cross-compile CLI binaries
+        run: |
+          bun build packages/cli/src/cli.ts --compile --target=bun-linux-x64    --outfile dist/meowanalyze-linux-x64
+          bun build packages/cli/src/cli.ts --compile --target=bun-linux-arm64  --outfile dist/meowanalyze-linux-arm64
+          bun build packages/cli/src/cli.ts --compile --target=bun-darwin-x64   --outfile dist/meowanalyze-darwin-x64
+          bun build packages/cli/src/cli.ts --compile --target=bun-darwin-arm64 --outfile dist/meowanalyze-darwin-arm64
+          bun build packages/cli/src/cli.ts --compile --target=bun-windows-x64 --outfile dist/meowanalyze-windows-x64.exe
+      - name: Smoke test (native target)
+        run: ./dist/meowanalyze-linux-x64 packages/core/tests/fixtures -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-binaries
+          path: dist/meowanalyze-*
+          if-no-files-found: error
+
+  web:
+    needs: [version, test]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build static web app
+        run: npm run build:web
+      - name: Build single-file web app
+        run: npm run build:web:single
+      - name: Package web artifacts
+        run: |
+          cd apps/web/dist
+          zip -r "$GITHUB_WORKSPACE/meowanalyze-web.zip" .
+          cp "$GITHUB_WORKSPACE/apps/web/dist-single/index.html" "$GITHUB_WORKSPACE/meowanalyze-web.html"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: |
+            meowanalyze-web.zip
+            meowanalyze-web.html
+          if-no-files-found: error
+
+  desktop:
+    needs: [version, test]
+    if: needs.version.outputs.publish == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build web + desktop
+        run: npm run build:desktop
+      - name: Package desktop app
+        run: npm run dist --workspace @meowanalyze/desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
+          if-no-files-found: error
+
+  release:
+    needs: [version, cli, web, desktop]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
+          name: v${{ needs.version.outputs.version }}
+          files: artifacts/*
+          generate_release_notes: true

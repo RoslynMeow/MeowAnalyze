@@ -1,0 +1,21 @@
+{
+  "name": "@meowanalyze/cli",
+  "version": "1.0.0",
+  "description": "MeowAnalyze command line interface.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "meowanalyze": "./dist/meowanalyze.cjs"
+  },
+  "scripts": {
+    "start": "node dist/meowanalyze.cjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@meowanalyze/core": "*",
+    "commander": "^12.1.0",
+    "ignore": "^7.0.9",
+    "picocolors": "^1.1.1",
+    "smol-toml": "^1.8.0"
+  }
+}
