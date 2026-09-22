@@ -42,6 +42,7 @@ export const DEFAULT_THRESHOLDS_BY_LANGUAGE: Readonly<Record<LanguageId, Thresho
   javascript: DEFAULT_THRESHOLDS,
   c: DEFAULT_THRESHOLDS,
   cpp: DEFAULT_THRESHOLDS,
+  python: DEFAULT_THRESHOLDS,
 };
 
 /** Defaults for a language, falling back to the global profile. */

@@ -1,5 +1,7 @@
 import type { LanguageAnalyzer } from "./analyzer.js";
 import { TreeSitterAnalyzer } from "./tree-sitter/analyzer.js";
+import { C_CPP_PROFILE } from "./tree-sitter/c-profile.js";
+import { PYTHON_PROFILE } from "./tree-sitter/python-profile.js";
 import { loadAllGrammars } from "./tree-sitter/runtime.js";
 import { TypeScriptAnalyzer } from "./typescript.js";
 
@@ -27,19 +29,19 @@ export class LanguageRegistry {
 }
 
 /** C is registered before C++, so `.h` headers resolve to C by default. */
-const C_ANALYZER = new TreeSitterAnalyzer("c", "c", [".c", ".h"]);
-const CPP_ANALYZER = new TreeSitterAnalyzer("cpp", "cpp", [
-  ".cc",
-  ".cpp",
-  ".cxx",
-  ".c++",
-  ".hpp",
-  ".hh",
-  ".hxx",
-  ".ipp",
-  ".tpp",
-  ".inl",
-]);
+const C_ANALYZER = new TreeSitterAnalyzer("c", "c", [".c", ".h"], C_CPP_PROFILE);
+const CPP_ANALYZER = new TreeSitterAnalyzer(
+  "cpp",
+  "cpp",
+  [".cc", ".cpp", ".cxx", ".c++", ".hpp", ".hh", ".hxx", ".ipp", ".tpp", ".inl"],
+  C_CPP_PROFILE,
+);
+const PYTHON_ANALYZER = new TreeSitterAnalyzer(
+  "python",
+  "python",
+  [".py", ".pyi"],
+  PYTHON_PROFILE,
+);
 
 /**
  * TypeScript / JavaScript only. Synchronous, so `analyzeSources` keeps working
@@ -58,5 +60,6 @@ export async function defaultRegistryWithLanguages(): Promise<LanguageRegistry> 
   return new LanguageRegistry()
     .register(new TypeScriptAnalyzer())
     .register(C_ANALYZER)
-    .register(CPP_ANALYZER);
+    .register(CPP_ANALYZER)
+    .register(PYTHON_ANALYZER);
 }

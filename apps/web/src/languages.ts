@@ -1,4 +1,11 @@
-import { siC, siCplusplus, siJavascript, siTypescript, type SimpleIcon } from "simple-icons";
+import {
+  siC,
+  siCplusplus,
+  siJavascript,
+  siPython,
+  siTypescript,
+  type SimpleIcon,
+} from "simple-icons";
 
 export interface SupportedLanguage {
   id: string;
@@ -12,6 +19,7 @@ export const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = [
   { id: "javascript", name: "JavaScript", icon: siJavascript },
   { id: "c", name: "C", icon: siC },
   { id: "cpp", name: "C++", icon: siCplusplus },
+  { id: "python", name: "Python", icon: siPython },
 ];
 
 const SVG_NS = "http://www.w3.org/2000/svg";

@@ -17,6 +17,7 @@ const WASM = {
   RUNTIME: "web-tree-sitter/tree-sitter.wasm",
   C: "tree-sitter-wasms/out/tree-sitter-c.wasm",
   CPP: "tree-sitter-wasms/out/tree-sitter-cpp.wasm",
+  PYTHON: "tree-sitter-wasms/out/tree-sitter-python.wasm",
 };
 
 let out =
