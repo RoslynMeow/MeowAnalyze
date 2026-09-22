@@ -20,4 +20,5 @@ linux:
     - AppImage
     - deb
   category: Development
+  maintainer: MeowAnalyze contributors <RoslynMeow@users.noreply.github.com>
   artifactName: meowanalyze-desktop-linux-${version}.${ext}
