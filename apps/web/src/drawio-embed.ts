@@ -1,6 +1,9 @@
 const EMBED_ORIGIN = "https://embed.diagrams.net";
 // pwa=0 disables the service worker (a common source of embed errors).
-const EMBED_URL = `${EMBED_ORIGIN}/?embed=1&ui=atlas&spin=1&proto=json&libraries=1&noSaveBtn=1&noExitBtn=1&modified=0&pwa=0`;
+// `libraries` is intentionally left off: we only use the core UML shapes, which
+// the load message already pulls in via `libs: "uml"`, so the shape-library
+// panel (and its extra payload) is not needed.
+const EMBED_URL = `${EMBED_ORIGIN}/?embed=1&ui=atlas&spin=1&proto=json&noSaveBtn=1&noExitBtn=1&modified=0&pwa=0`;
 
 import type { LayoutSpec } from "./drawio.js";
 
