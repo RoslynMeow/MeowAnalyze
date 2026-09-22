@@ -497,7 +497,7 @@ function fileDistribution(
         onClick: () => openDrilldown(languageSpec, { onJump: handlers.onJump }),
       });
       chip.type = "button";
-      if (language) chip.append(brandIcon(language.icon, 14));
+      if (language?.icon) chip.append(brandIcon(language.icon, 14));
       chip.append(
         el("span", { class: "lang-chip__name", text: language?.name ?? id }),
         el("span", { class: "lang-chip__count", text: String(count) }),

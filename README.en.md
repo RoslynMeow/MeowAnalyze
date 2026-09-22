@@ -62,6 +62,18 @@ and an **Electron desktop app** — nothing is uploaded anywhere.
 - **Browser-safe core** — no filesystem or process I/O in the engine, so the same
   code runs in Node, the browser and (soon) WASM.
 
+## Languages
+
+TypeScript / JavaScript are parsed with the TypeScript compiler; every other
+language uses tree-sitter (WASM). The grammars a project needs are loaded on
+demand and bundled into every target, so nothing is fetched at runtime.
+
+| Tier | Languages |
+| --- | --- |
+| **Tuned** — dedicated rules, all metrics trustworthy | TypeScript, JavaScript, C, C++, Python, Java, C# |
+| **Basic** — generic tree-sitter rules (best effort; complexity / functions / lines work, but Halstead, cognitive complexity and class members may be incomplete) | Go, Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua, Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+ |
+| **Files / LOC only** — contributes files, code lines and language share | HTML, CSS, JSON, TOML, Vue, ERB, SystemRDL |
+
 ## Try it online
 
 No install, no upload — the analysis runs locally in your browser:
@@ -308,8 +320,8 @@ supply sources and render the report.
 - [x] Cognitive complexity, Halstead metrics and a maintainability index
 - [x] UML diagrams (draw.io) and an OOP structure model
 - [x] One-click GitHub Pages deployment
-- [x] C / C++, Python, Java and C# support (tree-sitter WASM, bundled into every target)
-- [ ] More languages via tree-sitter (Go, Rust, Ruby, PHP, ...)
+- [x] 30+ languages via tree-sitter WASM, loaded on demand and bundled into every target
+- [ ] Tune the generic (“basic”) language profiles
 
 ## Development
 

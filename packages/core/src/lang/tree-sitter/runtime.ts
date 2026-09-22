@@ -1,35 +1,28 @@
 /**
- * Lazy tree-sitter runtime. The runtime and grammar wasm are embedded as
- * base64(gzip) (see `scripts/embed-grammars.mjs`) so every build target — web,
- * desktop, CLI single-file and standalone binaries — ships them with no external
- * files to fetch.
+ * On-demand tree-sitter runtime. The runtime and grammar wasm are embedded as
+ * base64(gzip) (see `scripts/embed-grammars.mjs`) in a module that is imported
+ * dynamically, so bundlers split it into its own chunk: TS/JS-only projects
+ * never download it, and only the grammars a project actually uses are
+ * decompressed and instantiated.
  *
  * `Parser.init` / `Language.load` are async, but once a language is loaded
- * `parser.parse()` is synchronous. Hosts therefore call `loadLanguage()` before
- * `analyzeSources`, keeping the analysis engine itself synchronous.
+ * `parser.parse()` is synchronous. Hosts load the grammars a project needs
+ * before calling `analyzeSources`, which keeps the analysis engine synchronous.
  */
 import Parser from "web-tree-sitter";
-import {
-  C_WASM_GZIP_BASE64,
-  CPP_WASM_GZIP_BASE64,
-  CSHARP_WASM_GZIP_BASE64,
-  JAVA_WASM_GZIP_BASE64,
-  PYTHON_WASM_GZIP_BASE64,
-  RUNTIME_WASM_GZIP_BASE64,
-} from "./grammars.generated.js";
 
-export type TreeSitterGrammar = "c" | "cpp" | "python" | "java" | "csharp";
+export type TreeSitterGrammar = string;
 
-const GRAMMAR_BASE64: Record<TreeSitterGrammar, string> = {
-  c: C_WASM_GZIP_BASE64,
-  cpp: CPP_WASM_GZIP_BASE64,
-  python: PYTHON_WASM_GZIP_BASE64,
-  java: JAVA_WASM_GZIP_BASE64,
-  csharp: CSHARP_WASM_GZIP_BASE64,
-};
+type GrammarModule = typeof import("./grammars.generated.js");
 
-const loaded = new Map<TreeSitterGrammar, Parser.Language>();
+let modulePromise: Promise<GrammarModule> | undefined;
+const loaded = new Map<string, Parser.Language>();
 let initPromise: Promise<void> | undefined;
+
+function loadModule(): Promise<GrammarModule> {
+  modulePromise ??= import("./grammars.generated.js");
+  return modulePromise;
+}
 
 async function inflate(base64: string): Promise<Uint8Array> {
   const binary = atob(base64);
@@ -41,9 +34,10 @@ async function inflate(base64: string): Promise<Uint8Array> {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
-function ensureInit(): Promise<void> {
+async function ensureInit(): Promise<void> {
   if (!initPromise) {
     initPromise = (async () => {
+      const { RUNTIME_WASM_GZIP_BASE64 } = await loadModule();
       await Parser.init({ wasmBinary: await inflate(RUNTIME_WASM_GZIP_BASE64) });
     })();
   }
@@ -51,29 +45,19 @@ function ensureInit(): Promise<void> {
 }
 
 /** Load (and cache) a grammar. Safe to call repeatedly. */
-export async function loadGrammar(
-  grammar: TreeSitterGrammar,
-): Promise<Parser.Language> {
+export async function loadGrammar(grammar: TreeSitterGrammar): Promise<Parser.Language> {
   const cached = loaded.get(grammar);
   if (cached) return cached;
   await ensureInit();
-  const language = await Parser.Language.load(await inflate(GRAMMAR_BASE64[grammar]));
+  const { GRAMMARS } = await loadModule();
+  const base64 = GRAMMARS[grammar];
+  if (!base64) throw new Error(`no embedded grammar for "${grammar}"`);
+  const language = await Parser.Language.load(await inflate(base64));
   loaded.set(grammar, language);
   return language;
 }
 
 /** The grammar if it has already been loaded, otherwise undefined (sync). */
-export function loadedGrammar(
-  grammar: TreeSitterGrammar,
-): Parser.Language | undefined {
+export function loadedGrammar(grammar: TreeSitterGrammar): Parser.Language | undefined {
   return loaded.get(grammar);
-}
-
-/** Load every grammar the core knows about. */
-export async function loadAllGrammars(): Promise<void> {
-  await Promise.all(
-    (Object.keys(GRAMMAR_BASE64) as TreeSitterGrammar[]).map((grammar) =>
-      loadGrammar(grammar),
-    ),
-  );
 }

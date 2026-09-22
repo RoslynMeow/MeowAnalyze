@@ -61,6 +61,17 @@ MeowAnalyze 读取一个
 - **浏览器安全的分析核心** —— 引擎不做任何文件系统或进程 I/O,同一份代码可运行在
   Node、浏览器(以及未来的 WASM)中。
 
+## 支持的语言
+
+TypeScript / JavaScript 走 TypeScript 编译器;其余语言走 tree-sitter(WASM)。项目用到的
+语法按需加载,并内联打包进所有目标,运行时无需联网获取。
+
+| 级别 | 语言 |
+| --- | --- |
+| **精准** —— 专门规则,所有指标可信 | TypeScript、JavaScript、C、C++、Python、Java、C# |
+| **基础** —— 通用 tree-sitter 规则(尽力而为;复杂度/函数/行数可用,Halstead、认知复杂度、类成员可能不完整) | Go、Rust、Ruby、PHP、Kotlin、Swift、Scala、Lua、Zig、Solidity、Objective-C、Shell、Elixir、Emacs Lisp、OCaml、ReScript、TLA+ |
+| **仅文件 / 代码行** —— 只贡献文件数、代码行与语言占比 | HTML、CSS、JSON、TOML、Vue、ERB、SystemRDL |
+
 ## 在线体验
 
 无需安装、无需上传 —— 分析完全在浏览器本地运行:
@@ -292,8 +303,8 @@ docs/assets/banner.svg
 - [x] 认知复杂度、Halstead 指标与可维护性指数
 - [x] UML 图表(draw.io)与 OOP 结构模型
 - [x] 一键部署到 GitHub Pages
-- [x] C / C++、Python、Java 与 C# 支持(tree-sitter WASM,内联打包进所有目标)
-- [ ] 通过 tree-sitter 支持更多语言(Go / Rust / Ruby / PHP …)
+- [x] 30+ 语言(tree-sitter WASM,按需加载并内联打包进所有目标)
+- [ ] 打磨「基础」级的通用语言画像
 
 ## 开发
 

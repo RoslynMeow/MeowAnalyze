@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and **Python** (`.py` / `.pyi`), **Java** (`.java`) and **C#** (`.cs`) are
   supported alongside C/C++ with the same metrics, thresholds, dashboard and
   diagrams.
+- Core: **many more languages** — Go, Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua,
+  Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+,
+  plus files/LOC for HTML, CSS, JSON, TOML, Vue, ERB and SystemRDL. Non-tuned
+  languages use a generic profile and are documented as “basic”.
+- Core: grammars are now loaded **on demand** (only the ones a project uses) from
+  a dynamically-imported, bundled chunk, so TS/JS-only projects download no wasm.
+  (dart, elm, ql and yaml grammars are omitted: their ABI is incompatible with
+  the pinned runtime.)
 
 - Web: the Diagrams tab embeds a **self-hosted draw.io** instead of
   `embed.diagrams.net`, so it no longer depends on a third party. The editor is

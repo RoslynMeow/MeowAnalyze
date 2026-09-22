@@ -377,6 +377,15 @@ const zh: Strings = {
           "文件代码行数 > file_loc",
         ],
       },
+      {
+        title: "语言支持",
+        body: "分析器分两级:「精准」有专门规则,所有指标可信;「基础」用通用 tree-sitter 规则尽力而为,复杂度/函数/行数可用,但 Halstead、认知复杂度、类成员等可能不完整。没有函数的语言只能统计文件数、代码行与语言占比。",
+        items: [
+          "精准:TypeScript / JavaScript、C / C++、Python、Java、C#",
+          "基础:Go、Rust、Ruby、PHP、Kotlin、Swift、Scala、Lua、Zig、Solidity、Objective-C、Shell、Elixir、Emacs Lisp、OCaml、ReScript、TLA+",
+          "仅文件 / 代码行 / 语言占比:HTML、CSS、JSON、TOML、Vue、ERB、SystemRDL",
+        ],
+      },
     ],
   },
   settings: {
@@ -684,6 +693,15 @@ const en: Strings = {
           "parameters > params",
           "function code lines > function_loc",
           "file code lines > file_loc",
+        ],
+      },
+      {
+        title: "Language support",
+        body: "Two tiers. “Tuned” languages have dedicated rules and trustworthy metrics; “basic” languages use the generic tree-sitter rules (best effort): complexity, functions and lines work, but Halstead, cognitive complexity and class members may be incomplete. Languages without functions only contribute files, code lines and language share.",
+        items: [
+          "Tuned: TypeScript / JavaScript, C / C++, Python, Java, C#",
+          "Basic: Go, Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua, Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+",
+          "Files / code lines / language share only: HTML, CSS, JSON, TOML, Vue, ERB, SystemRDL",
         ],
       },
     ],

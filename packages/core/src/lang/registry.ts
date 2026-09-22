@@ -1,10 +1,7 @@
 import type { LanguageAnalyzer } from "./analyzer.js";
 import { TreeSitterAnalyzer } from "./tree-sitter/analyzer.js";
-import { C_CPP_PROFILE } from "./tree-sitter/c-profile.js";
-import { CSHARP_PROFILE } from "./tree-sitter/csharp-profile.js";
-import { JAVA_PROFILE } from "./tree-sitter/java-profile.js";
-import { PYTHON_PROFILE } from "./tree-sitter/python-profile.js";
-import { loadAllGrammars } from "./tree-sitter/runtime.js";
+import { TREE_SITTER_LANGUAGES } from "./tree-sitter/languages.js";
+import { loadGrammar } from "./tree-sitter/runtime.js";
 import { TypeScriptAnalyzer } from "./typescript.js";
 
 /**
@@ -30,27 +27,15 @@ export class LanguageRegistry {
   }
 }
 
-/** C is registered before C++, so `.h` headers resolve to C by default. */
-const C_ANALYZER = new TreeSitterAnalyzer("c", "c", [".c", ".h"], C_CPP_PROFILE);
-const CPP_ANALYZER = new TreeSitterAnalyzer(
-  "cpp",
-  "cpp",
-  [".cc", ".cpp", ".cxx", ".c++", ".hpp", ".hh", ".hxx", ".ipp", ".tpp", ".inl"],
-  C_CPP_PROFILE,
-);
-const PYTHON_ANALYZER = new TreeSitterAnalyzer(
-  "python",
-  "python",
-  [".py", ".pyi"],
-  PYTHON_PROFILE,
-);
-const JAVA_ANALYZER = new TreeSitterAnalyzer("java", "java", [".java"], JAVA_PROFILE);
-const CSHARP_ANALYZER = new TreeSitterAnalyzer(
-  "csharp",
-  "csharp",
-  [".cs"],
-  CSHARP_PROFILE,
-);
+const TREE_SITTER_ANALYZERS = TREE_SITTER_LANGUAGES.map((language) => ({
+  grammar: language.grammar,
+  analyzer: new TreeSitterAnalyzer(
+    language.id,
+    language.grammar,
+    language.extensions,
+    language.profile,
+  ),
+}));
 
 /**
  * TypeScript / JavaScript only. Synchronous, so `analyzeSources` keeps working
@@ -61,16 +46,20 @@ export function defaultRegistry(): LanguageRegistry {
 }
 
 /**
- * Every language, with the tree-sitter grammars loaded. Hosts (CLI, web,
- * desktop) await this once and pass it to `analyzeSources`.
+ * Build a registry for the given files, loading only the grammars they need.
+ * A TS/JS-only project loads no wasm at all, and a project with several
+ * languages only pays for those. Grammars are cached, so repeated calls are
+ * cheap. Hosts (CLI, web, desktop) await this before `analyzeSources`.
  */
-export async function defaultRegistryWithLanguages(): Promise<LanguageRegistry> {
-  await loadAllGrammars();
-  return new LanguageRegistry()
-    .register(new TypeScriptAnalyzer())
-    .register(C_ANALYZER)
-    .register(CPP_ANALYZER)
-    .register(PYTHON_ANALYZER)
-    .register(JAVA_ANALYZER)
-    .register(CSHARP_ANALYZER);
+export async function registryForPaths(
+  paths: readonly string[],
+): Promise<LanguageRegistry> {
+  const needed = TREE_SITTER_ANALYZERS.filter(({ analyzer }) =>
+    paths.some((path) => analyzer.matches(path, "")),
+  );
+  await Promise.all(needed.map(({ grammar }) => loadGrammar(grammar)));
+
+  const registry = new LanguageRegistry().register(new TypeScriptAnalyzer());
+  for (const { analyzer } of needed) registry.register(analyzer);
+  return registry;
 }

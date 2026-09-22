@@ -17,7 +17,7 @@ export function renderLanding(root: HTMLElement, handlers: LandingHandlers): voi
       el(
         "span",
         { class: "lang-chip", title: language.name },
-        brandIcon(language.icon),
+        language.icon ? brandIcon(language.icon) : null,
         el("span", { class: "lang-chip__name", text: language.name }),
       ),
     ),

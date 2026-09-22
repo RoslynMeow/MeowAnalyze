@@ -31,13 +31,17 @@ export {
 export type { FileContext, LanguageAnalyzer } from "./lang/analyzer.js";
 export {
   defaultRegistry,
-  defaultRegistryWithLanguages,
+  registryForPaths,
   LanguageRegistry,
 } from "./lang/registry.js";
 export { TypeScriptAnalyzer } from "./lang/typescript.js";
 export {
-  loadAllGrammars,
   loadGrammar,
   type TreeSitterGrammar,
 } from "./lang/tree-sitter/runtime.js";
+export {
+  TREE_SITTER_LANGUAGES,
+  type SupportTier,
+  type TreeSitterLanguageDef,
+} from "./lang/tree-sitter/languages.js";
 export { TOOL_VERSION, toolVersion } from "./version.js";

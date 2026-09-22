@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
   analyzeSources,
-  defaultRegistryWithLanguages,
+  registryForPaths,
   type AnalysisReport,
   type LanguageRegistry,
 } from "../src/index.js";
@@ -9,7 +9,7 @@ import {
 let registry: LanguageRegistry;
 
 beforeAll(async () => {
-  registry = await defaultRegistryWithLanguages();
+  registry = await registryForPaths(["a.c", "b.cpp"]);
 });
 
 function analyze(path: string, content: string): AnalysisReport {
