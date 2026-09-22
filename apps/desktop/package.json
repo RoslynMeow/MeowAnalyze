@@ -1,6 +1,6 @@
 {
   "name": "@meowanalyze/desktop",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "MeowAnalyze desktop app (Electron) — reuses the web UI.",
   "private": true,
   "type": "module",

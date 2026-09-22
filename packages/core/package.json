@@ -1,6 +1,6 @@
 {
   "name": "@meowanalyze/core",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Browser-safe analysis core: language detection, cyclomatic complexity, nesting depth and more.",
   "type": "module",
   "main": "./dist/index.js",

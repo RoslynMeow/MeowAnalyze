@@ -1,6 +1,6 @@
 {
   "name": "meowanalyze",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A full-featured static code analyzer: language detection, cyclomatic complexity, nesting depth and more.",
   "private": true,
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@meowanalyze/web",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "MeowAnalyze web app: runs the analysis core entirely in the browser.",
   "type": "module",
   "private": true,

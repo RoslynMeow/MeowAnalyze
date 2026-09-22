@@ -7,30 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+
+- File map tab (nested treemap) — temporarily removed, to be re-added.
+- More languages via tree-sitter.
+
+## [1.0.0] - 2026-09-22
+
 ### Added
 
 - Core metrics: cognitive complexity (Sonar-style, nesting-weighted), Halstead
   metrics and a maintainability index (per function, per file and averaged), plus
   `TODO` / `FIXME` / `HACK` marker counts. Surfaced in the JSON report, the CLI
   and the web app. `FileMetrics` gains `halsteadDifficulty` and `halsteadEffort`.
+- Core: per-language default thresholds (`DEFAULT_THRESHOLDS_BY_LANGUAGE`,
+  `defaultThresholds()`, `resolveThresholds()`); `Config.thresholds` is now a
+  partial override merged over the language defaults.
+- OOP structure model: classes / interfaces / enums, imports and a static call
+  graph, resolved across files.
+- Web: UML diagrams (class, package, activity, sequence, state machine, ER,
+  communication) rendered with the embedded draw.io editor, with `.drawio`
+  download and SVG export.
+- Web: redesigned dashboard (数据大屏) — a maintainability hero (ECharts gauge +
+  marker / violation counters), a GitHub-style per-file heatmap coloured by
+  health, a “needs attention” ranking, and a code-line / function-kind
+  composition card. Remaining KPIs form a card wall; every card opens a
+  drill-down drawer. ECharts is lazy-loaded (code-split).
+- Web: the file-distribution header shows the project folder name, file count and
+  language chips; the file detail tab previews source and highlights a function.
+- Web: bilingual UI (Chinese by default) with an English/中文 switcher, and a
+  light/dark theme toggle (dark by default); both persisted in `localStorage`.
 - Desktop app (`@meowanalyze/desktop`): Electron, reusing the built web UI in the
   renderer. The main process opens a native folder dialog and reads files
   directly (no CLI subprocess); packaged as NSIS / dmg / AppImage + deb.
-- Web: bilingual UI (Chinese by default) with an English/中文 switcher, and a
-  light/dark theme toggle (dark by default); both persisted in `localStorage`.
-- Web: a left-hand tab sidebar with `#/dashboard` / `#/detail` hash routing, a
-  settings modal for thresholds, a home button and hidden scrollbars.
-- Web dashboard (数据大屏): 16 KPIs and charts — ordered distributions as bar
-  charts, parts-of-whole as donuts. Clicking a number or a slice opens a
-  drill-down drawer listing the underlying functions/files; clicking an entry
-  jumps to that file and highlights it. ECharts is lazy-loaded (code-split).
-- Web: the file detail tab lists files and previews source; clicking a function
-  scrolls to and highlights its lines.
+- CI: a GitHub Pages workflow that builds and deploys the web app on every push
+  to `main` / `master`.
+- Docs: bilingual README with Chinese as the default (`README.md`), English in
+  `README.en.md`.
 
-### Planned
+### Changed
 
-- File map tab (nested treemap) — temporarily removed, to be re-added.
-- More languages via tree-sitter.
+- Default thresholds now follow common conventions (Sonar: cyclomatic 15,
+  cognitive 15, params 7; ESLint `max-depth`: 4), and function / file length is
+  measured in **code lines** instead of physical lines. The maintainability
+  index uses the same line count.
 
 ## [0.1.0] - 2026-09-20
 
@@ -55,5 +75,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions: a CI workflow and a version-driven release workflow (no manual tags).
 - Bilingual documentation and a project banner.
 
-[Unreleased]: https://github.com/RoslynMeow/MeowAnalyze/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/RoslynMeow/MeowAnalyze/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v1.0.0
 [0.1.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v0.1.0
