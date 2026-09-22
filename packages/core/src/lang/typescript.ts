@@ -61,9 +61,9 @@ export class TypeScriptAnalyzer implements LanguageAnalyzer {
       scriptKind,
     );
 
-    const loc = measureLoc(ctx.source, sf, isJsx(scriptKind));
+    const { stats: loc, codeLines } = measureLoc(ctx.source, sf, isJsx(scriptKind));
     const markers = countMarkers(ctx.source, isJsx(scriptKind));
-    const functions = collectFunctions(sf, ctx.source, ctx.path);
+    const functions = collectFunctions(sf, ctx.source, ctx.path, codeLines);
 
     const metrics = {
       cyclomatic: distributionOf(functions.map((f) => f.cyclomatic)),
@@ -114,7 +114,13 @@ function isJsx(kind: ts.ScriptKind): boolean {
 /* Lines of code                                                       */
 /* ------------------------------------------------------------------ */
 
-function measureLoc(source: string, sf: ts.SourceFile, jsx: boolean): LocStats {
+interface LocResult {
+  stats: LocStats;
+  /** 1-based numbers of lines that contain at least one code token. */
+  codeLines: ReadonlySet<number>;
+}
+
+function measureLoc(source: string, sf: ts.SourceFile, jsx: boolean): LocResult {
   const physical = sf.getLineStarts().length;
   const scanner = createScanner(source, jsx);
 
@@ -139,12 +145,24 @@ function measureLoc(source: string, sf: ts.SourceFile, jsx: boolean): LocStats {
   }
 
   return {
-    physical,
-    code: codeLines.size,
-    comment,
-    blank: physical - codeLines.size - comment,
-    logical: countStatements(sf),
+    stats: {
+      physical,
+      code: codeLines.size,
+      comment,
+      blank: physical - codeLines.size - comment,
+      logical: countStatements(sf),
+    },
+    codeLines,
   };
+}
+
+/** Code lines (with a token) that fall inside a range. */
+function countCodeLines(codeLines: ReadonlySet<number>, range: Range): number {
+  let count = 0;
+  for (let line = range.start.line; line <= range.end.line; line++) {
+    if (codeLines.has(line)) count++;
+  }
+  return count;
 }
 
 function createScanner(source: string, jsx: boolean): ts.Scanner {
@@ -262,6 +280,7 @@ function collectFunctions(
   sf: ts.SourceFile,
   source: string,
   path: string,
+  codeLines: ReadonlySet<number>,
 ): FunctionReport[] {
   const out: FunctionReport[] = [];
   const visit = (node: ts.Node, owner: string | undefined): void => {
@@ -273,7 +292,7 @@ function collectFunctions(
       nextOwner = node.name.text;
     }
     if (isFunctionLike(node) && hasBody(node)) {
-      out.push(analyzeFunction(node, sf, source, path, nextOwner));
+      out.push(analyzeFunction(node, sf, source, path, nextOwner, codeLines));
     }
     node.forEachChild((child) => visit(child, nextOwner));
   };
@@ -287,10 +306,11 @@ function analyzeFunction(
   source: string,
   path: string,
   owner: string | undefined,
+  codeLines: ReadonlySet<number>,
 ): FunctionReport {
   const name = functionName(node);
   const range = rangeOf(node, sf);
-  const loc = range.end.line - range.start.line + 1;
+  const loc = countCodeLines(codeLines, range);
 
   let cyclomatic = 1;
   let maxNesting = 0;

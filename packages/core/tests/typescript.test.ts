@@ -123,4 +123,17 @@ describe("lines of code", () => {  it("splits code / comment / blank / logical",
       logical: 3,
     });
   });
+
+  it("counts a function's code lines, ignoring blanks and comments", () => {
+    const source = [
+      "function f() {",
+      "",
+      "  // just a comment",
+      "  const a = 1;",
+      "",
+      "  return a;",
+      "}",
+    ].join("\n");
+    expect(fn(analyzeSource(source), "f").loc).toBe(3);
+  });
 });

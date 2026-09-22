@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { analyzeSources, DEFAULT_CONFIG } from "../src/index.js";
+import {
+  analyzeSources,
+  DEFAULT_CONFIG,
+  DEFAULT_THRESHOLDS,
+  defaultThresholds,
+  resolveThresholds,
+} from "../src/index.js";
 
 const SIMPLE = `export function f(n: number) {
   if (n > 0 && n < 10) return n;
@@ -54,5 +60,21 @@ describe("analyzeSources (pure core, no filesystem)", () => {
       },
     });
     expect(report.summary.violations.warning).toBeGreaterThan(0);
+  });
+
+  it("ships Sonar-aligned defaults", () => {
+    expect(DEFAULT_THRESHOLDS.cyclomatic).toBe(15);
+    expect(DEFAULT_THRESHOLDS.params).toBe(7);
+    expect(DEFAULT_THRESHOLDS.functionLoc).toBe(100);
+  });
+
+  it("resolves per-language defaults under partial overrides", () => {
+    expect(defaultThresholds("typescript")).toBe(DEFAULT_THRESHOLDS);
+    expect(resolveThresholds("javascript", { params: 3 })).toMatchObject({
+      cyclomatic: 15,
+      params: 3,
+    });
+    // Unknown languages fall back to the global profile.
+    expect(resolveThresholds("rust").cyclomatic).toBe(15);
   });
 });

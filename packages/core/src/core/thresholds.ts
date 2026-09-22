@@ -63,11 +63,11 @@ export function applyThresholds(
   check(
     violations,
     "file-loc",
-    file.loc.physical,
+    file.loc.code,
     thresholds.fileLoc,
     fileRange(file),
     undefined,
-    `file is ${file.loc.physical} lines long (max ${thresholds.fileLoc})`,
+    `file is ${file.loc.code} code lines long (max ${thresholds.fileLoc})`,
   );
 
   return violations;

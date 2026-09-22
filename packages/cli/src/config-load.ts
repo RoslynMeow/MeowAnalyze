@@ -41,27 +41,27 @@ function mergeConfig(raw: Record<string, unknown>): Config {
   if (isRecord(thresholds)) {
     config.thresholds.cyclomatic = pickNumber(
       thresholds["cyclomatic"],
-      config.thresholds.cyclomatic,
+      DEFAULT_THRESHOLDS.cyclomatic,
     );
     config.thresholds.cognitive = pickNumber(
       thresholds["cognitive"],
-      config.thresholds.cognitive,
+      DEFAULT_THRESHOLDS.cognitive,
     );
     config.thresholds.nesting = pickNumber(
       thresholds["nesting"],
-      config.thresholds.nesting,
+      DEFAULT_THRESHOLDS.nesting,
     );
     config.thresholds.params = pickNumber(
       thresholds["params"],
-      config.thresholds.params,
+      DEFAULT_THRESHOLDS.params,
     );
     config.thresholds.functionLoc = pickNumber(
       thresholds["function_loc"],
-      config.thresholds.functionLoc,
+      DEFAULT_THRESHOLDS.functionLoc,
     );
     config.thresholds.fileLoc = pickNumber(
       thresholds["file_loc"],
-      config.thresholds.fileLoc,
+      DEFAULT_THRESHOLDS.fileLoc,
     );
   }
 
@@ -86,7 +86,7 @@ function mergeConfig(raw: Record<string, unknown>): Config {
 
 function cloneDefault(): Config {
   return {
-    thresholds: { ...DEFAULT_THRESHOLDS },
+    thresholds: {},
     respectGitignore: DEFAULT_CONFIG.respectGitignore,
     exclude: [...DEFAULT_CONFIG.exclude],
     maxFileSize: DEFAULT_CONFIG.maxFileSize,

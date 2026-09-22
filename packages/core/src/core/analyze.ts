@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG, type Config } from "../config/thresholds.js";
+import { DEFAULT_CONFIG, resolveThresholds, type Config } from "../config/thresholds.js";
 import { defaultRegistry, type LanguageRegistry } from "../lang/registry.js";
 import { mergeDistributions } from "../metrics/distribution.js";
 import {
@@ -73,7 +73,10 @@ export function analyzeSources(options: AnalyzeSourcesOptions): AnalysisReport {
         source,
         language: analyzer.id,
       });
-      report.violations = applyThresholds(report, config.thresholds);
+      report.violations = applyThresholds(
+        report,
+        resolveThresholds(report.language, config.thresholds),
+      );
       files.push(report);
     } catch (error) {
       diagnostics.push({

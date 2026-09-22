@@ -170,7 +170,7 @@ export interface FunctionReport {
   owner?: string;
   kind: FunctionKind;
   range: Range;
-  /** Physical lines spanned by the function. */
+  /** Code lines spanned by the function (lines that contain source tokens). */
   loc: number;
   params: number;
   cyclomatic: number;

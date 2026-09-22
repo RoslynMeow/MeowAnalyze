@@ -17,6 +17,9 @@ export { applyThresholds } from "./core/thresholds.js";
 export {
   DEFAULT_CONFIG,
   DEFAULT_THRESHOLDS,
+  DEFAULT_THRESHOLDS_BY_LANGUAGE,
+  defaultThresholds,
+  resolveThresholds,
   type Config,
   type Thresholds,
 } from "./config/thresholds.js";
