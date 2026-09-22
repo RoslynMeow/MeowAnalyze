@@ -46,6 +46,9 @@ describe("landing view", () => {
     expect(root.querySelectorAll("button.button")).toHaveLength(1);
     expect(root.querySelector("img")).toBeNull();
     expect(root.querySelector("textarea")).toBeNull();
+    // tuned / basic / files, separated by two rules.
+    expect(root.querySelectorAll(".landing__langs")).toHaveLength(3);
+    expect(root.querySelectorAll(".landing__sep")).toHaveLength(2);
   });
 });
 
