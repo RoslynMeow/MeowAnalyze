@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   analyzeSources,
   DEFAULT_CONFIG,
-  defaultRegistryWithLanguages,
+  registryForPaths,
   toolVersion,
   type AnalysisReport,
   type Config,
@@ -49,7 +49,8 @@ export async function analyze(
     }
   }
 
-  const registry = options.registry ?? (await defaultRegistryWithLanguages());
+  const registry =
+    options.registry ?? (await registryForPaths(sources.map((source) => source.path)));
 
   return analyzeSources({
     root,

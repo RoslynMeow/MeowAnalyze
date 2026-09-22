@@ -3,9 +3,8 @@ import {
   analyzeSources,
   DEFAULT_CONFIG,
   DEFAULT_THRESHOLDS,
-  defaultRegistryWithLanguages,
+  registryForPaths,
   type AnalysisReport,
-  type LanguageRegistry,
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
@@ -285,13 +284,6 @@ function jumpToItem(item: DrillItem): void {
 /* Analysis                                                            */
 /* ------------------------------------------------------------------ */
 
-/** The language registry (TS/JS + C/C++) is loaded once and reused. */
-let registryPromise: Promise<LanguageRegistry> | undefined;
-function languageRegistry(): Promise<LanguageRegistry> {
-  registryPromise ??= defaultRegistryWithLanguages();
-  return registryPromise;
-}
-
 async function handleFolder(): Promise<void> {
   try {
     const { root, sources } = await chooseFolder();
@@ -303,7 +295,8 @@ async function handleFolder(): Promise<void> {
 }
 
 async function runAnalysis(sources: SourceInput[], root: string): Promise<void> {
-  const registry = await languageRegistry();
+  // Only load the grammars this project actually needs (no wasm for TS/JS-only).
+  const registry = await registryForPaths(sources.map((source) => source.path));
   const report = analyzeSources({
     root,
     sources,
@@ -332,7 +325,9 @@ async function rerun(): Promise<void> {
     renderLandingView();
     return;
   }
-  const registry = await languageRegistry();
+  const registry = await registryForPaths(
+    state.sources.map((source) => source.path),
+  );
   state.report = analyzeSources({
     root: state.root,
     sources: state.sources,
