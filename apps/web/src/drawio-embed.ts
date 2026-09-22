@@ -1,11 +1,21 @@
-const EMBED_ORIGIN = "https://embed.diagrams.net";
+import type { LayoutSpec } from "./drawio.js";
+
 // pwa=0 disables the service worker (a common source of embed errors).
 // `libraries` is intentionally left off: we only use the core UML shapes, which
 // the load message already pulls in via `libs: "uml"`, so the shape-library
 // panel (and its extra payload) is not needed.
-const EMBED_URL = `${EMBED_ORIGIN}/?embed=1&ui=atlas&spin=1&proto=json&noSaveBtn=1&noExitBtn=1&modified=0&pwa=0`;
+const EMBED_PARAMS =
+  "embed=1&ui=atlas&spin=1&proto=json&noSaveBtn=1&noExitBtn=1&modified=0&pwa=0";
 
-import type { LayoutSpec } from "./drawio.js";
+/**
+ * The self-hosted draw.io editor lives next to the app (`/drawio/`), so the
+ * iframe loads from our own origin — no third-party request. Populate it with
+ * `npm run drawio` (see `scripts/fetch-drawio.mjs`).
+ */
+function embedUrl(): string {
+  const base = typeof document === "undefined" ? "http://localhost/" : document.baseURI;
+  return new URL(`drawio/index.html?${EMBED_PARAMS}`, base).href;
+}
 
 export interface LoadOptions {
   layout?: string | readonly LayoutSpec[];
@@ -25,7 +35,8 @@ export interface DrawioEmbed {
 }
 
 /**
- * Embed the draw.io editor in an iframe and drive it over the JSON protocol.
+ * Embed the self-hosted draw.io editor in an iframe and drive it over the JSON
+ * protocol.
  *
  * Messages are matched by `event.source === iframe.contentWindow` (enough when
  * posting to a specific window) and sent with a wildcard target origin,
@@ -98,7 +109,7 @@ export function createDrawioEmbed(
 
   const start = (): void => {
     ready = false;
-    iframe.src = EMBED_URL;
+    iframe.src = embedUrl();
   };
 
   window.addEventListener("message", onMessage);

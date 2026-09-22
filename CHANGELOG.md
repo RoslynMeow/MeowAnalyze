@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Web: the Diagrams tab embeds a **self-hosted draw.io** instead of
+  `embed.diagrams.net`, so it no longer depends on a third party. The editor is
+  fetched with `npm run drawio` into `apps/web/public/drawio` (gitignored,
+  ~114 MB after pruning unused integrations/viewer bundles); the Pages and
+  release workflows run it before building.
+
 - C and C++ support via `web-tree-sitter` (WASM). The runtime and grammars are
   embedded as `base64(gzip)` so the parsers bundle into every target — web,
   desktop, the CLI single-file bundle and the standalone binaries — with no

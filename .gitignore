@@ -7,3 +7,5 @@ release/
 *.log
 .DS_Store
 coverage/
+# Self-hosted draw.io, fetched on demand by scripts/fetch-drawio.mjs
+apps/web/public/drawio/

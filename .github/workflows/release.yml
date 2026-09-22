@@ -92,6 +92,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Fetch the self-hosted draw.io
+        run: npm run drawio
       - name: Build static web app
         run: npm run build:web
       - name: Build single-file web app
@@ -126,6 +128,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Fetch the self-hosted draw.io
+        run: npm run drawio
       - name: Build web + desktop
         run: npm run build:desktop
       - name: Package desktop app

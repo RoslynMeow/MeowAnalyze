@@ -122,8 +122,9 @@ npm run build:web:single   # 单文件 -> apps/web/dist-single/index.html
    认知复杂度、嵌套深度和 Halstead 体积 / 难度。点击任意卡片打开下钻抽屉;ECharts
    按需懒加载。
 2. **文件详情** —— 左侧文件列表 + 右侧源码预览;点击函数名定位并高亮对应行。
-3. **图表** —— UML 类图、包依赖图、活动图、时序图、状态机、ER 图和通信图,由内嵌的
-   draw.io 编辑器渲染(可下载 `.drawio`、导出 SVG)。
+3. **图表** —— UML 类图、包依赖图、活动图、时序图、状态机、ER 图和通信图,由**自托管的
+   draw.io** 渲染(不请求第三方;可下载 `.drawio`、导出 SVG)。构建前先跑一次
+   `npm run drawio` 拉取编辑器。
 4. **帮助** —— 每个指标的定义与公式,以 MathML 渲染。
 5. **设置** —— 阈值与首页显示哪些卡片,应用后即时重算。
 
@@ -304,6 +305,7 @@ npm run typecheck         # 类型检查全部包
 npm test                  # 单元测试(Vitest)
 npm run build             # 构建核心库
 npm run build:web         # 构建静态 Web 应用
+npm run drawio            # 拉取自托管的 draw.io 编辑器(图表页用)
 npm run bundle            # 单文件 CJS 打包
 npm run compile           # 独立二进制(需要 Bun)
 ```

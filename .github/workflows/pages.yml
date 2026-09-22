@@ -27,6 +27,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Fetch the self-hosted draw.io
+        run: npm run drawio
       - name: Build the static web app
         run: npm run build:web
       # NOTE: enable Pages once in Settings -> Pages -> Source: GitHub Actions.

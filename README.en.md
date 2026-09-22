@@ -129,8 +129,9 @@ npm run build:web:single   # one self-contained file -> apps/web/dist-single/ind
 2. **File detail** — a file list with a source preview; click a function to scroll
    to and highlight its lines.
 3. **Diagrams** — UML class, package, activity, sequence, state-machine, ER and
-   communication diagrams, rendered with the embedded draw.io editor (download
-   `.drawio`, export SVG).
+   communication diagrams, rendered with a **self-hosted draw.io** (no
+   third-party request; download `.drawio`, export SVG). Fetch the editor once
+   with `npm run drawio` before building.
 4. **Help** — every metric with its formula, rendered as MathML.
 5. **Settings** — thresholds and which dashboard cards are shown; the analysis
    re-runs live.
@@ -320,6 +321,7 @@ npm run typecheck         # type-check all packages
 npm test                  # unit tests (Vitest)
 npm run build             # build the core library
 npm run build:web         # build the static web app
+npm run drawio            # fetch the self-hosted draw.io editor (Diagrams tab)
 npm run bundle            # single-file CJS bundle
 npm run compile           # standalone binary (requires Bun)
 ```
