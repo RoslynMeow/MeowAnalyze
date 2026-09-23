@@ -82,9 +82,9 @@ const NESTING_BUCKETS: readonly BucketRange[] = [
 ];
 
 const MAINTAINABILITY_BUCKETS: readonly BucketRange[] = [
-  { upTo: 40, label: "<40", severity: "critical" },
-  { upTo: 65, label: "40–65", severity: "warn" },
-  { upTo: Number.POSITIVE_INFINITY, label: "65+", severity: "good" },
+  { upTo: 65, label: "<65", severity: "critical" },
+  { upTo: 85, label: "65–85", severity: "warn" },
+  { upTo: Number.POSITIVE_INFINITY, label: "85+", severity: "good" },
 ];
 
 const VOLUME_BUCKETS: readonly BucketRange[] = [
@@ -776,8 +776,8 @@ function round1(value: number): number {
 
 function maintainabilityGrade(value: number): string {
   const labels = t().dashboard.maintainability;
-  if (value < 40) return labels.low;
-  if (value < 65) return labels.moderate;
+  if (value < 65) return labels.low;
+  if (value < 85) return labels.moderate;
   return labels.healthy;
 }
 

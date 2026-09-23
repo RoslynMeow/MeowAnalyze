@@ -46,8 +46,9 @@ export function complexityColor(value: number): string {
 }
 
 export function maintainabilityColor(value: number): string {
-  if (value < 40) return severityColor("critical");
-  if (value < 65) return severityColor("warn");
+  // Common 0–100 grading (the original MI paper): < 65 hard, 65–85 moderate, ≥ 85 good.
+  if (value < 65) return severityColor("critical");
+  if (value < 85) return severityColor("warn");
   return severityColor("good");
 }
 
