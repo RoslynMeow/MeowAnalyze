@@ -73,6 +73,11 @@ export interface Strings {
       files: { name: string; summary: string; features: readonly string[] };
     };
   };
+  loading: {
+    reading: string;
+    languages: string;
+    analyzing: string;
+  };
   notices: {
     noFiles: string;
   };
@@ -267,6 +272,11 @@ const zh: Strings = {
         ],
       },
     },
+  },
+  loading: {
+    reading: "正在读取文件…",
+    languages: "正在加载语言支持…",
+    analyzing: "正在分析…",
   },
   notices: {
     noFiles: "没有找到可分析的 TypeScript / JavaScript 文件。",
@@ -518,7 +528,7 @@ const zh: Strings = {
     kinds: {
       function: "函数",
       method: "方法",
-      arrow: "箭头函数",
+      arrow: "λ函数",
       constructor: "构造函数",
       getter: "取值器",
       setter: "设值器",
@@ -612,6 +622,11 @@ const en: Strings = {
         ],
       },
     },
+  },
+  loading: {
+    reading: "Reading files…",
+    languages: "Loading language support…",
+    analyzing: "Analyzing…",
   },
   notices: {
     noFiles: "No TypeScript / JavaScript files found.",
@@ -863,7 +878,7 @@ const en: Strings = {
     kinds: {
       function: "function",
       method: "method",
-      arrow: "arrow",
+      arrow: "λ function",
       constructor: "constructor",
       getter: "getter",
       setter: "setter",

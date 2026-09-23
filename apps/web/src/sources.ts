@@ -35,17 +35,24 @@ export function rootNameOf(sources: readonly SourceInput[]): string {
   return segment ?? "folder";
 }
 
+/** Reports how many files have been read out of the total. */
+export type ProgressFn = (done: number, total: number) => void;
+
 export async function fileListToSources(
   files: readonly File[],
+  onProgress?: ProgressFn,
 ): Promise<SourceInput[]> {
   const sources: SourceInput[] = [];
-  for (const file of files) {
+  const total = files.length;
+  for (let index = 0; index < files.length; index++) {
+    const file = files[index] as File;
     const relative = (file as File & { webkitRelativePath?: string })
       .webkitRelativePath;
     const path = relative && relative.length > 0 ? relative : file.name;
-    if (isIgnoredPath(path)) continue;
-    if (file.size > MAX_FILE_SIZE) continue;
-    sources.push({ path, content: new Uint8Array(await file.arrayBuffer()) });
+    if (!isIgnoredPath(path) && file.size <= MAX_FILE_SIZE) {
+      sources.push({ path, content: new Uint8Array(await file.arrayBuffer()) });
+    }
+    onProgress?.(index + 1, total);
   }
   sources.sort((a, b) => a.path.localeCompare(b.path));
   return sources;
@@ -84,31 +91,48 @@ export function supportsDirectoryPicker(): boolean {
   return typeof (window as unknown as PickerWindow).showDirectoryPicker === "function";
 }
 
+interface Target {
+  handle: FileHandleLike;
+  path: string;
+}
+
 /** Let the user pick a project folder and read every analyzable file in it. */
-export async function pickDirectory(): Promise<ProjectSelection> {
+export async function pickDirectory(onProgress?: ProgressFn): Promise<ProjectSelection> {
   const picker = (window as unknown as PickerWindow).showDirectoryPicker;
   if (!picker) throw new Error("Directory picker is not supported by this browser.");
   const handle = await picker();
+
+  // List first so the total (and therefore a progress bar) is known before the
+  // slower file reads begin.
+  const targets: Target[] = [];
+  await collectTargets(handle, "", targets);
+
   const sources: SourceInput[] = [];
-  await collectDirectory(handle, "", sources);
+  const total = targets.length;
+  for (let index = 0; index < targets.length; index++) {
+    const target = targets[index] as Target;
+    const file = await target.handle.getFile();
+    if (file.size <= MAX_FILE_SIZE) {
+      sources.push({ path: target.path, content: new Uint8Array(await file.arrayBuffer()) });
+    }
+    onProgress?.(index + 1, total);
+  }
   sources.sort((a, b) => a.path.localeCompare(b.path));
   return { root: handle.name, sources };
 }
 
-async function collectDirectory(
+async function collectTargets(
   directory: DirectoryHandleLike,
   prefix: string,
-  out: SourceInput[],
+  out: Target[],
 ): Promise<void> {
   for await (const entry of directory.values()) {
     const path = prefix.length > 0 ? `${prefix}/${entry.name}` : entry.name;
     if (isIgnoredPath(path)) continue;
     if (entry.kind === "directory") {
-      await collectDirectory(entry, path, out);
+      await collectTargets(entry, path, out);
       continue;
     }
-    const file = await entry.getFile();
-    if (file.size > MAX_FILE_SIZE) continue;
-    out.push({ path, content: new Uint8Array(await file.arrayBuffer()) });
+    out.push({ handle: entry, path });
   }
 }
