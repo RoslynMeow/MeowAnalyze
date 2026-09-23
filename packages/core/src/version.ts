@@ -2,7 +2,7 @@
  * Tool version as a plain constant so the pure core can run anywhere
  * (Node, browser, WASM) without touching the filesystem.
  *
- * Must stay in sync with package.json â€?enforced by a test.
+ * Must stay in sync with package.json â€” enforced by a test.
  */
 export const TOOL_VERSION = "2.0.0";
 
