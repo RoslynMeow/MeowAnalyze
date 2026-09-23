@@ -12,7 +12,7 @@ export function maintainabilityIndex(
   if (loc <= 0) return 100;
   const raw =
     171 -
-    3.42 * Math.log(Math.max(volume, 1)) -
+    5.2 * Math.log(Math.max(volume, 1)) -
     0.23 * cyclomatic -
     16.2 * Math.log(loc);
   return Math.max(0, Math.min(100, (raw * 100) / 171));

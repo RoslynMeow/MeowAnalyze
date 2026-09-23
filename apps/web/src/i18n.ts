@@ -364,9 +364,9 @@ const zh: Strings = {
       },
       {
         title: "可维护性指数（Maintainability Index）",
-        body: "由 Oman 与 Hagemeister 提出，综合 Halstead 体积、圈复杂度与代码行数，给出 0–100 的可维护性评分，越高越易维护。本工具沿用 Visual Studio 的系数并做归一化。",
+        body: "由 Oman 与 Hagemeister 提出，综合 Halstead 体积、圈复杂度与代码行数，给出 0–100 的可维护性评分，越高越易维护。本工具采用 Visual Studio / SEI 的系数（5.2）并归一化到 0–100。",
         formulas: [
-          "MI = 171 - 3.42\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
+          "MI = 171 - 5.2\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
           "MI^{*} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{100\\,MI}{171}\\right)\\right)",
         ],
         items: [
@@ -709,9 +709,9 @@ const en: Strings = {
       },
       {
         title: "Maintainability index",
-        body: "Proposed by Oman and Hagemeister, it combines Halstead volume, cyclomatic complexity and lines of code into a 0–100 score, where higher is easier to maintain. This tool uses the Visual Studio coefficients and normalizes the result.",
+        body: "Proposed by Oman and Hagemeister, it combines Halstead volume, cyclomatic complexity and lines of code into a 0–100 score, where higher is easier to maintain. This tool uses the Visual Studio / SEI coefficient (5.2) and normalizes to 0–100.",
         formulas: [
-          "MI = 171 - 3.42\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
+          "MI = 171 - 5.2\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
           "MI^{*} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{100\\,MI}{171}\\right)\\right)",
         ],
         items: [

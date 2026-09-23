@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Maintainability index now uses the **Visual Studio / SEI coefficient (5.2)**
+  instead of 3.42, so values are comparable with Visual Studio, NDepend, radon
+  and other tools. (V/G/L definitions still differ slightly per tool.)
+
 ### Added
 
 - Core: the tree-sitter analyzers are now driven by a reusable `AnalyzerProfile`,

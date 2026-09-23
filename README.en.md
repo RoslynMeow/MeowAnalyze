@@ -286,7 +286,7 @@ const registry = new LanguageRegistry().register(new MyLang());
 | **Cognitive complexity** | Sonar-style, nesting-weighted score. Nesting increments for `if` / loops / `switch` / `catch` / `?:`, `else if` chains stay flat, and each sequence of like logical operators adds one. |
 | **Nesting depth** | Maximum depth of nested control constructs (`if`, loops, `switch`, `try`) within a function. |
 | **Halstead** | Distinct/total operators and operands, vocabulary, length, volume, difficulty and effort, scanned from the function text. |
-| **Maintainability index** | `171 − 3.42·ln(V) − 0.23·CC − 16.2·ln(L)` (normalized to 0–100, higher is better), where `L` is the function's code lines. Reported per function, per file and averaged. |
+| **Maintainability index** | `171 − 5.2·ln(V) − 0.23·CC − 16.2·ln(L)` (Visual Studio / SEI coefficient, normalized to 0–100, higher is better), where `L` is the function's code lines. Reported per function, per file and averaged. |
 | **Comment density** | Share of non-blank lines that are comments. |
 | **Markers** | Counts of `TODO` / `FIXME` / `HACK` in comments. |
 | **Physical LOC** | Number of lines in the file. |
