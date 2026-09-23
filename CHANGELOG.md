@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-23
+
 ### Changed
 
 - Maintainability index now uses the **Visual Studio / SEI coefficient (5.2)**
@@ -116,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions: a CI workflow and a version-driven release workflow (no manual tags).
 - Bilingual documentation and a project banner.
 
-[Unreleased]: https://github.com/RoslynMeow/MeowAnalyze/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/RoslynMeow/MeowAnalyze/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v2.0.0
 [1.0.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v1.0.0
 [0.1.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v0.1.0

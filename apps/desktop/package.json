@@ -1,7 +1,7 @@
 {
   "name": "@meowanalyze/desktop",
-  "version": "1.0.0",
-  "description": "MeowAnalyze desktop app (Electron) â€” reuses the web UI.",
+  "version": "2.0.0",
+  "description": "MeowAnalyze desktop app (Electron) â€?reuses the web UI.",
   "homepage": "https://github.com/RoslynMeow/MeowAnalyze",
   "author": {
     "name": "MeowAnalyze contributors",
