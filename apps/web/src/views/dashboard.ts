@@ -19,7 +19,7 @@ import { countUp, el, type ViewTargets } from "../dom.js";
 import { openDrilldown, type DrillItem } from "../drilldown.js";
 import { renderGauge } from "../echarts.js";
 import { t } from "../i18n.js";
-import { brandIcon, SUPPORTED_LANGUAGES } from "../languages.js";
+import { languageIcon, SUPPORTED_LANGUAGES } from "../languages.js";
 import { defaultPrefs, type DashboardPrefs } from "../prefs.js";
 
 export interface DashboardHandlers {
@@ -498,7 +498,7 @@ function fileDistribution(
         onClick: () => openDrilldown(languageSpec, { onJump: handlers.onJump }),
       });
       chip.type = "button";
-      if (language?.icon) chip.append(brandIcon(language.icon, 14));
+      if (language) chip.append(languageIcon(language, 14));
       chip.append(
         el("span", { class: "lang-chip__name", text: language?.name ?? id }),
         el("span", { class: "lang-chip__count", text: String(count) }),

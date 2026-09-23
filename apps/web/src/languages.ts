@@ -1,4 +1,6 @@
 import { TREE_SITTER_LANGUAGES } from "@meowanalyze/core";
+import { icon } from "./dom.js";
+import { getTheme } from "./theme.js";
 import {
   siC,
   siCplusplus,
@@ -95,17 +97,40 @@ export function languageExtensions(id: string): readonly string[] {
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/**
+ * Some brand colours are near-black (Java, Rust, JSON, Lua, …) or near-white
+ * (JavaScript) and vanish on one of the themes; fall back to the chip's own text
+ * colour so every icon stays visible.
+ */
+function iconFill(hex: string): string {
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const dark = getTheme() === "dark";
+  if ((dark && luminance < 0.22) || (!dark && luminance > 0.82)) return "currentColor";
+  return `#${hex}`;
+}
+
 /** Render a simple-icons brand logo as an inline SVG. */
 export function brandIcon(icon: SimpleIcon, size = 20): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("width", String(size));
   svg.setAttribute("height", String(size));
-  svg.setAttribute("fill", `#${icon.hex}`);
+  svg.setAttribute("fill", iconFill(icon.hex));
   svg.setAttribute("aria-hidden", "true");
 
   const path = document.createElementNS(SVG_NS, "path");
   path.setAttribute("d", icon.path);
   svg.append(path);
   return svg;
+}
+
+/** A generic `<>` glyph for languages without a brand icon. */
+const CODE_GLYPH = ["M9 6 4 12l5 6", "M15 6l5 6-5 6"];
+
+/** The brand logo, or a generic code glyph when simple-icons has none. */
+export function languageIcon(language: SupportedLanguage, size = 20): SVGSVGElement {
+  return language.icon ? brandIcon(language.icon, size) : icon(CODE_GLYPH, size);
 }

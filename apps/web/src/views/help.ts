@@ -1,6 +1,6 @@
 import { el, type Child, type ViewTargets } from "../dom.js";
 import { t, type HelpSection } from "../i18n.js";
-import { brandIcon, languageExtensions, SUPPORTED_LANGUAGES, type LanguageGroup } from "../languages.js";
+import { languageExtensions, languageIcon, SUPPORTED_LANGUAGES, type LanguageGroup } from "../languages.js";
 import { renderLatex, type LatexNode } from "../math.js";
 
 const LANGUAGE_GROUPS: readonly LanguageGroup[] = ["tuned", "basic", "files"];
@@ -55,7 +55,7 @@ function languageSupportCard(): HTMLElement {
           el(
             "span",
             { class: "lang-chip", title: languageExtensions(language.id).join(" ") },
-            language.icon ? brandIcon(language.icon, 14) : null,
+            languageIcon(language, 14),
             el("span", { class: "lang-chip__name", text: language.name }),
           ),
         ),

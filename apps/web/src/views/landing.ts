@@ -2,7 +2,7 @@ import { button, el } from "../dom.js";
 import { t } from "../i18n.js";
 import { openLanguagePopover } from "../language-popover.js";
 import {
-  brandIcon,
+  languageIcon,
   SUPPORTED_LANGUAGES,
   type LanguageGroup,
   type SupportedLanguage,
@@ -20,7 +20,7 @@ function languageChip(language: SupportedLanguage): HTMLElement {
   const chip = el(
     "button",
     { class: "lang-chip lang-chip--button", title: language.name },
-    language.icon ? brandIcon(language.icon) : null,
+    languageIcon(language),
     el("span", { class: "lang-chip__name", text: language.name }),
   );
   chip.type = "button";
