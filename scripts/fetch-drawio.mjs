@@ -40,24 +40,66 @@ const PRUNE = [
   "META-INF",
 ];
 
-function download(url, target) {
+const MIN_WAR_BYTES = 40_000_000;
+
+function getStream(url, redirects = 0) {
   return new Promise((resolve, reject) => {
-    const request = get(url, { headers: { "user-agent": "meowanalyze-build" } }, (response) => {
-      if (response.statusCode === 301 || response.statusCode === 302) {
-        download(response.headers.location, target).then(resolve, reject);
-        return;
-      }
-      if (response.statusCode !== 200) {
-        reject(new Error(`download failed: HTTP ${response.statusCode}`));
-        return;
-      }
-      const file = createWriteStream(target);
-      response.pipe(file);
-      file.on("finish", () => file.close(resolve));
-      file.on("error", reject);
-    });
+    const request = get(
+      url,
+      { headers: { "user-agent": "meowanalyze-build" }, timeout: 60_000 },
+      (response) => {
+        const status = response.statusCode ?? 0;
+        if (status >= 300 && status < 400 && response.headers.location && redirects < 5) {
+          response.resume();
+          getStream(response.headers.location, redirects + 1).then(resolve, reject);
+          return;
+        }
+        if (status !== 200) {
+          response.resume();
+          reject(new Error(`download failed: HTTP ${status}`));
+          return;
+        }
+        resolve(response);
+      },
+    );
+    request.on("timeout", () => request.destroy(new Error("download timed out")));
     request.on("error", reject);
   });
+}
+
+async function downloadOnce(url, target) {
+  const response = await getStream(url);
+  await new Promise((resolve, reject) => {
+    const file = createWriteStream(target);
+    response.pipe(file);
+    file.on("finish", () => file.close(() => resolve()));
+    file.on("error", reject);
+    response.on("error", reject);
+  });
+  const size = statSync(target).size;
+  if (size < MIN_WAR_BYTES) {
+    throw new Error(`downloaded war is too small (${size} bytes)`);
+  }
+}
+
+/** Retries a few times — CI runners occasionally time out reaching GitHub. */
+async function download(url, target) {
+  const attempts = 4;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await downloadOnce(url, target);
+      return;
+    } catch (error) {
+      if (attempt >= attempts) throw error;
+      const wait = attempt * 5000;
+      console.warn(
+        `download failed (${error instanceof Error ? error.message : error}); retry ${attempt}/${
+          attempts - 1
+        } in ${wait}ms`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    }
+  }
 }
 
 if (existsSync(versionFile) && readFileSync(versionFile, "utf8").trim() === VERSION) {
@@ -70,7 +112,7 @@ if (war && existsSync(war)) {
   console.log(`using local war from DRAWIO_WAR=${war}`);
 } else {
   war = path.join(tmpdir(), `drawio-${VERSION}.war`);
-  const complete = existsSync(war) && statSync(war).size > 40_000_000;
+  const complete = existsSync(war) && statSync(war).size > MIN_WAR_BYTES;
   if (!complete) {
     console.log(`downloading drawio ${VERSION} (${WAR_URL}) ...`);
     await download(WAR_URL, war);

@@ -27,6 +27,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Cache the self-hosted draw.io
+        uses: actions/cache@v4
+        with:
+          path: apps/web/public/drawio
+          key: drawio-${{ hashFiles('scripts/fetch-drawio.mjs') }}
       - name: Fetch the self-hosted draw.io
         run: npm run drawio
       - name: Build the static web app
