@@ -51,9 +51,9 @@ export const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = [
   { id: "csharp", name: "C#", icon: siDotnet, group: "tuned" },
   { id: "java", name: "Java", icon: siOpenjdk, group: "tuned" },
   { id: "python", name: "Python", icon: siPython, group: "tuned" },
+  { id: "go", name: "Go", icon: siGo, group: "tuned" },
 
   // basic: generic tree-sitter rules, best effort
-  { id: "go", name: "Go", icon: siGo, group: "basic" },
   { id: "rust", name: "Rust", icon: siRust, group: "basic" },
   { id: "ruby", name: "Ruby", icon: siRuby, group: "basic" },
   { id: "php", name: "PHP", icon: siPhp, group: "basic" },

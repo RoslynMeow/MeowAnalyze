@@ -10,6 +10,7 @@ import type { AnalyzerProfile } from "./analyzer.js";
 import { C_CPP_PROFILE } from "./c-profile.js";
 import { CSHARP_PROFILE } from "./csharp-profile.js";
 import { defineProfile } from "./generic-profile.js";
+import { GO_PROFILE } from "./go-profile.js";
 import { JAVA_PROFILE } from "./java-profile.js";
 import { PYTHON_PROFILE } from "./python-profile.js";
 
@@ -38,22 +39,9 @@ export const TREE_SITTER_LANGUAGES: readonly TreeSitterLanguageDef[] = [
   { id: "python", grammar: "python", extensions: [".py", ".pyi"], tier: "tuned", profile: PYTHON_PROFILE },
   { id: "java", grammar: "java", extensions: [".java"], tier: "tuned", profile: JAVA_PROFILE },
   { id: "csharp", grammar: "csharp", extensions: [".cs"], tier: "tuned", profile: CSHARP_PROFILE },
+  { id: "go", grammar: "go", extensions: [".go"], tier: "tuned", profile: GO_PROFILE },
 
   // --- basic (generic profile) --------------------------------------------
-  {
-    id: "go",
-    grammar: "go",
-    extensions: [".go"],
-    tier: "basic",
-    profile: defineProfile({
-      functionTypes: s("function_declaration", "method_declaration"),
-      containerTypes: s("type_declaration", "type_spec"),
-      declarationTypes: s("type_declaration"),
-      commentTypes: s("comment"),
-      importTypes: s("import_declaration", "package_clause"),
-      callTypes: s("call_expression"),
-    }),
-  },
   {
     id: "rust",
     grammar: "rust",

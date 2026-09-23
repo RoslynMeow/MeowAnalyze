@@ -68,8 +68,8 @@ TypeScript / JavaScript 走 TypeScript 编译器;其余语言走 tree-sitter(WAS
 
 | 级别 | 语言 |
 | --- | --- |
-| **精准** —— 专门规则,所有指标可信 | TypeScript、JavaScript、C、C++、Python、Java、C# |
-| **基础** —— 通用 tree-sitter 规则(尽力而为;复杂度/函数/行数可用,Halstead、认知复杂度、类成员可能不完整) | Go、Rust、Ruby、PHP、Kotlin、Swift、Scala、Lua、Zig、Solidity、Objective-C、Shell、Elixir、Emacs Lisp、OCaml、ReScript、TLA+ |
+| **精准** —— 专门规则,所有指标可信 | TypeScript、JavaScript、C、C++、Python、Java、C#、Go |
+| **基础** —— 通用 tree-sitter 规则(尽力而为;复杂度/函数/行数可用,Halstead、认知复杂度、类成员可能不完整) | Rust、Ruby、PHP、Kotlin、Swift、Scala、Lua、Zig、Solidity、Objective-C、Shell、Elixir、Emacs Lisp、OCaml、ReScript、TLA+ |
 | **仅文件 / 代码行** —— 只贡献文件数、代码行与语言占比 | HTML、CSS、JSON、TOML、Vue、ERB、SystemRDL |
 
 ## 在线体验

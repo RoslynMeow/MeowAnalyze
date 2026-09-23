@@ -17,7 +17,7 @@ function analyze(path: string, content: string): AnalysisReport {
 }
 
 describe("generic tree-sitter languages", () => {
-  it("analyzes Go", () => {
+  it("analyzes Go (tuned profile)", () => {
     const source = `package main
 
 import "fmt"
@@ -33,17 +33,30 @@ func add(a int, b int) int {
 	return 0
 }
 
-func main() {
-	fmt.Println(add(1, 2))
+type Point struct {
+	X int
+	Y int
+}
+
+func (p Point) Sum() int {
+	return p.X + p.Y
 }
 `;
     const file = analyze("main.go", source).files[0];
     expect(file?.language).toBe("go");
+    expect(file?.imports.map((i) => i.module)).toEqual(["fmt"]);
     expect(file?.markers.todo).toBe(1);
+
     const add = file?.functions.find((fn) => fn.name === "add");
     expect(add?.params).toBe(2);
     expect(add?.cyclomatic).toBe(4); // 1 + if + && + for
-    expect(file?.functions.some((fn) => fn.name === "main")).toBe(true);
+
+    const sum = file?.functions.find((fn) => fn.name === "Sum");
+    expect(sum?.kind).toBe("method");
+    expect(sum?.owner).toBe("Point");
+
+    const point = file?.declarations.find((d) => d.name === "Point");
+    expect(point?.members.map((m) => m.name)).toEqual(["X", "Y"]);
   });
 
   it("analyzes Rust", () => {

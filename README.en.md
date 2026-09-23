@@ -70,8 +70,8 @@ demand and bundled into every target, so nothing is fetched at runtime.
 
 | Tier | Languages |
 | --- | --- |
-| **Tuned** — dedicated rules, all metrics trustworthy | TypeScript, JavaScript, C, C++, Python, Java, C# |
-| **Basic** — generic tree-sitter rules (best effort; complexity / functions / lines work, but Halstead, cognitive complexity and class members may be incomplete) | Go, Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua, Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+ |
+| **Tuned** — dedicated rules, all metrics trustworthy | TypeScript, JavaScript, C, C++, Python, Java, C#, Go |
+| **Basic** — generic tree-sitter rules (best effort; complexity / functions / lines work, but Halstead, cognitive complexity and class members may be incomplete) | Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua, Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+ |
 | **Files / LOC only** — contributes files, code lines and language share | HTML, CSS, JSON, TOML, Vue, ERB, SystemRDL |
 
 ## Try it online

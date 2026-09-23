@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+,
   plus files/LOC for HTML, CSS, JSON, TOML, Vue, ERB and SystemRDL. Non-tuned
   languages use a generic profile and are documented as “basic”.
+- Core: **Go** gets a dedicated profile (functions/methods with receiver owners,
+  structs/interfaces with members, imports, calls, control flow) and is now a
+  “tuned” language alongside C/C++, Python, Java and C#.
 - Core: grammars are now loaded **on demand** (only the ones a project uses) from
   a dynamically-imported, bundled chunk, so TS/JS-only projects download no wasm.
   (dart, elm, ql and yaml grammars are omitted: their ABI is incompatible with
