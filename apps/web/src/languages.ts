@@ -1,3 +1,4 @@
+import { TREE_SITTER_LANGUAGES } from "@meowanalyze/core";
 import {
   siC,
   siCplusplus,
@@ -79,6 +80,18 @@ export const SUPPORTED_LANGUAGES: readonly SupportedLanguage[] = [
   { id: "systemrdl", name: "SystemRDL", group: "files" },
   { id: "embedded_template", name: "ERB", group: "files" },
 ];
+
+const COMPILER_EXTENSIONS: Record<string, readonly string[]> = {
+  typescript: [".ts", ".tsx", ".mts", ".cts"],
+  javascript: [".js", ".jsx", ".mjs", ".cjs"],
+};
+
+/** File extensions a language claims (TS/JS come from the compiler, not tree-sitter). */
+export function languageExtensions(id: string): readonly string[] {
+  const known = COMPILER_EXTENSIONS[id];
+  if (known) return known;
+  return TREE_SITTER_LANGUAGES.find((language) => language.id === id)?.extensions ?? [];
+}
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

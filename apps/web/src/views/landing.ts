@@ -1,5 +1,6 @@
 import { button, el } from "../dom.js";
 import { t } from "../i18n.js";
+import { openLanguagePopover } from "../language-popover.js";
 import {
   brandIcon,
   SUPPORTED_LANGUAGES,
@@ -16,12 +17,15 @@ export interface LandingHandlers {
 const GROUPS: readonly LanguageGroup[] = ["tuned", "basic", "files"];
 
 function languageChip(language: SupportedLanguage): HTMLElement {
-  return el(
-    "span",
-    { class: "lang-chip", title: language.name },
+  const chip = el(
+    "button",
+    { class: "lang-chip lang-chip--button", title: language.name },
     language.icon ? brandIcon(language.icon) : null,
     el("span", { class: "lang-chip__name", text: language.name }),
   );
+  chip.type = "button";
+  chip.addEventListener("click", () => openLanguagePopover(chip, language));
+  return chip;
 }
 
 export function renderLanding(root: HTMLElement, handlers: LandingHandlers): void {

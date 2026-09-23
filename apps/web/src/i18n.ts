@@ -62,6 +62,17 @@ export interface Strings {
   landing: {
     openFolder: string;
   };
+  languages: {
+    title: string;
+    extensions: string;
+    tierLabel: string;
+    detailHint: string;
+    tiers: {
+      tuned: { name: string; summary: string; features: readonly string[] };
+      basic: { name: string; summary: string; features: readonly string[] };
+      files: { name: string; summary: string; features: readonly string[] };
+    };
+  };
   notices: {
     noFiles: string;
   };
@@ -219,7 +230,43 @@ const zh: Strings = {
     light: "亮色",
   },
   landing: {
-    openFolder: "打开文件夹",
+    openFolder: "打开工程文件夹",
+  },
+  languages: {
+    title: "语言支持详情",
+    extensions: "扩展名",
+    tierLabel: "支持级别",
+    detailHint: "点击任意语言查看详细支持信息",
+    tiers: {
+      tuned: {
+        name: "精准",
+        summary: "有专门的解析规则,所有指标都可信。",
+        features: [
+          "函数 / 方法 / 构造函数;圈复杂度、认知复杂度、嵌套深度",
+          "Halstead 指标、可维护性指数、代码行(物理 / 代码 / 注释 / 空行 / 逻辑)",
+          "TODO / FIXME / HACK 标记、导入、函数调用",
+          "类 / 接口 / 枚举及其成员(字段与方法)",
+          "控制流 → 活动图;声明 / 导入 / 调用 → 类图、包图、通信图、时序图",
+        ],
+      },
+      basic: {
+        name: "基础",
+        summary: "使用通用 tree-sitter 规则,尽力而为。",
+        features: [
+          "函数、圈复杂度、嵌套深度、代码行、标记",
+          "认知复杂度与 Halstead 为近似值",
+          "类成员与图表可能不完整",
+        ],
+      },
+      files: {
+        name: "无函数",
+        summary: "语言本身没有函数概念,只贡献文件级信息。",
+        features: [
+          "文件数、代码行(物理 / 代码 / 注释 / 空行)、语言占比",
+          "不产生函数、复杂度、Halstead 或可维护性指数",
+        ],
+      },
+    },
   },
   notices: {
     noFiles: "没有找到可分析的 TypeScript / JavaScript 文件。",
@@ -377,15 +424,6 @@ const zh: Strings = {
           "文件代码行数 > file_loc",
         ],
       },
-      {
-        title: "语言支持",
-        body: "分析器分两级:「精准」有专门规则,所有指标可信;「基础」用通用 tree-sitter 规则尽力而为,复杂度/函数/行数可用,但 Halstead、认知复杂度、类成员等可能不完整。没有函数的语言只能统计文件数、代码行与语言占比。",
-        items: [
-          "精准:TypeScript / JavaScript、C / C++、Python、Java、C#",
-          "基础:Go、Rust、Ruby、PHP、Kotlin、Swift、Scala、Lua、Zig、Solidity、Objective-C、Shell、Elixir、Emacs Lisp、OCaml、ReScript、TLA+",
-          "仅文件 / 代码行 / 语言占比:HTML、CSS、JSON、TOML、Vue、ERB、SystemRDL",
-        ],
-      },
     ],
   },
   settings: {
@@ -537,7 +575,43 @@ const en: Strings = {
     light: "Light",
   },
   landing: {
-    openFolder: "Open folder",
+    openFolder: "Open project folder",
+  },
+  languages: {
+    title: "Language support details",
+    extensions: "Extensions",
+    tierLabel: "Support",
+    detailHint: "Click a language to see its detailed support",
+    tiers: {
+      tuned: {
+        name: "Tuned",
+        summary: "Dedicated parsing rules; every metric is trustworthy.",
+        features: [
+          "Functions / methods / constructors; cyclomatic & cognitive complexity, nesting depth",
+          "Halstead metrics, maintainability index, lines of code (physical / code / comment / blank / logical)",
+          "TODO / FIXME / HACK markers, imports, function calls",
+          "Classes / interfaces / enums and their members (fields and methods)",
+          "Control flow → activity diagram; declarations / imports / calls → class, package, communication and sequence diagrams",
+        ],
+      },
+      basic: {
+        name: "Basic",
+        summary: "Generic tree-sitter rules, best effort.",
+        features: [
+          "Functions, cyclomatic complexity, nesting depth, lines of code, markers",
+          "Cognitive complexity and Halstead are approximations",
+          "Class members and diagrams may be incomplete",
+        ],
+      },
+      files: {
+        name: "Files only",
+        summary: "The language has no notion of functions; only file-level data.",
+        features: [
+          "Files, lines of code (physical / code / comment / blank), language share",
+          "No functions, complexity, Halstead or maintainability index",
+        ],
+      },
+    },
   },
   notices: {
     noFiles: "No TypeScript / JavaScript files found.",
@@ -693,15 +767,6 @@ const en: Strings = {
           "parameters > params",
           "function code lines > function_loc",
           "file code lines > file_loc",
-        ],
-      },
-      {
-        title: "Language support",
-        body: "Two tiers. “Tuned” languages have dedicated rules and trustworthy metrics; “basic” languages use the generic tree-sitter rules (best effort): complexity, functions and lines work, but Halstead, cognitive complexity and class members may be incomplete. Languages without functions only contribute files, code lines and language share.",
-        items: [
-          "Tuned: TypeScript / JavaScript, C / C++, Python, Java, C#",
-          "Basic: Go, Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua, Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+",
-          "Files / code lines / language share only: HTML, CSS, JSON, TOML, Vue, ERB, SystemRDL",
         ],
       },
     ],

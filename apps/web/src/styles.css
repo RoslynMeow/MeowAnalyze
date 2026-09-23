@@ -386,6 +386,154 @@ body {
   color: var(--text);
 }
 
+.lang-chip--button {
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.lang-chip--button:hover {
+  border-color: var(--accent);
+}
+
+/* Floating language-support panel (landing chips) */
+.lang-pop {
+  position: fixed;
+  z-index: 60;
+  width: min(340px, calc(100vw - 16px));
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  animation: riseIn 0.15s ease both;
+}
+
+.lang-pop__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lang-pop__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.lang-pop__tier {
+  padding: 1px 8px;
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.lang-pop__tier--tuned {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.lang-pop__tier--basic {
+  color: var(--yellow);
+  border-color: var(--yellow);
+}
+
+.lang-pop__close {
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.lang-pop__close:hover {
+  color: var(--text);
+  background: var(--track);
+}
+
+.lang-pop__summary {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.lang-pop__ext {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.lang-pop__label {
+  color: var(--muted);
+}
+
+.lang-pop__value {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.lang-pop__features {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.lang-pop__features li {
+  margin: 2px 0;
+}
+
+/* Language support card on the Help page */
+.help-lang {
+  margin-top: 14px;
+}
+
+.help-lang__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.help-lang__tier {
+  font-weight: 700;
+}
+
+.help-lang__tier--tuned {
+  color: var(--green);
+}
+
+.help-lang__tier--basic {
+  color: var(--yellow);
+}
+
+.help-lang__tier--files {
+  color: var(--muted);
+}
+
+.help-lang__summary {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.help-lang__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .landing__actions {
   display: flex;
   gap: 14px;

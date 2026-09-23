@@ -10,6 +10,7 @@ import {
 } from "@meowanalyze/core";
 import { button, downloadJson, el, icon, MENU_ICON, type ViewTargets } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
+import { closeLanguagePopover } from "./language-popover.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { renderSettings, type SettingsValues } from "./settings.js";
 import { loadPrefs, savePrefs, type DashboardPrefs } from "./prefs.js";
@@ -209,6 +210,7 @@ window.addEventListener("hashchange", () => {
 
 function renderLandingView(): void {
   closeDrilldown();
+  closeLanguagePopover();
   disposeCharts();
   disposeDiagrams();
   sidenav.hidden = true;
@@ -239,6 +241,7 @@ function renderContent(): void {
   brand.hidden = true;
   menuBtn.hidden = false;
   closeDrilldown();
+  closeLanguagePopover();
   disposeCharts();
   disposeDiagrams();
   content.replaceChildren();

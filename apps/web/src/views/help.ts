@@ -1,6 +1,9 @@
 import { el, type Child, type ViewTargets } from "../dom.js";
 import { t, type HelpSection } from "../i18n.js";
+import { brandIcon, languageExtensions, SUPPORTED_LANGUAGES, type LanguageGroup } from "../languages.js";
 import { renderLatex, type LatexNode } from "../math.js";
+
+const LANGUAGE_GROUPS: readonly LanguageGroup[] = ["tuned", "basic", "files"];
 
 /** Explain every metric and its formula, rendered from LaTeX. */
 export function renderHelp(targets: ViewTargets): void {
@@ -15,10 +18,52 @@ export function renderHelp(targets: ViewTargets): void {
 
   const pending: LatexNode[] = [];
   const sections = strings.help.sections.map((section) => sectionCard(section, pending));
+  sections.push(languageSupportCard());
 
   targets.body.replaceChildren(el("div", { class: "help-page" }, ...sections));
 
   void renderLatex(pending);
+}
+
+/** Detailed per-tier language support, mirroring the landing-page popover. */
+function languageSupportCard(): HTMLElement {
+  const strings = t().languages;
+  const blocks = LANGUAGE_GROUPS.map((group) => {
+    const tier = strings.tiers[group];
+    const languages = SUPPORTED_LANGUAGES.filter((language) => language.group === group);
+    return el(
+      "div",
+      { class: "help-lang" },
+      el(
+        "div",
+        { class: "help-lang__head" },
+        el("span", {
+          class: `help-lang__tier help-lang__tier--${group}`,
+          text: tier.name,
+        }),
+        el("span", { class: "help-lang__summary", text: tier.summary }),
+      ),
+      el(
+        "ul",
+        { class: "help-list" },
+        ...tier.features.map((feature) => el("li", { text: feature })),
+      ),
+      el(
+        "div",
+        { class: "help-lang__chips" },
+        ...languages.map((language) =>
+          el(
+            "span",
+            { class: "lang-chip", title: languageExtensions(language.id).join(" ") },
+            language.icon ? brandIcon(language.icon, 14) : null,
+            el("span", { class: "lang-chip__name", text: language.name }),
+          ),
+        ),
+      ),
+    );
+  });
+
+  return el("section", { class: "card" }, el("h2", { text: strings.title }), ...blocks);
 }
 
 function sectionCard(section: HelpSection, pending: LatexNode[]): HTMLElement {
