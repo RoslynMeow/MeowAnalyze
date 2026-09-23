@@ -40,6 +40,11 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
 export const DEFAULT_THRESHOLDS_BY_LANGUAGE: Readonly<Record<LanguageId, Thresholds>> = {
   typescript: DEFAULT_THRESHOLDS,
   javascript: DEFAULT_THRESHOLDS,
+  c: DEFAULT_THRESHOLDS,
+  cpp: DEFAULT_THRESHOLDS,
+  python: DEFAULT_THRESHOLDS,
+  java: DEFAULT_THRESHOLDS,
+  csharp: DEFAULT_THRESHOLDS,
 };
 
 /** Defaults for a language, falling back to the global profile. */

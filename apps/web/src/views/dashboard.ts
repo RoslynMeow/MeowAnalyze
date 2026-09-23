@@ -19,7 +19,7 @@ import { countUp, el, type ViewTargets } from "../dom.js";
 import { openDrilldown, type DrillItem } from "../drilldown.js";
 import { renderGauge } from "../echarts.js";
 import { t } from "../i18n.js";
-import { brandIcon, SUPPORTED_LANGUAGES } from "../languages.js";
+import { languageIcon, SUPPORTED_LANGUAGES } from "../languages.js";
 import { defaultPrefs, type DashboardPrefs } from "../prefs.js";
 
 export interface DashboardHandlers {
@@ -81,10 +81,11 @@ const NESTING_BUCKETS: readonly BucketRange[] = [
   { upTo: Number.POSITIVE_INFINITY, label: "5+", severity: "critical" },
 ];
 
+// Visual Studio's bands: 0–9 red, 10–19 yellow, 20–100 green.
 const MAINTAINABILITY_BUCKETS: readonly BucketRange[] = [
-  { upTo: 40, label: "<40", severity: "critical" },
-  { upTo: 65, label: "40–65", severity: "warn" },
-  { upTo: Number.POSITIVE_INFINITY, label: "65+", severity: "good" },
+  { upTo: 9.999, label: "0–9", severity: "critical" },
+  { upTo: 19.999, label: "10–19", severity: "warn" },
+  { upTo: Number.POSITIVE_INFINITY, label: "20+", severity: "good" },
 ];
 
 const VOLUME_BUCKETS: readonly BucketRange[] = [
@@ -497,7 +498,7 @@ function fileDistribution(
         onClick: () => openDrilldown(languageSpec, { onJump: handlers.onJump }),
       });
       chip.type = "button";
-      if (language) chip.append(brandIcon(language.icon, 14));
+      if (language) chip.append(languageIcon(language, 14));
       chip.append(
         el("span", { class: "lang-chip__name", text: language?.name ?? id }),
         el("span", { class: "lang-chip__count", text: String(count) }),
@@ -776,8 +777,8 @@ function round1(value: number): number {
 
 function maintainabilityGrade(value: number): string {
   const labels = t().dashboard.maintainability;
-  if (value < 40) return labels.low;
-  if (value < 65) return labels.moderate;
+  if (value < 10) return labels.low;
+  if (value < 20) return labels.moderate;
   return labels.healthy;
 }
 

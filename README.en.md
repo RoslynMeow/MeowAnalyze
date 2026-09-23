@@ -23,11 +23,12 @@
 
 ---
 
-MeowAnalyze reads a TypeScript / JavaScript project and reports the numbers that
-predict maintenance pain: complexity, nesting, Halstead volume, a maintainability
-index, comment density and technical-debt markers. The same analysis core powers a
-**CLI**, a **web app** that runs entirely in your browser, and an **Electron desktop
-app** — nothing is uploaded anywhere.
+MeowAnalyze reads a
+**TypeScript / JavaScript / C / C++ / Python / Java / C#** project and reports the
+numbers that predict maintenance pain: complexity, nesting, Halstead volume, a
+maintainability index, comment density and technical-debt markers. The same
+analysis core powers a **CLI**, a **web app** that runs entirely in your browser,
+and an **Electron desktop app** — nothing is uploaded anywhere.
 
 ## Table of contents
 
@@ -60,6 +61,18 @@ app** — nothing is uploaded anywhere.
 - **Multiple outputs** — a rich terminal report and a stable JSON document.
 - **Browser-safe core** — no filesystem or process I/O in the engine, so the same
   code runs in Node, the browser and (soon) WASM.
+
+## Languages
+
+TypeScript / JavaScript are parsed with the TypeScript compiler; every other
+language uses tree-sitter (WASM). The grammars a project needs are loaded on
+demand and bundled into every target, so nothing is fetched at runtime.
+
+| Tier | Languages |
+| --- | --- |
+| **Tuned** — dedicated rules, all metrics trustworthy | TypeScript, JavaScript, C, C++, Python, Java, C#, Go |
+| **Basic** — generic tree-sitter rules (best effort; complexity / functions / lines work, but Halstead, cognitive complexity and class members may be incomplete) | Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua, Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+ |
+| **Files / LOC only** — contributes files, code lines and language share | HTML, CSS, JSON, TOML, Vue, ERB, SystemRDL |
 
 ## Try it online
 
@@ -129,8 +142,9 @@ npm run build:web:single   # one self-contained file -> apps/web/dist-single/ind
 2. **File detail** — a file list with a source preview; click a function to scroll
    to and highlight its lines.
 3. **Diagrams** — UML class, package, activity, sequence, state-machine, ER and
-   communication diagrams, rendered with the embedded draw.io editor (download
-   `.drawio`, export SVG).
+   communication diagrams, rendered with a **self-hosted draw.io** (no
+   third-party request; download `.drawio`, export SVG). Fetch the editor once
+   with `npm run drawio` before building.
 4. **Help** — every metric with its formula, rendered as MathML.
 5. **Settings** — thresholds and which dashboard cards are shown; the analysis
    re-runs live.
@@ -272,7 +286,7 @@ const registry = new LanguageRegistry().register(new MyLang());
 | **Cognitive complexity** | Sonar-style, nesting-weighted score. Nesting increments for `if` / loops / `switch` / `catch` / `?:`, `else if` chains stay flat, and each sequence of like logical operators adds one. |
 | **Nesting depth** | Maximum depth of nested control constructs (`if`, loops, `switch`, `try`) within a function. |
 | **Halstead** | Distinct/total operators and operands, vocabulary, length, volume, difficulty and effort, scanned from the function text. |
-| **Maintainability index** | `171 − 3.42·ln(V) − 0.23·CC − 16.2·ln(L)` (normalized to 0–100, higher is better), where `L` is the function's code lines. Reported per function, per file and averaged. |
+| **Maintainability index** | `171 − 5.2·ln(V) − 0.23·CC − 16.2·ln(L)` (Visual Studio / SEI coefficient, normalized to 0–100, higher is better), where `L` is the function's code lines. Reported per function, per file and averaged. |
 | **Comment density** | Share of non-blank lines that are comments. |
 | **Markers** | Counts of `TODO` / `FIXME` / `HACK` in comments. |
 | **Physical LOC** | Number of lines in the file. |
@@ -306,7 +320,8 @@ supply sources and render the report.
 - [x] Cognitive complexity, Halstead metrics and a maintainability index
 - [x] UML diagrams (draw.io) and an OOP structure model
 - [x] One-click GitHub Pages deployment
-- [ ] More languages via tree-sitter
+- [x] 30+ languages via tree-sitter WASM, loaded on demand and bundled into every target
+- [ ] Tune the generic (“basic”) language profiles
 
 ## Development
 
@@ -319,6 +334,7 @@ npm run typecheck         # type-check all packages
 npm test                  # unit tests (Vitest)
 npm run build             # build the core library
 npm run build:web         # build the static web app
+npm run drawio            # fetch the self-hosted draw.io editor (Diagrams tab)
 npm run bundle            # single-file CJS bundle
 npm run compile           # standalone binary (requires Bun)
 ```

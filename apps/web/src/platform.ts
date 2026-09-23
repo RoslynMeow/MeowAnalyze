@@ -3,6 +3,7 @@ import {
   pickDirectory,
   rootNameOf,
   supportsDirectoryPicker,
+  type ProgressFn,
   type ProjectSelection,
 } from "./sources.js";
 
@@ -29,25 +30,28 @@ export function isDesktop(): boolean {
  * desktop app, then the File System Access API, then a `<input webkitdirectory>`
  * fallback.
  */
-export async function chooseFolder(): Promise<ProjectSelection> {
+export async function chooseFolder(
+  onProgress?: ProgressFn,
+): Promise<ProjectSelection> {
   if (isDesktop()) {
+    // The Electron main process reads the files; no progress stream yet.
     return (window.meow as DesktopBridge).openFolder();
   }
   if (supportsDirectoryPicker()) {
-    return pickDirectory();
+    return pickDirectory(onProgress);
   }
-  return chooseFolderWithInput();
+  return chooseFolderWithInput(onProgress);
 }
 
-function chooseFolderWithInput(): Promise<ProjectSelection> {
+function chooseFolderWithInput(onProgress?: ProgressFn): Promise<ProjectSelection> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
     (input as HTMLInputElement & { webkitdirectory: boolean }).webkitdirectory =
       true;
     input.addEventListener("change", () => {
-      void fileListToSources(Array.from(input.files ?? [])).then((sources) =>
-        resolve({ root: rootNameOf(sources), sources }),
+      void fileListToSources(Array.from(input.files ?? []), onProgress).then(
+        (sources) => resolve({ root: rootNameOf(sources), sources }),
       );
     });
     input.click();

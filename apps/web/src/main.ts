@@ -3,12 +3,20 @@ import {
   analyzeSources,
   DEFAULT_CONFIG,
   DEFAULT_THRESHOLDS,
+  registryForPaths,
   type AnalysisReport,
   type SourceInput,
   type Thresholds,
 } from "@meowanalyze/core";
 import { button, downloadJson, el, icon, MENU_ICON, type ViewTargets } from "./dom.js";
 import { getLang, onLangChange, setLang, t } from "./i18n.js";
+import { closeLanguagePopover } from "./language-popover.js";
+import {
+  hideLoading,
+  setLoadingLabel,
+  setLoadingProgress,
+  showLoading,
+} from "./loading.js";
 import { getTheme, onThemeChange, setTheme } from "./theme.js";
 import { renderSettings, type SettingsValues } from "./settings.js";
 import { loadPrefs, savePrefs, type DashboardPrefs } from "./prefs.js";
@@ -162,7 +170,7 @@ function applySettings(values: SettingsValues): void {
   state.thresholds = values.thresholds;
   state.prefs = values.prefs;
   savePrefs(values.prefs);
-  rerun();
+  void rerun();
 }
 
 function exportReport(): void {
@@ -208,6 +216,7 @@ window.addEventListener("hashchange", () => {
 
 function renderLandingView(): void {
   closeDrilldown();
+  closeLanguagePopover();
   disposeCharts();
   disposeDiagrams();
   sidenav.hidden = true;
@@ -238,6 +247,7 @@ function renderContent(): void {
   brand.hidden = true;
   menuBtn.hidden = false;
   closeDrilldown();
+  closeLanguagePopover();
   disposeCharts();
   disposeDiagrams();
   content.replaceChildren();
@@ -283,22 +293,46 @@ function jumpToItem(item: DrillItem): void {
 /* Analysis                                                            */
 /* ------------------------------------------------------------------ */
 
+/** Let the browser paint a frame (so a label set just before sync work shows). */
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
 async function handleFolder(): Promise<void> {
   try {
-    const { root, sources } = await chooseFolder();
-    runAnalysis(sources, root);
+    showLoading(t().loading.reading);
+    const { root, sources } = await chooseFolder((done, total) =>
+      setLoadingProgress(done, total),
+    );
+    await runAnalysis(sources, root);
   } catch (error) {
+    hideLoading();
     notice = error instanceof Error ? error.message : String(error);
     renderLandingView();
   }
 }
 
-function runAnalysis(sources: SourceInput[], root: string): void {
+async function runAnalysis(sources: SourceInput[], root: string): Promise<void> {
+  // Load only the grammars this project actually needs (no wasm for TS/JS-only).
+  setLoadingLabel(t().loading.languages);
+  setLoadingProgress(0, 0);
+  const registry = await registryForPaths(sources.map((source) => source.path));
+
+  setLoadingLabel(t().loading.analyzing);
+  await nextFrame();
   const report = analyzeSources({
     root,
     sources,
     config: { ...DEFAULT_CONFIG, thresholds: state.thresholds },
+    registry,
   });
+  hideLoading();
 
   if (report.summary.files === 0) {
     notice = t().notices.noFiles;
@@ -316,15 +350,19 @@ function runAnalysis(sources: SourceInput[], root: string): void {
   renderContent();
 }
 
-function rerun(): void {
+async function rerun(): Promise<void> {
   if (state.sources.length === 0) {
     renderLandingView();
     return;
   }
+  const registry = await registryForPaths(
+    state.sources.map((source) => source.path),
+  );
   state.report = analyzeSources({
     root: state.root,
     sources: state.sources,
     config: { ...DEFAULT_CONFIG, thresholds: state.thresholds },
+    registry,
   });
   renderContent();
 }

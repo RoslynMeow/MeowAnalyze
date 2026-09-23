@@ -8,6 +8,10 @@
       content="MeowAnalyze web app — static code analysis fully in your browser. Nothing is uploaded."
     />
     <title>MeowAnalyze</title>
+    <!-- Warm the draw.io embed origin while the app boots, so the Diagrams tab
+         does not pay the DNS + TLS handshake on first open. -->
+    <link rel="preconnect" href="https://embed.diagrams.net" crossorigin />
+    <link rel="dns-prefetch" href="https://embed.diagrams.net" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E"

@@ -10,13 +10,13 @@ describe("i18n", () => {
 
   it("defaults to Chinese", () => {
     expect(getLang()).toBe("zh");
-    expect(t().landing.openFolder).toBe("打开文件夹");
+    expect(t().landing.openFolder).toBe("打开工程文件夹");
   });
 
   it("switches to English", () => {
     setLang("en");
     expect(getLang()).toBe("en");
-    expect(t().landing.openFolder).toBe("Open folder");
+    expect(t().landing.openFolder).toBe("Open project folder");
     expect(t().dashboard.kpi.files).toBe("Files");
   });
 

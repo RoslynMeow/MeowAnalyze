@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   analyzeSources,
   DEFAULT_CONFIG,
+  registryForPaths,
   toolVersion,
   type AnalysisReport,
   type Config,
@@ -48,12 +49,15 @@ export async function analyze(
     }
   }
 
+  const registry =
+    options.registry ?? (await registryForPaths(sources.map((source) => source.path)));
+
   return analyzeSources({
     root,
     sources,
     config,
     diagnostics,
-    registry: options.registry,
+    registry,
     toolVersion: toolVersion(),
   });
 }

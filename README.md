@@ -23,10 +23,11 @@
 
 ---
 
-MeowAnalyze 读取一个 TypeScript / JavaScript 项目,给出最影响维护成本的各项数字:
-复杂度、嵌套深度、Halstead 体积、可维护性指数、注释密度,以及技术债标记。同一套分析
-核心同时驱动 **CLI**、**完全在浏览器内运行的 Web 应用** 和 **Electron 桌面应用** ——
-任何代码都不会上传。
+MeowAnalyze 读取一个
+**TypeScript / JavaScript / C / C++ / Python / Java / C#** 项目,给出最影响维护成本的
+各项数字:复杂度、嵌套深度、Halstead 体积、可维护性指数、注释密度,以及技术债标记。同一
+套分析核心同时驱动 **CLI**、**完全在浏览器内运行的 Web 应用** 和 **Electron 桌面应用**
+—— 任何代码都不会上传。
 
 ## 目录
 
@@ -59,6 +60,17 @@ MeowAnalyze 读取一个 TypeScript / JavaScript 项目,给出最影响维护成
 - **多种输出** —— 丰富的终端报告与稳定的 JSON 文档。
 - **浏览器安全的分析核心** —— 引擎不做任何文件系统或进程 I/O,同一份代码可运行在
   Node、浏览器(以及未来的 WASM)中。
+
+## 支持的语言
+
+TypeScript / JavaScript 走 TypeScript 编译器;其余语言走 tree-sitter(WASM)。项目用到的
+语法按需加载,并内联打包进所有目标,运行时无需联网获取。
+
+| 级别 | 语言 |
+| --- | --- |
+| **精准** —— 专门规则,所有指标可信 | TypeScript、JavaScript、C、C++、Python、Java、C#、Go |
+| **基础** —— 通用 tree-sitter 规则(尽力而为;复杂度/函数/行数可用,Halstead、认知复杂度、类成员可能不完整) | Rust、Ruby、PHP、Kotlin、Swift、Scala、Lua、Zig、Solidity、Objective-C、Shell、Elixir、Emacs Lisp、OCaml、ReScript、TLA+ |
+| **仅文件 / 代码行** —— 只贡献文件数、代码行与语言占比 | HTML、CSS、JSON、TOML、Vue、ERB、SystemRDL |
 
 ## 在线体验
 
@@ -122,8 +134,9 @@ npm run build:web:single   # 单文件 -> apps/web/dist-single/index.html
    认知复杂度、嵌套深度和 Halstead 体积 / 难度。点击任意卡片打开下钻抽屉;ECharts
    按需懒加载。
 2. **文件详情** —— 左侧文件列表 + 右侧源码预览;点击函数名定位并高亮对应行。
-3. **图表** —— UML 类图、包依赖图、活动图、时序图、状态机、ER 图和通信图,由内嵌的
-   draw.io 编辑器渲染(可下载 `.drawio`、导出 SVG)。
+3. **图表** —— UML 类图、包依赖图、活动图、时序图、状态机、ER 图和通信图,由**自托管的
+   draw.io** 渲染(不请求第三方;可下载 `.drawio`、导出 SVG)。构建前先跑一次
+   `npm run drawio` 拉取编辑器。
 4. **帮助** —— 每个指标的定义与公式,以 MathML 渲染。
 5. **设置** —— 阈值与首页显示哪些卡片,应用后即时重算。
 
@@ -257,7 +270,7 @@ const registry = new LanguageRegistry().register(new MyLang());
 | **认知复杂度** | Sonar 风格、按嵌套加权的分数。`if` / 循环 / `switch` / `catch` / `?:` 会因嵌套加分,`else if` 链保持同一层,连续的同种逻辑运算符只加一次。 |
 | **嵌套深度** | 函数内控制结构(`if`、循环、`switch`、`try`)的最大嵌套层数。 |
 | **Halstead** | 从函数文本扫描出的运算符/操作数的去重与总数,以及词汇量、长度、体积、难度和工作量。 |
-| **可维护性指数** | `171 − 3.42·ln(V) − 0.23·CC − 16.2·ln(L)`(归一化到 0–100,越高越易维护),其中 `L` 为函数的代码行数。给出函数级、文件级与项目均值。 |
+| **可维护性指数** | `171 − 5.2·ln(V) − 0.23·CC − 16.2·ln(L)`(Visual Studio / SEI 系数,归一化到 0–100,越高越易维护),其中 `L` 为函数的代码行数。给出函数级、文件级与项目均值。 |
 | **注释密度** | 非空行中注释所占比例。 |
 | **标记** | 注释中 `TODO` / `FIXME` / `HACK` 的数量。 |
 | **物理行** | 文件总行数。 |
@@ -290,7 +303,8 @@ docs/assets/banner.svg
 - [x] 认知复杂度、Halstead 指标与可维护性指数
 - [x] UML 图表(draw.io)与 OOP 结构模型
 - [x] 一键部署到 GitHub Pages
-- [ ] 通过 tree-sitter 支持更多语言
+- [x] 30+ 语言(tree-sitter WASM,按需加载并内联打包进所有目标)
+- [ ] 打磨「基础」级的通用语言画像
 
 ## 开发
 
@@ -303,6 +317,7 @@ npm run typecheck         # 类型检查全部包
 npm test                  # 单元测试(Vitest)
 npm run build             # 构建核心库
 npm run build:web         # 构建静态 Web 应用
+npm run drawio            # 拉取自托管的 draw.io 编辑器(图表页用)
 npm run bundle            # 单文件 CJS 打包
 npm run compile           # 独立二进制(需要 Bun)
 ```

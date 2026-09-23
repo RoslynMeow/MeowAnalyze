@@ -8,6 +8,7 @@ import { renderDetail } from "../src/views/detail.js";
 import { disposeDiagrams, renderDiagrams } from "../src/views/diagrams.js";
 import { renderHelp } from "../src/views/help.js";
 import { renderLanding } from "../src/views/landing.js";
+import { closeLanguagePopover } from "../src/language-popover.js";
 
 const SOURCE = `export function simple(a: number) {
   return a + 1;
@@ -46,6 +47,22 @@ describe("landing view", () => {
     expect(root.querySelectorAll("button.button")).toHaveLength(1);
     expect(root.querySelector("img")).toBeNull();
     expect(root.querySelector("textarea")).toBeNull();
+    // tuned / basic / files, separated by two rules.
+    expect(root.querySelectorAll(".landing__langs")).toHaveLength(3);
+    expect(root.querySelectorAll(".landing__sep")).toHaveLength(2);
+  });
+
+  it("opens a language support popover from a chip", () => {
+    const root = document.createElement("div");
+    renderLanding(root, { onFolder: vi.fn() });
+
+    root.querySelector<HTMLElement>(".lang-chip--button")?.click();
+    const popover = document.body.querySelector(".lang-pop");
+    expect(popover).not.toBeNull();
+    expect(popover?.textContent).toContain("TypeScript");
+
+    closeLanguagePopover();
+    expect(document.body.querySelector(".lang-pop")).toBeNull();
   });
 });
 
@@ -87,6 +104,8 @@ describe("help view", () => {
     expect(view.body.querySelector(".help-page")).not.toBeNull();
     expect(view.body.querySelectorAll(".card").length).toBeGreaterThanOrEqual(8);
     expect(view.body.querySelectorAll(".math").length).toBeGreaterThanOrEqual(8);
+    // The dynamic language-support card: tuned / basic / files.
+    expect(view.body.querySelectorAll(".help-lang")).toHaveLength(3);
   });
 });
 

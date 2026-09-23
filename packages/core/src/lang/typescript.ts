@@ -11,6 +11,7 @@ import type {
   Range,
 } from "../report/model.js";
 import { distributionOf } from "../metrics/distribution.js";
+import { maintainabilityIndex } from "../metrics/maintainability.js";
 import type { FileContext, LanguageAnalyzer } from "./analyzer.js";
 import {
   buildFlow,
@@ -195,8 +196,9 @@ function markLines(
   end: number,
   sf: ts.SourceFile,
 ): void {
-  const first = sf.getLineAndCharacterOfPosition(start).line;
-  const last = sf.getLineAndCharacterOfPosition(Math.max(start, end - 1)).line;
+  // Store 1-based lines so the set lines up with `Range` (also 1-based).
+  const first = sf.getLineAndCharacterOfPosition(start).line + 1;
+  const last = sf.getLineAndCharacterOfPosition(Math.max(start, end - 1)).line + 1;
   for (let line = first; line <= last; line++) target.add(line);
 }
 
@@ -507,21 +509,6 @@ function sumValues(map: Map<string, number>): number {
   let total = 0;
   for (const value of map.values()) total += value;
   return total;
-}
-
-/** Normalized maintainability index (0–100, higher is better). */
-function maintainabilityIndex(
-  volume: number,
-  cyclomatic: number,
-  loc: number,
-): number {
-  if (loc <= 0) return 100;
-  const raw =
-    171 -
-    3.42 * Math.log(Math.max(volume, 1)) -
-    0.23 * cyclomatic -
-    16.2 * Math.log(loc);
-  return Math.max(0, Math.min(100, (raw * 100) / 171));
 }
 
 /* ------------------------------------------------------------------ */

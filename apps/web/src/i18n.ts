@@ -62,6 +62,22 @@ export interface Strings {
   landing: {
     openFolder: string;
   };
+  languages: {
+    title: string;
+    extensions: string;
+    tierLabel: string;
+    detailHint: string;
+    tiers: {
+      tuned: { name: string; summary: string; features: readonly string[] };
+      basic: { name: string; summary: string; features: readonly string[] };
+      files: { name: string; summary: string; features: readonly string[] };
+    };
+  };
+  loading: {
+    reading: string;
+    languages: string;
+    analyzing: string;
+  };
   notices: {
     noFiles: string;
   };
@@ -219,7 +235,48 @@ const zh: Strings = {
     light: "亮色",
   },
   landing: {
-    openFolder: "打开文件夹",
+    openFolder: "打开工程文件夹",
+  },
+  languages: {
+    title: "语言支持详情",
+    extensions: "扩展名",
+    tierLabel: "支持级别",
+    detailHint: "点击任意语言查看详细支持信息",
+    tiers: {
+      tuned: {
+        name: "精准",
+        summary: "有专门的解析规则,所有指标都可信。",
+        features: [
+          "函数 / 方法 / 构造函数;圈复杂度、认知复杂度、嵌套深度",
+          "Halstead 指标、可维护性指数、代码行(物理 / 代码 / 注释 / 空行 / 逻辑)",
+          "TODO / FIXME / HACK 标记、导入、函数调用",
+          "类 / 接口 / 枚举及其成员(字段与方法)",
+          "控制流 → 活动图;声明 / 导入 / 调用 → 类图、包图、通信图、时序图",
+        ],
+      },
+      basic: {
+        name: "基础",
+        summary: "使用通用 tree-sitter 规则,尽力而为。",
+        features: [
+          "函数、圈复杂度、嵌套深度、代码行、标记",
+          "认知复杂度与 Halstead 为近似值",
+          "类成员与图表可能不完整",
+        ],
+      },
+      files: {
+        name: "无函数",
+        summary: "语言本身没有函数概念,只贡献文件级信息。",
+        features: [
+          "文件数、代码行(物理 / 代码 / 注释 / 空行)、语言占比",
+          "不产生函数、复杂度、Halstead 或可维护性指数",
+        ],
+      },
+    },
+  },
+  loading: {
+    reading: "正在读取文件…",
+    languages: "正在加载语言支持…",
+    analyzing: "正在分析…",
   },
   notices: {
     noFiles: "没有找到可分析的 TypeScript / JavaScript 文件。",
@@ -317,9 +374,9 @@ const zh: Strings = {
       },
       {
         title: "可维护性指数（Maintainability Index）",
-        body: "由 Oman 与 Hagemeister 提出，综合 Halstead 体积、圈复杂度与代码行数，给出 0–100 的可维护性评分，越高越易维护。本工具沿用 Visual Studio 的系数并做归一化。",
+        body: "由 Oman 与 Hagemeister 提出，综合 Halstead 体积、圈复杂度与代码行数，给出 0–100 的可维护性评分，越高越易维护。本工具采用 Visual Studio / SEI 的系数（5.2）并归一化到 0–100。",
         formulas: [
-          "MI = 171 - 3.42\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
+          "MI = 171 - 5.2\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
           "MI^{*} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{100\\,MI}{171}\\right)\\right)",
         ],
         items: [
@@ -327,7 +384,7 @@ const zh: Strings = {
           "G：圈复杂度",
           "L：代码行数（含源码 token 的行）",
         ],
-        note: "颜色分级：< 40 红（难维护）、40–65 黄、≥ 65 绿。",
+        note: "颜色分级（Visual Studio 口径）：0–9 红（难维护）、10–19 黄、20–100 绿。",
       },
       {
         title: "代码行（Lines of Code）",
@@ -471,7 +528,7 @@ const zh: Strings = {
     kinds: {
       function: "函数",
       method: "方法",
-      arrow: "箭头函数",
+      arrow: "λ函数",
       constructor: "构造函数",
       getter: "取值器",
       setter: "设值器",
@@ -528,7 +585,48 @@ const en: Strings = {
     light: "Light",
   },
   landing: {
-    openFolder: "Open folder",
+    openFolder: "Open project folder",
+  },
+  languages: {
+    title: "Language support details",
+    extensions: "Extensions",
+    tierLabel: "Support",
+    detailHint: "Click a language to see its detailed support",
+    tiers: {
+      tuned: {
+        name: "Tuned",
+        summary: "Dedicated parsing rules; every metric is trustworthy.",
+        features: [
+          "Functions / methods / constructors; cyclomatic & cognitive complexity, nesting depth",
+          "Halstead metrics, maintainability index, lines of code (physical / code / comment / blank / logical)",
+          "TODO / FIXME / HACK markers, imports, function calls",
+          "Classes / interfaces / enums and their members (fields and methods)",
+          "Control flow → activity diagram; declarations / imports / calls → class, package, communication and sequence diagrams",
+        ],
+      },
+      basic: {
+        name: "Basic",
+        summary: "Generic tree-sitter rules, best effort.",
+        features: [
+          "Functions, cyclomatic complexity, nesting depth, lines of code, markers",
+          "Cognitive complexity and Halstead are approximations",
+          "Class members and diagrams may be incomplete",
+        ],
+      },
+      files: {
+        name: "Files only",
+        summary: "The language has no notion of functions; only file-level data.",
+        features: [
+          "Files, lines of code (physical / code / comment / blank), language share",
+          "No functions, complexity, Halstead or maintainability index",
+        ],
+      },
+    },
+  },
+  loading: {
+    reading: "Reading files…",
+    languages: "Loading language support…",
+    analyzing: "Analyzing…",
   },
   notices: {
     noFiles: "No TypeScript / JavaScript files found.",
@@ -626,9 +724,9 @@ const en: Strings = {
       },
       {
         title: "Maintainability index",
-        body: "Proposed by Oman and Hagemeister, it combines Halstead volume, cyclomatic complexity and lines of code into a 0–100 score, where higher is easier to maintain. This tool uses the Visual Studio coefficients and normalizes the result.",
+        body: "Proposed by Oman and Hagemeister, it combines Halstead volume, cyclomatic complexity and lines of code into a 0–100 score, where higher is easier to maintain. This tool uses the Visual Studio / SEI coefficient (5.2) and normalizes to 0–100.",
         formulas: [
-          "MI = 171 - 3.42\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
+          "MI = 171 - 5.2\\,\\ln V - 0.23\\,G - 16.2\\,\\ln L",
           "MI^{*} = \\max\\!\\left(0,\\ \\min\\!\\left(100,\\ \\frac{100\\,MI}{171}\\right)\\right)",
         ],
         items: [
@@ -636,7 +734,7 @@ const en: Strings = {
           "G: cyclomatic complexity",
           "L: code lines (lines that contain source tokens)",
         ],
-        note: "Color grading: < 40 red (hard to maintain), 40–65 yellow, ≥ 65 green.",
+        note: "Color grading (Visual Studio): 0–9 red (hard to maintain), 10–19 yellow, 20–100 green.",
       },
       {
         title: "Lines of code",
@@ -780,7 +878,7 @@ const en: Strings = {
     kinds: {
       function: "function",
       method: "method",
-      arrow: "arrow",
+      arrow: "λ function",
       constructor: "constructor",
       getter: "getter",
       setter: "setter",

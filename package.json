@@ -1,6 +1,6 @@
 {
   "name": "meowanalyze",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A full-featured static code analyzer: language detection, cyclomatic complexity, nesting depth and more.",
   "private": true,
   "type": "module",
@@ -24,10 +24,13 @@
     "dev": "tsx packages/cli/src/cli.ts",
     "dev:web": "npm run dev --workspace @meowanalyze/web",
     "bundle": "node scripts/bundle.mjs",
-    "compile": "bun build packages/cli/src/cli.ts --compile --outfile dist/meowanalyze"
+    "compile": "bun build packages/cli/src/cli.ts --compile --outfile dist/meowanalyze",
+    "grammars": "node scripts/embed-grammars.mjs",
+    "drawio": "node scripts/fetch-drawio.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
+    "adm-zip": "^0.6.1",
     "bun": "^1.4.2",
     "esbuild": "^0.28.2",
     "tsx": "^4.23.13",

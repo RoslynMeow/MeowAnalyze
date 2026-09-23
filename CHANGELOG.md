@@ -7,10 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-23
+
+### Changed
+
+- Maintainability index now uses the **Visual Studio / SEI coefficient (5.2)**
+  instead of 3.42, so values are comparable with Visual Studio, NDepend, radon
+  and other tools. (V/G/L definitions still differ slightly per tool.)
+- Maintainability colour bands now follow Visual Studio: **0–9 red, 10–19
+  yellow, 20–100 green** (was <40 / 40–65 / ≥65).
+
+### Added
+
+- Core: the tree-sitter analyzers are now driven by a reusable `AnalyzerProfile`,
+  and **Python** (`.py` / `.pyi`), **Java** (`.java`) and **C#** (`.cs`) are
+  supported alongside C/C++ with the same metrics, thresholds, dashboard and
+  diagrams.
+- Core: **many more languages** — Go, Rust, Ruby, PHP, Kotlin, Swift, Scala, Lua,
+  Zig, Solidity, Objective-C, Shell, Elixir, Emacs Lisp, OCaml, ReScript, TLA+,
+  plus files/LOC for HTML, CSS, JSON, TOML, Vue, ERB and SystemRDL. Non-tuned
+  languages use a generic profile and are documented as “basic”.
+- Core: **Go** gets a dedicated profile (functions/methods with receiver owners,
+  structs/interfaces with members, imports, calls, control flow) and is now a
+  “tuned” language alongside C/C++, Python, Java and C#.
+- Core: grammars are now loaded **on demand** (only the ones a project uses) from
+  a dynamically-imported, bundled chunk, so TS/JS-only projects download no wasm.
+  (dart, elm, ql and yaml grammars are omitted: their ABI is incompatible with
+  the pinned runtime.)
+
+- Web: the Diagrams tab embeds a **self-hosted draw.io** instead of
+  `embed.diagrams.net`, so it no longer depends on a third party. The editor is
+  fetched with `npm run drawio` into `apps/web/public/drawio` (gitignored,
+  ~114 MB after pruning unused integrations/viewer bundles); the Pages and
+  release workflows run it before building.
+
+- C and C++ support via `web-tree-sitter` (WASM). The runtime and grammars are
+  embedded as `base64(gzip)` so the parsers bundle into every target — web,
+  desktop, the CLI single-file bundle and the standalone binaries — with no
+  external files. C/C++ files get the same metrics as TypeScript (complexity,
+  nesting, Halstead, maintainability, LOC, markers, imports, calls, control flow
+  and declarations), so the dashboard, thresholds, CLI and diagrams all work.
+  `defaultRegistryWithLanguages()` loads the grammars; the engine stays
+  synchronous.
+
 ### Planned
 
 - File map tab (nested treemap) — temporarily removed, to be re-added.
-- More languages via tree-sitter.
+- More languages via tree-sitter (Go, Rust, Python, ...).
 
 ## [1.0.0] - 2026-09-22
 
@@ -75,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions: a CI workflow and a version-driven release workflow (no manual tags).
 - Bilingual documentation and a project banner.
 
-[Unreleased]: https://github.com/RoslynMeow/MeowAnalyze/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/RoslynMeow/MeowAnalyze/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v2.0.0
 [1.0.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v1.0.0
 [0.1.0]: https://github.com/RoslynMeow/MeowAnalyze/releases/tag/v0.1.0
