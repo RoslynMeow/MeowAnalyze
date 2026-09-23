@@ -81,10 +81,11 @@ const NESTING_BUCKETS: readonly BucketRange[] = [
   { upTo: Number.POSITIVE_INFINITY, label: "5+", severity: "critical" },
 ];
 
+// Visual Studio's bands: 0–9 red, 10–19 yellow, 20–100 green.
 const MAINTAINABILITY_BUCKETS: readonly BucketRange[] = [
-  { upTo: 65, label: "<65", severity: "critical" },
-  { upTo: 85, label: "65–85", severity: "warn" },
-  { upTo: Number.POSITIVE_INFINITY, label: "85+", severity: "good" },
+  { upTo: 9.999, label: "0–9", severity: "critical" },
+  { upTo: 19.999, label: "10–19", severity: "warn" },
+  { upTo: Number.POSITIVE_INFINITY, label: "20+", severity: "good" },
 ];
 
 const VOLUME_BUCKETS: readonly BucketRange[] = [
@@ -776,8 +777,8 @@ function round1(value: number): number {
 
 function maintainabilityGrade(value: number): string {
   const labels = t().dashboard.maintainability;
-  if (value < 65) return labels.low;
-  if (value < 85) return labels.moderate;
+  if (value < 10) return labels.low;
+  if (value < 20) return labels.moderate;
   return labels.healthy;
 }
 

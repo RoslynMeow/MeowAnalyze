@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Maintainability index now uses the **Visual Studio / SEI coefficient (5.2)**
   instead of 3.42, so values are comparable with Visual Studio, NDepend, radon
-  and other tools. (V/G/L definitions still differ slightly per tool.) Colour
-  grading now uses the common 0–100 thresholds: < 65 red, 65–85 amber, ≥ 85 green.
+  and other tools. (V/G/L definitions still differ slightly per tool.)
+- Maintainability colour bands now follow Visual Studio: **0–9 red, 10–19
+  yellow, 20–100 green** (was <40 / 40–65 / ≥65).
 
 ### Added
 

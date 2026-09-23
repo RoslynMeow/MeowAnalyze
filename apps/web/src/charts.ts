@@ -45,10 +45,10 @@ export function complexityColor(value: number): string {
   return severityColor("good");
 }
 
+/** Visual Studio's bands: 0–9 red, 10–19 yellow, 20–100 green. */
 export function maintainabilityColor(value: number): string {
-  // Common 0–100 grading (the original MI paper): < 65 hard, 65–85 moderate, ≥ 85 good.
-  if (value < 65) return severityColor("critical");
-  if (value < 85) return severityColor("warn");
+  if (value < 10) return severityColor("critical");
+  if (value < 20) return severityColor("warn");
   return severityColor("good");
 }
 

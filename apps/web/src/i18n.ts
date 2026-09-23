@@ -374,7 +374,7 @@ const zh: Strings = {
           "G：圈复杂度",
           "L：代码行数（含源码 token 的行）",
         ],
-        note: "颜色分级：< 65 红（难维护）、65–85 黄、≥ 85 绿。",
+        note: "颜色分级（Visual Studio 口径）：0–9 红（难维护）、10–19 黄、20–100 绿。",
       },
       {
         title: "代码行（Lines of Code）",
@@ -719,7 +719,7 @@ const en: Strings = {
           "G: cyclomatic complexity",
           "L: code lines (lines that contain source tokens)",
         ],
-        note: "Color grading: < 65 red (hard to maintain), 65–85 yellow, ≥ 85 green.",
+        note: "Color grading (Visual Studio): 0–9 red (hard to maintain), 10–19 yellow, 20–100 green.",
       },
       {
         title: "Lines of code",
